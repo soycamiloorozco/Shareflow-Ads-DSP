@@ -1,0 +1,281 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply text-neutral-800;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background font-sans antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Improve touch targets */
+  button, a, input, select, textarea {
+    @apply touch-manipulation;
+  }
+
+  /* Remove blue highlight on touch */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* Mobile-optimized text styles */
+  .text-body {
+    @apply font-sans text-sm sm:text-base font-normal text-neutral-800 leading-relaxed;
+  }
+
+  .text-body-sm {
+    @apply font-sans text-xs sm:text-sm font-normal text-neutral-800 leading-relaxed;
+  }
+
+  .text-body-xs {
+    @apply font-sans text-xs font-normal text-neutral-800 leading-relaxed;
+  }
+
+  /* Mobile-first headings */
+  .text-heading-1 {
+    @apply font-sans text-2xl sm:text-4xl font-bold text-neutral-800 leading-tight tracking-tight;
+  }
+
+  .text-heading-2 {
+    @apply font-sans text-xl sm:text-3xl font-semibold text-neutral-800 leading-tight tracking-tight;
+  }
+
+  .text-heading-3 {
+    @apply font-sans text-lg sm:text-2xl font-semibold text-neutral-800 leading-tight tracking-tight;
+  }
+
+  .text-heading-4 {
+    @apply font-sans text-base sm:text-xl font-semibold text-neutral-800 leading-tight tracking-tight;
+  }
+
+  /* Mobile-optimized labels */
+  .text-label {
+    @apply font-sans text-xs sm:text-sm font-medium text-neutral-600;
+  }
+
+  .text-caption {
+    @apply font-sans text-xs font-normal text-neutral-500;
+  }
+
+  /* Mobile price styles */
+  .text-price {
+    @apply font-sans text-sm sm:text-lg font-semibold text-neutral-800;
+  }
+
+  .text-price-lg {
+    @apply font-sans text-base sm:text-xl font-bold text-neutral-800;
+  }
+
+  /* Mobile button text */
+  .text-button {
+    @apply font-sans text-xs sm:text-sm font-medium leading-none;
+  }
+
+  .text-button-lg {
+    @apply font-sans text-sm sm:text-base font-medium leading-none;
+  }
+
+  /* Mobile-optimized team names */
+  .text-team {
+    @apply font-sans text-xs sm:text-sm font-semibold text-neutral-800;
+  }
+
+  /* Match status */
+  .text-vs {
+    @apply font-sans text-xs sm:text-sm font-semibold text-neutral-800;
+  }
+
+  /* Location and time */
+  .text-location {
+    @apply font-sans text-xs sm:text-sm font-normal text-neutral-500;
+  }
+
+  .text-time {
+    @apply font-sans text-xs sm:text-sm font-normal text-neutral-500;
+  }
+
+  /* Mobile CTA */
+  .text-cta {
+    @apply font-sans text-sm font-medium text-primary leading-none;
+  }
+
+  /* Mobile links */
+  .text-link {
+    @apply font-sans text-sm font-medium text-primary hover:text-primary transition-colors;
+  }
+
+  .text-link-sm {
+    @apply font-sans text-xs font-medium text-primary hover:text-primary transition-colors;
+  }
+
+  /* Mobile hero text */
+  .text-hero {
+    @apply font-sans text-xl sm:text-4xl font-normal text-white;
+  }
+
+  .text-hero-bold {
+    @apply font-sans text-xl sm:text-4xl font-bold text-white;
+  }
+
+  /* Mobile search placeholder */
+  .text-search {
+    @apply font-sans text-sm font-normal text-neutral-500;
+  }
+
+  /* Mobile form labels */
+  .text-form-label {
+    @apply font-sans text-xs sm:text-sm font-medium text-neutral-700;
+  }
+
+  /* Mobile error messages */
+  .text-error {
+    @apply font-sans text-xs sm:text-sm font-normal text-error-600;
+  }
+
+  /* Mobile success messages */
+  .text-success {
+    @apply font-sans text-xs sm:text-sm font-normal text-success-600;
+  }
+
+  /* Mobile-optimized component styles */
+  .btn {
+    @apply min-h-[44px] px-4 py-3 rounded-xl transition-colors active:scale-[0.98] touch-manipulation;
+  }
+
+  .btn-sm {
+    @apply min-h-[36px] px-3 py-2 text-xs sm:text-sm rounded-lg;
+  }
+
+  .btn-lg {
+    @apply min-h-[48px] px-5 py-3 text-sm sm:text-base rounded-xl;
+  }
+
+  .card {
+    @apply bg-white border border-neutral-200 rounded-xl overflow-hidden;
+  }
+
+  .card-body {
+    @apply p-4 sm:p-6;
+  }
+
+  .input {
+    @apply min-h-[44px] px-3 py-2 text-sm sm:text-base rounded-xl border border-neutral-200 
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  /* Mobile container */
+  .container-mobile {
+    @apply px-4 max-w-[640px] mx-auto;
+  }
+
+  /* Mobile bottom sheet */
+  .bottom-sheet {
+    @apply fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-lg 
+           transform transition-transform duration-300 ease-out
+           pb-[env(safe-area-inset-bottom)];
+  }
+
+  .bottom-sheet-overlay {
+    @apply fixed inset-0 bg-black/50 z-40 backdrop-blur-sm
+           transition-opacity duration-300 ease-out;
+  }
+
+  /* Mobile drawer */
+  .drawer {
+    @apply fixed inset-y-0 left-0 z-50 w-[280px] bg-white shadow-lg
+           transform transition-transform duration-300 ease-out
+           pb-[env(safe-area-inset-bottom)];
+  }
+
+  .drawer-overlay {
+    @apply fixed inset-0 bg-black/50 z-40 backdrop-blur-sm
+           transition-opacity duration-300 ease-out;
+  }
+
+  /* Mobile bottom navigation */
+  .bottom-nav {
+    @apply fixed inset-x-0 bottom-0 z-40 bg-white border-t border-neutral-200
+           pb-[env(safe-area-inset-bottom)]
+           transition-transform duration-300 ease-out;
+  }
+
+  /* Mobile floating button */
+  .floating-button {
+    @apply fixed bottom-6 right-4 z-30 shadow-lg rounded-full
+           transform transition-transform duration-300 ease-out;
+  }
+}
+
+/* Mobile accessibility improvements */
+@layer utilities {
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+  }
+
+  .focus-ring-inset {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset;
+  }
+
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  }
+
+  .line-clamp-1 {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .line-clamp-2 {
+    @apply overflow-hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .line-clamp-3 {
+    @apply overflow-hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  /* Mobile touch target utilities */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .touch-target-sm {
+    @apply min-h-[36px] min-w-[36px];
+  }
+
+  .touch-target-lg {
+    @apply min-h-[48px] min-w-[48px];
+  }
+
+  /* Mobile safe area utilities */
+  .safe-top {
+    @apply pt-[env(safe-area-inset-top)];
+  }
+
+  .safe-bottom {
+    @apply pb-[env(safe-area-inset-bottom)];
+  }
+
+  /* Mobile scroll snap utilities */
+  .snap-x-mandatory {
+    @apply snap-x snap-mandatory;
+  }
+
+  .snap-start-always {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}
