@@ -1,22 +1,14 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { Plus, MapPin, Users } from 'lucide-react';
-import { Stadium } from '../../types';
-import { Button } from '../Button';
-import { Card } from '../Card';
 import { AddStadiumModal } from './AddStadiumModal';
+import { Stadium } from '../../hooks/useStadiums';
 
 interface StadiumSelectorProps {
   stadiums: Stadium[];
   selectedStadium?: string;
   onStadiumSelect: (stadiumId: string) => void;
-  onAddStadium: (stadiumData: {
-    name: string;
-    city: string;
-    capacity: number;
-    location: string;
-    coordinates: { lat: number; lng: number };
-  }) => void;
+  onAddStadium: (stadiumData: Stadium) => void;
 }
 
 export function StadiumSelector({

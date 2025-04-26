@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
-import { Team } from '../../types';
-import { Button } from '../Button';
-import { Card } from '../Card';
+import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
+
 import { AddTeamModal } from './AddTeamModal';
+import { Team } from '../../hooks/useTeams';
+import { constants } from '../../config/constants';
 
 interface TeamSelectorProps {
   teams: Team[];
@@ -12,7 +12,7 @@ interface TeamSelectorProps {
   selectedAwayTeam?: string;
   onHomeTeamSelect: (teamId: string) => void;
   onAwayTeamSelect: (teamId: string) => void;
-  onAddTeam: (teamData: { name: string; city: string; logo: string }) => void;
+  onAddTeam: (teamData: Omit<Team, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
 export function TeamSelector({
@@ -46,7 +46,7 @@ export function TeamSelector({
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
                     <img
-                      src={team.logo}
+                      src={`${constants.base_path}/${team.logo}`}
                       alt={team.name}
                       className="w-8 h-8 object-contain"
                     />
@@ -93,7 +93,7 @@ export function TeamSelector({
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
                     <img
-                      src={team.logo}
+                     src={`${constants.base_path}/${team.logo}`}
                       alt={team.name}
                       className="w-8 h-8 object-contain"
                     />
@@ -114,6 +114,7 @@ export function TeamSelector({
           <AddTeamModal
             onClose={() => setIsAddModalOpen(false)}
             onSave={(teamData) => {
+              console.log({teamData})
               onAddTeam(teamData);
               setIsAddModalOpen(false);
             }}

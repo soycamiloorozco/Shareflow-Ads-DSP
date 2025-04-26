@@ -3,25 +3,23 @@ import { motion } from 'framer-motion';
 import { Upload, X, Info, Trophy, AlertCircle } from 'lucide-react';
 import { Button } from '../Button';
 import { useDropzone } from 'react-dropzone';
+import { Team } from '../../hooks/useTeams';
 
 interface AddTeamModalProps {
   onClose: () => void;
-  onSave: (teamData: {
-    name: string;
-    city: string;
-    logo: string;
-    colors: {
-      primary: string;
-      secondary: string;
-    };
-  }) => void;
+  onSave: (teamData: Omit<Team, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
 export function AddTeamModal({ onClose, onSave }: AddTeamModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Team>({
     name: '',
     city: '',
+    id: "",
     logo: '',
+    primaryColor: "",
+    secondaryColor: "",
+    createdAt: "",
+    updatedAt: "",
     colors: {
       primary: '#000000',
       secondary: '#ffffff'

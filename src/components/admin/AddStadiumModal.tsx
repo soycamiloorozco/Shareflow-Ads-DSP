@@ -4,17 +4,11 @@ import { Upload, X, MapPin, Users, AlertCircle, Image as ImageIcon } from 'lucid
 import { Button } from '../Button';
 import { Card } from '../Card';
 import { LocationInput } from './LocationInput';
+import { Stadium } from '../../hooks/useStadiums';
 
 interface AddStadiumModalProps {
   onClose: () => void;
-  onSave: (stadiumData: {
-    name: string;
-    city: string;
-    capacity: number;
-    location: string;
-    coordinates: { lat: number; lng: number };
-    photos: string[];
-  }) => void;
+  onSave: (stadiumData: Stadium) => void;
 }
 
 interface PhotoUpload {
@@ -24,12 +18,15 @@ interface PhotoUpload {
 }
 
 export function AddStadiumModal({ onClose, onSave }: AddStadiumModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Stadium>({
+    id: '',
     name: '',
     city: '',
     capacity: 0,
     location: '',
-    coordinates: { lat: 6.2442, lng: -75.5812 }
+    createdAt: "",
+    updatedAt: "",
+    photos: []
   });
 
   const [photos, setPhotos] = useState<PhotoUpload[]>([]);
@@ -165,7 +162,7 @@ export function AddStadiumModal({ onClose, onSave }: AddStadiumModalProps) {
             </div>
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
               Ubicación
             </label>
@@ -177,7 +174,7 @@ export function AddStadiumModal({ onClose, onSave }: AddStadiumModalProps) {
                 coordinates: coordinates || prev.coordinates
               }))}
             />
-          </div>
+          </div> */}
 
           {/* Photo Upload Section */}
           <div className="space-y-4">
@@ -258,7 +255,7 @@ export function AddStadiumModal({ onClose, onSave }: AddStadiumModalProps) {
               variant="primary"
               size="lg"
               onClick={handleSubmit}
-              disabled={!formData.name || !formData.city || !formData.capacity || !formData.location || photos.length === 0}
+              disabled={!formData.name || !formData.city || !formData.capacity || photos.length === 0}
             >
               Guardar Estadio
             </Button>

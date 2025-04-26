@@ -1,52 +1,26 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Filter, Plus, Calendar, MapPin, Clock, Users,
-  ChevronRight, Trophy, Star, TrendingUp, Sparkles,
-  ArrowRight, Target, DollarSign, Edit, Trash2, Eye,
-  Monitor, X, AlertCircle, FileImage, Info
-} from 'lucide-react';
+  Search, Filter, Plus, Calendar, Users,
+  ChevronRight, 
+  Target, DollarSign, 
+  X} from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { TeamSelector } from '../../components/admin/TeamSelector';
 import { StadiumSelector } from '../../components/admin/StadiumSelector';
 import { MomentPricing } from '../../components/admin/MomentPricing';
-import { LocationInput } from '../../components/admin/LocationInput';
-import { Team, Stadium, SportEvent } from '../../types';
+import { useTeams, Team } from '../../hooks/useTeams';
+import { useStadiums, Stadium } from '../../hooks/useStadiums';
 
-// Mock data for teams and stadiums
-const mockTeams: Team[] = [
-  {
-    id: 'team1',
-    name: 'Atlético Nacional',
-    logo: 'https://api.shareflow.me/teams/atletico-nacional.png',
-    city: 'Medellín'
-  },
-  {
-    id: 'team2',
-    name: 'Independiente Medellín',
-    logo: 'https://api.shareflow.me/teams/independiente-medellin.png',
-    city: 'Medellín'
-  }
-];
 
-const mockStadiums: Stadium[] = [
-  {
-    id: 'stadium1',
-    name: 'Estadio Atanasio Girardot',
-    city: 'Medellín',
-    capacity: 45000,
-    location: 'Cra. 74 #48010',
-    coordinates: { lat: 6.2447, lng: -75.5916 },
-    screens: []
-  }
-];
 
 export function SportsEventsAdmin() {
+
+  const { createTeam, teams, listTeams } = useTeams();
+  const { createStadiums, stadiums, listStadiums } = useStadiums();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<SportEvent | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   // Form state for new event
   const [formData, setFormData] = useState({
@@ -69,6 +43,23 @@ export function SportsEventsAdmin() {
     console.log('Create event:', formData);
     setIsCreateModalOpen(false);
   };
+
+  const handleCreateTeam = async (data: Omit<Team, 'id' | 'createdAt' | 'updatedAt'>) => {
+    await createTeam({
+      name: data.name,
+      city: data.city,
+      logo: data.logo,
+      primaryColor: data.colors.primary,
+      secondaryColor: data.colors.secondary
+    });
+    await listTeams();
+  }
+
+  const handleCreateStedium = async (data: Omit<Stadium, 'id' | 'createdAt' | 'updatedAt'>) => {
+    console.log({ data })
+    await createStadiums(data)
+    await listStadiums();
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -222,7 +213,7 @@ export function SportsEventsAdmin() {
                   <div className="p-6 space-y-8">
                     {/* Team Selection */}
                     <TeamSelector
-                      teams={mockTeams}
+                      teams={teams}
                       selectedHomeTeam={formData.homeTeam}
                       selectedAwayTeam={formData.awayTeam}
                       onHomeTeamSelect={(teamId) => setFormData({
@@ -233,18 +224,18 @@ export function SportsEventsAdmin() {
                         ...formData,
                         awayTeam: teamId
                       })}
-                      onAddTeam={() => {/* Handle add team */}}
+                      onAddTeam={handleCreateTeam}
                     />
 
                     {/* Stadium Selection */}
                     <StadiumSelector
-                      stadiums={mockStadiums}
+                      stadiums={stadiums}
                       selectedStadium={formData.stadium}
                       onStadiumSelect={(stadiumId) => setFormData({
                         ...formData,
                         stadium: stadiumId
                       })}
-                      onAddStadium={() => {/* Handle add stadium */}}
+                      onAddStadium={handleCreateStedium}
                     />
 
                     {/* Date and Time */}
