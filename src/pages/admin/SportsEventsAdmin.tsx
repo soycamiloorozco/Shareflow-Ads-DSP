@@ -12,6 +12,7 @@ import { StadiumSelector } from '../../components/admin/StadiumSelector';
 import { MomentPricing } from '../../components/admin/MomentPricing';
 import { useTeams, Team } from '../../hooks/useTeams';
 import { useStadiums, Stadium } from '../../hooks/useStadiums';
+import { useSportEvents } from '../../hooks/useSportEvents';
 
 
 
@@ -19,28 +20,47 @@ export function SportsEventsAdmin() {
 
   const { createTeam, teams, listTeams } = useTeams();
   const { createStadiums, stadiums, listStadiums } = useStadiums();
+  const { createSportEvent } = useSportEvents();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Form state for new event
   const [formData, setFormData] = useState({
-    homeTeam: '',
-    awayTeam: '',
-    stadium: '',
-    date: '',
-    time: '',
-    momentPricing: {
+    homeTeamId: '',
+    awayTeamId: '',
+    stadiumId: '',
+    eventDate: '',
+    eventTime: '',
+    momentPrices: {
       firstHalf: 2500000,
       halftime: 1800000,
-      secondHalf: 2500000
+      secondHalf: 2500000,
     },
     estimatedAttendance: 0,
-    broadcastChannels: [] as string[]
+    broadcastChannels: ""
   });
 
   const handleCreateEvent = () => {
     // Handle event creation
-    console.log('Create event:', formData);
+    const data = {
+      ...formData,
+      momentPrices: [
+        {
+          "moment": "FirstHalf",
+          "price": formData.momentPrices.firstHalf
+        },
+        {
+          "moment": "Halftime",
+          "price": formData.momentPrices.halftime
+        },
+        {
+          "moment": "SecondHalf",
+          "price": formData.momentPrices.secondHalf
+        }
+      ]
+    }
+    console.log('Create event:', data);
+    createSportEvent(data);
     setIsCreateModalOpen(false);
   };
 
@@ -214,15 +234,15 @@ export function SportsEventsAdmin() {
                     {/* Team Selection */}
                     <TeamSelector
                       teams={teams}
-                      selectedHomeTeam={formData.homeTeam}
-                      selectedAwayTeam={formData.awayTeam}
+                      selectedHomeTeam={formData.homeTeamId}
+                      selectedAwayTeam={formData.awayTeamId}
                       onHomeTeamSelect={(teamId) => setFormData({
                         ...formData,
-                        homeTeam: teamId
+                        homeTeamId: teamId
                       })}
                       onAwayTeamSelect={(teamId) => setFormData({
                         ...formData,
-                        awayTeam: teamId
+                        awayTeamId: teamId
                       })}
                       onAddTeam={handleCreateTeam}
                     />
@@ -230,10 +250,10 @@ export function SportsEventsAdmin() {
                     {/* Stadium Selection */}
                     <StadiumSelector
                       stadiums={stadiums}
-                      selectedStadium={formData.stadium}
+                      selectedStadium={formData.stadiumId}
                       onStadiumSelect={(stadiumId) => setFormData({
                         ...formData,
-                        stadium: stadiumId
+                        stadiumId: stadiumId
                       })}
                       onAddStadium={handleCreateStedium}
                     />
@@ -246,10 +266,10 @@ export function SportsEventsAdmin() {
                         </label>
                         <input
                           type="date"
-                          value={formData.date}
+                          value={formData.eventDate}
                           onChange={(e) => setFormData({
                             ...formData,
-                            date: e.target.value
+                            eventDate: e.target.value
                           })}
                           className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                         />
@@ -260,10 +280,10 @@ export function SportsEventsAdmin() {
                         </label>
                         <input
                           type="time"
-                          value={formData.time}
+                          value={formData.eventTime}
                           onChange={(e) => setFormData({
                             ...formData,
-                            time: e.target.value
+                            eventTime: e.target.value
                           })}
                           className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                         />
@@ -272,10 +292,10 @@ export function SportsEventsAdmin() {
 
                     {/* Moment Pricing */}
                     <MomentPricing
-                      prices={formData.momentPricing}
+                      prices={formData.momentPrices}
                       onChange={(prices) => setFormData({
                         ...formData,
-                        momentPricing: prices
+                        momentPrices: prices
                       })}
                     />
 
@@ -306,7 +326,8 @@ export function SportsEventsAdmin() {
                             placeholder="Separados por coma"
                             onChange={(e) => setFormData({
                               ...formData,
-                              broadcastChannels: e.target.value.split(',').map(s => s.trim())
+                              broadcastChannels: e.target.value
+                              //broadcastChannels: e.target.value.split(',').map(s => s.trim())
                             })}
                             className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                           />

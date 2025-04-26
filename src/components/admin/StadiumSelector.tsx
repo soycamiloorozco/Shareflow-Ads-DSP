@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Plus, MapPin, Users } from 'lucide-react';
+import { Plus, MapPin, Users, Search } from 'lucide-react';
 import { AddStadiumModal } from './AddStadiumModal';
 import { Stadium } from '../../hooks/useStadiums';
 
@@ -18,13 +18,39 @@ export function StadiumSelector({
   onAddStadium
 }: StadiumSelectorProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAllStadiums, ] = useState(false);
+
+  // Filtrar estadios basado en la búsqueda
+  const filteredStadiums = useMemo(() => {
+    return stadiums.filter(
+      stadium => 
+        stadium.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        stadium.city.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [stadiums, searchQuery]);
+
+  // Limitar la visualización a 2 estadios inicialmente
+  const displayedStadiums = showAllStadiums 
+    ? filteredStadiums 
+    : filteredStadiums.slice(0, 2);
 
   return (
     <>
       <div className="space-y-6">
         <h3 className="text-lg font-semibold mb-4">Seleccionar Estadio</h3>
+        <div className="flex items-center px-4 py-2 border rounded-xl mb-4">
+          <Search className="w-5 h-5 text-neutral-400 mr-2" />
+          <input
+            type="text"
+            placeholder="Buscar estadio..."
+            className="flex-1 outline-none"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {stadiums.map((stadium) => (
+          {displayedStadiums.map((stadium) => (
             <button
               key={stadium.id}
               onClick={() => onStadiumSelect(stadium.id)}
@@ -51,6 +77,7 @@ export function StadiumSelector({
               </div>
             </button>
           ))}
+          
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="p-4 border-2 border-dashed border-neutral-300 rounded-xl hover:border-primary hover:bg-primary-50 transition-colors"
