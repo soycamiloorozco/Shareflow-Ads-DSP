@@ -9,6 +9,7 @@ export interface SportEvents {
     eventDate: string;
     eventTime: string;
     estimatedAttendance: number;
+    maxMoments: number;
     broadcastChannels: string;
     createdAt: string;
     updatedAt: string;

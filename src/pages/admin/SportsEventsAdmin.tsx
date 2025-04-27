@@ -4,7 +4,9 @@ import {
   Search, Filter, Plus, Calendar, Users,
   ChevronRight, 
   Target, DollarSign, 
-  X} from 'lucide-react';
+  X,
+  Settings,
+  Info} from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { TeamSelector } from '../../components/admin/TeamSelector';
@@ -20,7 +22,7 @@ export function SportsEventsAdmin() {
 
   const { createTeam, teams, listTeams } = useTeams();
   const { createStadiums, stadiums, listStadiums } = useStadiums();
-  const { createSportEvent } = useSportEvents();
+  const { createSportEvent, listSportEvent } = useSportEvents();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -31,6 +33,7 @@ export function SportsEventsAdmin() {
     stadiumId: '',
     eventDate: '',
     eventTime: '',
+    maxMoments: 0,
     momentPrices: {
       firstHalf: 2500000,
       halftime: 1800000,
@@ -40,7 +43,7 @@ export function SportsEventsAdmin() {
     broadcastChannels: ""
   });
 
-  const handleCreateEvent = () => {
+  const handleCreateEvent = async () => {
     // Handle event creation
     const data = {
       ...formData,
@@ -60,7 +63,8 @@ export function SportsEventsAdmin() {
       ]
     }
     console.log('Create event:', data);
-    createSportEvent(data);
+    await createSportEvent(data);
+    await listSportEvent();
     setIsCreateModalOpen(false);
   };
 
@@ -298,6 +302,46 @@ export function SportsEventsAdmin() {
                         momentPrices: prices
                       })}
                     />
+
+
+                    {/* Maximum Moments Configuration */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Configuración de Momentos</h3>
+                        <div className="flex items-center gap-2 text-sm text-primary">
+                          <Info className="w-4 h-4" />
+                          <span>Establece el límite de momentos disponibles</span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-primary-50 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                            <Settings className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-neutral-700 mb-2">
+                              Número máximo de momentos disponibles
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              value={formData.maxMoments}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                maxMoments: parseInt(e.target.value)
+                              })}
+                              className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <p className="mt-2 text-sm text-primary-600">
+                              Limitar la disponibilidad crea sensación de escasez y aumenta el valor percibido.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
 
                     {/* Additional Details */}
                     <div className="space-y-6">
