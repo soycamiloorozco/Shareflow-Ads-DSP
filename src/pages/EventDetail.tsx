@@ -35,9 +35,27 @@ export function EventDetail() {
   }, []);
 
   const gameMoments: GameMoment[] = [
-    { id: '1', name: 'Primer Tiempo (45\')', duration: '45 minutos', price: event ? event?.moments[0].price : 0, maxMinutes: 45 },
-    { id: '2', name: 'Entre Tiempo (15\')', duration: '15 minutos', price: event ? event?.moments[1].price : 0, maxMinutes: 15 },
-    { id: '3', name: 'Segundo Tiempo (45\')', duration: '45 minutos', price: event ? event?.moments[2].price : 0, maxMinutes: 45 },
+    { 
+      id: event ? event?.moments.find(item => item.moment === 'FirstHalf')?.moment || '' : '', 
+      name: 'Primer Tiempo (45\')', 
+      duration: '45 minutos', 
+      price: event ? event?.moments.find(item => item.moment === 'FirstHalf')?.price || 0 : 0, 
+      maxMinutes: 45 
+    },
+    { 
+      id: event ? event?.moments.find(item => item.moment === 'Halftime')?.moment || '' : '', 
+      name: 'Entre Tiempo (15\')', 
+      duration: '15 minutos', 
+      price: event ? event?.moments.find(item => item.moment === 'Halftime')?.price || 0 : 0, 
+      maxMinutes: 15 
+    },
+    { 
+      id: event ? event?.moments.find(item => item.moment === 'SecondHalf')?.moment || '' : '', 
+      name: 'Segundo Tiempo (45\')', 
+      duration: '45 minutos', 
+      price: event ? event?.moments.find(item => item.moment === 'SecondHalf')?.price || 0 : 0, 
+      maxMinutes: 45 
+    },
   ];
 
   const toggleMoment = (momentId: string) => {
@@ -120,7 +138,7 @@ export function EventDetail() {
 
   const handlePurchase = () => {
     if (selectedMoments.length > 0) {
-      navigate(`/event/${id}/creative`);
+      navigate(`/event/${id}/creative`, { state: { id, selectedMoments } });
     }
   };
 

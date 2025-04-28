@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, Image as ImageIcon, X, Eye, ArrowRight } from 'lucide-react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Upload, X, Eye, ArrowRight } from 'lucide-react';
 import { Button } from '../components/Button';
 import { CreativeMockup } from '../components/CreativeMockup';
 
 export function CreativeUpload() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { state } = useLocation();
+  const { selectedMoments } = state;
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -55,7 +57,7 @@ export function CreativeUpload() {
 
   const handleContinue = () => {
     if (file) {
-      navigate(`/event/${id}/payment`);
+      navigate(`/event/${id}/payment`, { state: { id, selectedMoments, file: preview } });
     }
   };
 

@@ -1,18 +1,39 @@
-import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Clock, MapPin } from 'lucide-react';
-import { sportEvents } from '../data/mockData';
 import { Button } from '../components/Button';
+import { useSportEvents } from '../hooks/useSportEvents';
+import { constants } from '../config/constants';
+import { useMomentPurchases } from '../hooks/useMomentPurchases';
 
 export function PaymentDetails() {
   const navigate = useNavigate();
+  const { purchaseMoments } = useMomentPurchases();
   const { id } = useParams();
-  const event = sportEvents.find(e => e.id === id);
-
+  const { state } = useLocation();
+  
+   const {event} = useSportEvents({id});
+  
   if (!event) {
-    return null;
+    return <div><h1>HELLO</h1></div>;
   }
-
+  const Handlepayment = () => {
+    const PurchaseDetails = state.selectedMoments.map((item: any) => {
+      return {
+        momentId: item.momentId,
+        minutes: item.minutes.join(',')
+      }
+    });
+    const data = {
+      "sportEventId": id ?? "0",
+      "FilePath": state.file,
+      PurchaseDetails
+    }
+    purchaseMoments(data).then(() => {
+      alert("Sucess")
+    }).catch((error) => {
+      alert(error)
+    });
+  }
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:ml-64">
       {/* Header */}
@@ -48,18 +69,18 @@ export function PaymentDetails() {
         <div className="flex gap-3 mb-6">
           <div className="w-[142px] h-[94px] bg-white rounded-lg overflow-hidden">
             <img
-              src={`https://api.shareflow.me/stadiums/${event.stadium.toLowerCase().replace(/\s+/g, '-')}.jpg`}
-              alt={event.stadium}
+                src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
+              alt={event.stadiumName}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="flex-1">
             <h2 className="text-[20px] font-medium text-[#171725] leading-7 tracking-[0.1px] mb-2">
-              {event.homeTeam} vs {event.awayTeam}
+              {event.homeTeamName} vs {event.awayTeamName}
             </h2>
             <div className="flex items-center gap-1 mb-2">
               <MapPin size={16} className="text-[#9CA4AB]" />
-              <span className="text-[12px] text-[#9CA4AB]">{event.stadium}</span>
+              <span className="text-[12px] text-[#9CA4AB]">{event.stadiumName}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-[18px] h-[18px] relative">
@@ -83,7 +104,7 @@ export function PaymentDetails() {
                   <MapPin size={20} className="text-primary" />
                   <span className="text-[14px] text-primary">Ubicación:</span>
                 </div>
-                <span className="text-[14px] text-[#1A1A35]">{event.stadium}</span>
+                <span className="text-[14px] text-[#1A1A35]">{event.stadiumName}</span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -91,7 +112,7 @@ export function PaymentDetails() {
                   <span className="text-[14px] text-primary">Fecha:</span>
                 </div>
                 <span className="text-[14px] text-[#1A1A35]">
-                  {new Date(event.date).toLocaleDateString('es-CO', {
+                  {new Date(event.eventDate).toLocaleDateString('es-CO', {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long'
@@ -194,9 +215,7 @@ export function PaymentDetails() {
           size="lg"
           fullWidth
           icon={ArrowRight}
-          onClick={() => {
-            // Handle payment
-          }}
+          onClick={Handlepayment}
         >
           Pagar Ahora
         </Button>

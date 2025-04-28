@@ -81,9 +81,7 @@ export default function App() {
                     path="/event/:id/payment" 
                     element={
                       <RequireAuth allowedRoles={['Admin', 'ads_admin']}>
-                        <RequirePermission roles={['Admin', 'ads_admin']}  action="billing.access">
                           <PaymentDetails />
-                        </RequirePermission>
                       </RequireAuth>
                     } 
                   />
