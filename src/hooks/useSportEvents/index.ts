@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import request  from '../../helpers/request';
 
+
 export interface SportEvents {
     id: string;
     homeTeamId: string;
@@ -16,28 +17,34 @@ export interface SportEvents {
     homeTeamName?: string;
     awayTeamName?: string;
     homeTeamImage?: string;
-    homeAwayImage?: string;
+    awayTeamImage?: string;
     stadiumName: string;
     momentPrices: {
         moment: string;
         price: number;
     }[]
-  moments: {
+    moments: {
         moment: string;
         price: number;
-    }[]
+    }[],
+  stadiumPhotos: string[]
 }
 
 interface useSportEventsReturn {
   sportEvents: SportEvents[];
+  event?: SportEvents;
   loading: boolean;
   error: string | null;
   listSportEvent: () => Promise<void>;
-  createSportEvent: (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments'>) => Promise<void>;
+  sportEventById: (id: string) => Promise<void>;
+  createSportEvent: (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments' | 'stadiumPhotos'>) => Promise<void>;
 }
 
-export function useSportEvents(): useSportEventsReturn {
+export function useSportEvents(
+  { id }: { id?: string } = {}
+): useSportEventsReturn {
   const [sportEvents, setSportEvents] = useState<SportEvents[]>([]);
+  const [event, setEvent] = useState<SportEvents>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +62,21 @@ export function useSportEvents(): useSportEventsReturn {
     }
   };
 
-  const createSportEvent = async (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments'>) => {
+  const sportEventById = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await request.get(`/SportEvents/${id}`);
+      setEvent(response.data);
+    } catch (err) {
+      setError('Error al cargar los equipos');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createSportEvent = async (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments'| 'stadiumPhotos'>) => {
     try {
       setLoading(true);
       setError(null);
@@ -70,7 +91,12 @@ export function useSportEvents(): useSportEventsReturn {
   };
 
   useEffect(() => {
-    listSportEvent();
+    if (id) {
+       sportEventById(id);
+    } else {
+      listSportEvent();
+    }
+    
   }, []);
 
   return {
@@ -78,6 +104,8 @@ export function useSportEvents(): useSportEventsReturn {
     loading,
     error,
     listSportEvent,
-    createSportEvent
+    createSportEvent,
+    sportEventById,
+    event
   };
 }

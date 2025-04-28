@@ -8,24 +8,26 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { sportEvents } from '../data/mockData';
 import Select from 'react-select';
+import { useSportEvents } from '../hooks/useSportEvents';
+import { constants } from '../config/constants';
 
 export function SportsEvents() {
   const navigate = useNavigate();
+  const { sportEvents } = useSportEvents();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedStadium, setSelectedStadium] = useState<string | null>(null);
 
   const filteredEvents = sportEvents.filter(event => {
     const matchesSearch = 
-      event.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.stadium.toLowerCase().includes(searchQuery.toLowerCase());
+      event.homeTeamId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.awayTeamId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.stadiumId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTeam = !selectedTeam || 
-      event.homeTeam === selectedTeam || 
-      event.awayTeam === selectedTeam;
-    const matchesStadium = !selectedStadium || event.stadium === selectedStadium;
+      event.homeTeamId === selectedTeam || 
+      event.awayTeamId === selectedTeam;
+    const matchesStadium = !selectedStadium || event.stadiumId === selectedStadium;
     return matchesSearch && matchesTeam && matchesStadium;
   });
 
@@ -158,27 +160,27 @@ export function SportsEvents() {
             <Card key={event.id} className="group cursor-pointer hover:-translate-y-1 transition-transform duration-200">
               <div className="relative aspect-[4/3]">
                 <img
-                  src={`https://api.shareflow.me/stadiums/${event.stadium.toLowerCase().replace(/\s+/g, '-')}.jpg`}
-                  alt={event.stadium}
+                 src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
+                  alt={event.stadiumName}
                   className="w-full h-full object-cover rounded-t-xl"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="flex items-center justify-between mb-2">
                     <img
-                      src={`https://api.shareflow.me/teams/${event.homeTeam.toLowerCase().replace(/\s+/g, '-')}.png`}
-                      alt={event.homeTeam}
+                      src={`${constants.base_path}/${event.homeTeamImage}`}
+                      alt={event.homeTeamName}
                       className="w-10 h-10"
                     />
                     <span className="text-xl font-bold text-white">VS</span>
                     <img
-                      src={`https://api.shareflow.me/teams/${event.awayTeam.toLowerCase().replace(/\s+/g, '-')}.png`}
-                      alt={event.awayTeam}
+                       src={`${constants.base_path}/${event.awayTeamImage}`}
+                      alt={event.awayTeamName}
                       className="w-10 h-10"
                     />
                   </div>
                   <h3 className="text-lg font-semibold text-white text-center mb-2">
-                    {event.homeTeam} vs {event.awayTeam}
+                    {event.homeTeamName} vs {event.awayTeamName}
                   </h3>
                 </div>
               </div>
@@ -192,7 +194,7 @@ export function SportsEvents() {
                     <div>
                       <p className="text-sm text-neutral-600">Fecha</p>
                       <p className="font-medium">
-                        {new Date(event.date).toLocaleDateString('es-CO', {
+                        {new Date(event.eventDate).toLocaleDateString('es-CO', {
                           weekday: 'long',
                           day: 'numeric',
                           month: 'long'
@@ -207,7 +209,7 @@ export function SportsEvents() {
                     </div>
                     <div>
                       <p className="text-sm text-neutral-600">Estadio</p>
-                      <p className="font-medium">{event.stadium}</p>
+                      <p className="font-medium">{event.stadiumName}</p>
                     </div>
                   </div>
 

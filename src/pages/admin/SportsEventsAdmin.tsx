@@ -9,7 +9,6 @@ import {
   Info,
   Clock,
   MapPin,
-  Eye,
   Edit} from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -242,7 +241,7 @@ export function SportsEventsAdmin() {
                           <span className="text-sm">vs</span>
                           <div className="w-10 h-10 bg-error-50 rounded-lg flex items-center justify-center">
                             <img 
-                               src={`${constants.base_path}/${event.homeAwayImage}`}
+                               src={`${constants.base_path}/${event.awayTeamImage}`}
                               alt={event.awayTeamId}
                               className="w-6 h-6 object-contain"
                             />

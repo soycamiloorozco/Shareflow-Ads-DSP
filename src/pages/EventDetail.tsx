@@ -1,11 +1,12 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Star, MapPin, Calendar, Clock, ArrowRight, Share2, ChevronRight, Loader2 } from 'lucide-react';
-import { sportEvents } from '../data/mockData';
-import { GameMoment, SportEvent } from '../types';
+import { ArrowLeft, Star, MapPin, Clock, ArrowRight, Share2, ChevronRight, Loader2 } from 'lucide-react';
+import { GameMoment } from '../types';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { useSportEvents } from '../hooks/useSportEvents';
+import { constants } from '../config/constants';
 
 const MomentSelector = React.lazy(() => import('../components/MomentSelector').then(module => ({
   default: module.MomentSelector
@@ -17,13 +18,12 @@ interface MomentGroup {
 }
 
 export function EventDetail() {
-  const { id } = useParams();
+  const { id, loading } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState<SportEvent | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {event} = useSportEvents({id});
   const [selectedMoments, setSelectedMoments] = useState<MomentGroup[]>([]);
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,32 +34,10 @@ export function EventDetail() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const foundEvent = sportEvents.find(e => e.id === id);
-        if (!foundEvent) {
-          throw new Error('Evento no encontrado');
-        }
-        
-        setEvent(foundEvent);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al cargar el evento');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvent();
-  }, [id]);
-
   const gameMoments: GameMoment[] = [
-    { id: '1', name: 'Primer Tiempo (45\')', duration: '45 minutos', price: 1250000, maxMinutes: 45 },
-    { id: '2', name: 'Entre Tiempo (15\')', duration: '15 minutos', price: 950000, maxMinutes: 15 },
-    { id: '3', name: 'Segundo Tiempo (45\')', duration: '45 minutos', price: 1250000, maxMinutes: 45 },
+    { id: '1', name: 'Primer Tiempo (45\')', duration: '45 minutos', price: event ? event?.moments[0].price : 0, maxMinutes: 45 },
+    { id: '2', name: 'Entre Tiempo (15\')', duration: '15 minutos', price: event ? event?.moments[1].price : 0, maxMinutes: 15 },
+    { id: '3', name: 'Segundo Tiempo (45\')', duration: '45 minutos', price: event ? event?.moments[2].price : 0, maxMinutes: 45 },
   ];
 
   const toggleMoment = (momentId: string) => {
@@ -131,8 +109,8 @@ export function EventDetail() {
   const handleShare = async () => {
     try {
       await navigator.share({
-        title: event ? `${event.homeTeam} vs ${event.awayTeam}` : 'Partido de fútbol',
-        text: event ? `Mira este partido en el ${event.stadium}` : 'Mira este partido',
+        title: event ? `${event.homeTeamName} vs ${event.awayTeamName}` : 'Partido de fútbol',
+        text: event ? `Mira este partido en el ${event.stadiumName}` : 'Mira este partido',
         url: window.location.href,
       });
     } catch (error) {
@@ -179,7 +157,7 @@ export function EventDetail() {
     );
   }
 
-  const eventDate = new Date(event.date).toLocaleDateString('es-CO', {
+  const eventDate = new Date(event.eventDate).toLocaleDateString('es-CO', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -197,7 +175,7 @@ export function EventDetail() {
         </Link>
         <ChevronRight size={16} className="text-neutral-400" />
         <span className="text-body-sm text-neutral-800">
-          {event.homeTeam} vs {event.awayTeam}
+          {event.homeTeamName} vs {event.awayTeamName}
         </span>
       </nav>
 
@@ -249,13 +227,13 @@ export function EventDetail() {
                 <div className="flex flex-col items-center">
                   <div className="w-20 h-20 bg-green-50 rounded-2xl p-4 mb-2">
                     <img 
-                      src={`https://api.shareflow.me/teams/${event.homeTeam.toLowerCase().replace(/\s+/g, '-')}.png`}
-                      alt={event.homeTeam}
+                       src={`${constants.base_path}/${event.homeTeamImage}`}
+                      alt={event.homeTeamName}
                       className="w-full h-full object-contain"
                     />
                   </div>
                   <span className="text-body font-medium text-center">
-                    {event.homeTeam}
+                    {event.homeTeamName}
                   </span>
                 </div>
 
@@ -269,13 +247,13 @@ export function EventDetail() {
                 <div className="flex flex-col items-center">
                   <div className="w-20 h-20 bg-error-50 rounded-2xl p-4 mb-2">
                     <img 
-                      src={`https://api.shareflow.me/teams/${event.awayTeam.toLowerCase().replace(/\s+/g, '-')}.png`}
-                      alt={event.awayTeam}
+                      src={`${constants.base_path}/${event.awayTeamImage}`}
+                      alt={event.awayTeamName}
                       className="w-full h-full object-contain"
                     />
                   </div>
                   <span className="text-body font-medium text-center">
-                    {event.awayTeam}
+                    {event.awayTeamName}
                   </span>
                 </div>
               </div>
@@ -283,8 +261,8 @@ export function EventDetail() {
 
             <div className="relative aspect-video rounded-2xl overflow-hidden">
               <img
-                src={`https://api.shareflow.me/stadiums/${event.stadium.toLowerCase().replace(/\s+/g, '-')}.jpg`}
-                alt={event.stadium}
+                 src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
+                alt={event.stadiumName}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -307,13 +285,13 @@ export function EventDetail() {
                   <div className="p-4 bg-neutral-50 rounded-xl">
                     <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-2">
                       <img
-                        src={`https://api.shareflow.me/stadiums/icon-${event.stadium.toLowerCase().replace(/\s+/g, '-')}.svg`}
+                         src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
                         alt="Stadium icon"
                         className="w-6 h-6"
                       />
                     </div>
                     <span className="text-body-sm font-medium text-neutral-800">
-                      {event.stadium}
+                      {event.stadiumName}
                     </span>
                   </div>
                   <div className="p-4 bg-neutral-50 rounded-xl">
