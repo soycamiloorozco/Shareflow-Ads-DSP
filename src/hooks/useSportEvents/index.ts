@@ -13,7 +13,16 @@ export interface SportEvents {
     broadcastChannels: string;
     createdAt: string;
     updatedAt: string;
+    homeTeamName?: string;
+    awayTeamName?: string;
+    homeTeamImage?: string;
+    homeAwayImage?: string;
+    stadiumName: string;
     momentPrices: {
+        moment: string;
+        price: number;
+    }[]
+  moments: {
         moment: string;
         price: number;
     }[]
@@ -24,7 +33,7 @@ interface useSportEventsReturn {
   loading: boolean;
   error: string | null;
   listSportEvent: () => Promise<void>;
-  createSportEvent: (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  createSportEvent: (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments'>) => Promise<void>;
 }
 
 export function useSportEvents(): useSportEventsReturn {
@@ -46,7 +55,7 @@ export function useSportEvents(): useSportEventsReturn {
     }
   };
 
-  const createSportEvent = async (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createSportEvent = async (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments'>) => {
     try {
       setLoading(true);
       setError(null);

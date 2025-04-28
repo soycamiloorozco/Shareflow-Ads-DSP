@@ -11,6 +11,7 @@ import {
 import { usePermissions } from '../contexts/PermissionsContext';
 import { RequirePermission } from './RequirePermission';
 import { Tooltip } from './Tooltip';
+import { useAuth } from '../hooks/useAuth';
 
 interface NavigationProps {
   isCollapsed: boolean;
@@ -34,6 +35,7 @@ interface NavGroup {
 export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) {
   const location = useLocation();
   const { hasRole } = usePermissions();
+  const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -215,6 +217,11 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
     </div>
   );
 
+  const handleLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <>
       {/* Mobile Menu Button */}
@@ -288,7 +295,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                     )}
                   </button>
                   <button
-                    onClick={() => {/* Handle logout */}}
+                    onClick={handleLogout}
                     className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-error-600"
                   >
                     <LogOut className="w-5 h-5" />
@@ -366,7 +373,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                     )}
                   </button>
                   <button
-                    onClick={() => {/* Handle logout */}}
+                    onClick={handleLogout}
                     className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-error-600"
                   >
                     <LogOut className="w-5 h-5" />

@@ -100,6 +100,11 @@ export interface SportEvent {
   city: string;
   screens: Screen[];
   price?: number;
+  homeTeamName: string;
+  awayTeamName: string;
+  stadiumName: string;
+  homeTeamImage: string;
+  homeAwayImage: string;
   momentPricing: {
     firstHalf: number;
     halftime: number;

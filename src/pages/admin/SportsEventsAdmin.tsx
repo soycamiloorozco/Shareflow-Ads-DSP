@@ -6,7 +6,11 @@ import {
   Target, DollarSign, 
   X,
   Settings,
-  Info} from 'lucide-react';
+  Info,
+  Clock,
+  MapPin,
+  Eye,
+  Edit} from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { TeamSelector } from '../../components/admin/TeamSelector';
@@ -14,7 +18,8 @@ import { StadiumSelector } from '../../components/admin/StadiumSelector';
 import { MomentPricing } from '../../components/admin/MomentPricing';
 import { useTeams, Team } from '../../hooks/useTeams';
 import { useStadiums, Stadium } from '../../hooks/useStadiums';
-import { useSportEvents } from '../../hooks/useSportEvents';
+import { useSportEvents, SportEvents } from '../../hooks/useSportEvents';
+import { constants } from '../../config/constants';
 
 
 
@@ -22,9 +27,12 @@ export function SportsEventsAdmin() {
 
   const { createTeam, teams, listTeams } = useTeams();
   const { createStadiums, stadiums, listStadiums } = useStadiums();
-  const { createSportEvent, listSportEvent } = useSportEvents();
+  const { createSportEvent, listSportEvent, sportEvents } = useSportEvents();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<SportEvents | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Form state for new event
   const [formData, setFormData] = useState({
@@ -33,6 +41,9 @@ export function SportsEventsAdmin() {
     stadiumId: '',
     eventDate: '',
     eventTime: '',
+    homeTeamName: '',
+    awayTeamName: '',
+    stadiumName: '',
     maxMoments: 0,
     momentPrices: {
       firstHalf: 2500000,
@@ -85,6 +96,26 @@ export function SportsEventsAdmin() {
     await listStadiums();
   }
 
+
+    const handleEditEvent = (event: SportEvents) => {
+    setSelectedEvent(event);
+    setIsEditModalOpen(true);
+  };
+
+
+  const handleUpdateEvent = (_: any) => {
+    //TODO
+  }
+
+  const filteredEvents = sportEvents.filter(event => {
+    const matchesSearch = 
+      event.homeTeamId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.awayTeamId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.stadiumId.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = !selectedStatus;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -115,7 +146,7 @@ export function SportsEventsAdmin() {
               </div>
               <div>
                 <p className="text-sm text-neutral-600">Eventos Programados</p>
-                <p className="text-2xl font-semibold">12</p>
+                <p className="text-2xl font-semibold">{sportEvents.length }</p>
               </div>
             </Card.Body>
           </Card>
@@ -196,7 +227,75 @@ export function SportsEventsAdmin() {
                 </tr>
               </thead>
               <tbody>
-                {/* Event rows would go here */}
+                {filteredEvents.map((event) => (
+                  <tr key={event.id} className="border-b border-neutral-200">
+                    <td className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                            <img 
+                              src={`${constants.base_path}/${event.homeTeamImage}`}
+                              alt={event.homeTeamId}
+                              className="w-6 h-6 object-contain"
+                            />
+                          </div>
+                          <span className="text-sm">vs</span>
+                          <div className="w-10 h-10 bg-error-50 rounded-lg flex items-center justify-center">
+                            <img 
+                               src={`${constants.base_path}/${event.homeAwayImage}`}
+                              alt={event.awayTeamId}
+                              className="w-6 h-6 object-contain"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{event.homeTeamName} vs {event.awayTeamName}</h3>
+                          <p className="text-sm text-neutral-600">{event.stadiumName}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-neutral-400" />
+                        <span>{new Date(event.eventDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-neutral-600">
+                        <Clock className="w-4 h-4" />
+                        <span>{event.eventTime}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-neutral-400" />
+                        <span>{event.stadiumName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-neutral-600">
+                        <Users className="w-4 h-4" />
+                        <span>{event.estimatedAttendance?.toLocaleString() || 'N/A'} espectadores</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-neutral-400" />
+                        <span className="font-medium">{event.maxMoments || 20} momentos</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-neutral-600">
+                        <DollarSign className="w-4 h-4" />
+                        <span>Desde ${(event.moments ? event.moments[0].price : 0 / 1000000).toFixed(1)}M</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Edit}
+                          onClick={() => handleEditEvent(event)} children={undefined}                        />
+                        
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -396,6 +495,102 @@ export function SportsEventsAdmin() {
                         onClick={handleCreateEvent}
                       >
                         Crear Evento
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+       {/* Edit Event Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && selectedEvent && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setIsEditModalOpen(false)}
+          >
+            <div className="absolute inset-0 overflow-y-auto">
+              <div className="min-h-full p-4 flex items-center justify-center">
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="w-full max-w-4xl bg-white rounded-2xl shadow-xl"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="p-6 border-b border-neutral-200">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-semibold">Editar Evento Deportivo</h2>
+                      <button
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-8">
+                    {/* Event details form would go here */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Configuración de Momentos</h3>
+                        <div className="flex items-center gap-2 text-sm text-primary">
+                          <Info className="w-4 h-4" />
+                          <span>Establece el límite de momentos disponibles</span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-primary-50 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                            <Settings className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-neutral-700 mb-2">
+                              Número máximo de momentos disponibles
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              value={selectedEvent.maxMoments || 20}
+                              onChange={(e) => setSelectedEvent({
+                                ...selectedEvent,
+                                maxMoments: parseInt(e.target.value)
+                              })}
+                              className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <p className="mt-2 text-sm text-primary-600">
+                              Limitar la disponibilidad crea sensación de escasez y aumenta el valor percibido.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-t border-neutral-200 bg-neutral-50">
+                    <div className="flex justify-end gap-4">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => setIsEditModalOpen(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        icon={ChevronRight}
+                        onClick={() => handleUpdateEvent(selectedEvent)}
+                      >
+                        Guardar Cambios
                       </Button>
                     </div>
                   </div>
