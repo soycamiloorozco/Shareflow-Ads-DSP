@@ -280,7 +280,7 @@ export function SportsEventsAdmin() {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-neutral-600">
                         <DollarSign className="w-4 h-4" />
-                        <span>Desde ${(event.moments ? event.moments[0].price : 0 / 1000000).toFixed(1)}M</span>
+                        <span>Desde ${(event.moments && event.moments.length > 0 ? event.moments[0].price : 0 / 1000000).toFixed(1)}M</span>
                       </div>
                     </td>
                     <td className="p-4">

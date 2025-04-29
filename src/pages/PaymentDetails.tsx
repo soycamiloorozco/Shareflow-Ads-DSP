@@ -14,7 +14,7 @@ import type { RootState } from '../store/store';
 const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
 
 // Componente de formulario de pago
-const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: () => void, onError: (error: any) => void, amount: number }) => {
+const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: (id: any) => void, onError: (error: any) => void, amount: number }) => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { state } = useLocation();
   const { id } = useParams();
@@ -64,7 +64,7 @@ const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: () => void, on
       if (stripeError) {
         onError(stripeError.message);
       } else if (paymentIntent.status === 'succeeded') {
-        onSuccess();
+        onSuccess(paymentIntent.id);
       }
     } catch (error) {
       onError(error);
@@ -119,7 +119,7 @@ export function PaymentDetails() {
     return <div></div>;
   }
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (paymentId: string) => {
     const PurchaseDetails = state.selectedMoments.map((item: any) => ({
       momentId: item.momentId,
       minutes: item.minutes.join(',')
@@ -128,17 +128,17 @@ export function PaymentDetails() {
     const data = {
       sportEventId: id ?? "0",
       FilePath: state.file,
-      PurchaseDetails
+      PurchaseDetails,
+      paymentId
     };
 
-    console.log({data})
-    // try {
-    //   await purchaseMoments(data);
-    //   alert("Pago exitoso");
-    //   navigate('/success');
-    // } catch (error) {
-    //   alert(error);
-    // }
+    try {
+      await purchaseMoments(data);
+      alert("Pago exitoso");
+      //navigate('/success');
+    } catch (error) {
+      alert(error);
+     }
   };
 
   const handlePaymentError = (error: any) => {
@@ -146,7 +146,8 @@ export function PaymentDetails() {
   };
 
   // Calcular el monto total
-  const totalAmount = 4500000; // Este valor debería venir de tu lógica de negocio
+  const totalAmount = state.selectedMoments.reduce((total: number, moment: any) => 
+                    total + (moment.price * moment.minutes.length), 0); // Este valor debería venir de tu lógica de negocio
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:ml-64">
@@ -243,27 +244,49 @@ export function PaymentDetails() {
             <h3 className="text-[20px] font-semibold text-[#1A1A35] mb-4">
               Costos
             </h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Clock size={20} className="text-primary" />
-                  <span className="text-[14px] text-primary">Cantidad:</span>
-                </div>
-                <span className="text-[14px] text-[#1A1A35]">{state.selectedMoments.length} momentos</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Clock size={20} className="text-primary" />
-                  <span className="text-[14px] text-primary">Precio por momento:</span>
-                </div>
-                <span className="text-[14px] text-[#1A1A35]">$2,252,800 COP</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Clock size={20} className="text-primary" />
-                  <span className="text-[14px] text-primary">Total a pagar:</span>
-                </div>
-                <span className="text-[14px] text-[#1A1A35]">$4,500,000 COP</span>
+            <div className="space-y-4">
+              {state.selectedMoments.map((moment: any, index: number) => {
+                const getMomentName = (momentId: string) => {
+                  switch(momentId) {
+                    case 'FirstHalf':
+                      return 'Primer Tiempo';
+                    case 'SecondHalf':
+                      return 'Segundo Tiempo';
+                    case 'Halftime':
+                      return 'Medio Tiempo';
+                    default:
+                      return momentId;
+                  }
+                };
+
+                const totalPrice = moment.price * moment.minutes.length;
+
+                return (
+                  <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[14px] font-medium text-[#1A1A35]">
+                        {getMomentName(moment.momentId)}
+                      </span>
+                      <span className="text-[14px] font-medium text-[#1A1A35]">
+                        {totalPrice.toLocaleString('es-CO')} COP
+                      </span>
+                    </div>
+                    <div className="text-[12px] text-[#9CA4AB]">
+                      <div>Minutos seleccionados: {moment.minutes.join(', ')}</div>
+                      <div>Precio por minuto: {moment.price.toLocaleString('es-CO')} COP</div>
+                      <div>Total: {moment.minutes.length} min × {moment.price.toLocaleString('es-CO')} COP</div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex justify-between items-center pt-3 border-t border-[#BFC6CC]">
+                <span className="text-[16px] font-semibold text-[#1A1A35]">
+                  Total a pagar:
+                </span>
+                <span className="text-[16px] font-semibold text-[#1A1A35]">
+                  {state.selectedMoments.reduce((total: number, moment: any) => 
+                    total + (moment.price * moment.minutes.length), 0).toLocaleString('es-CO')} COP
+                </span>
               </div>
             </div>
           </div>
