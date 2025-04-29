@@ -11,6 +11,7 @@ import { RequireAuth } from '../../components/RequireAuth';
 
 type Role = 
   | 'super_admin'
+  | 'Admin'
   | 'ads_admin'
   | 'pixel_admin'
   | 'asset_manager'
@@ -39,7 +40,7 @@ interface User {
 
 const roles: { id: Role; name: string; description: string }[] = [
   {
-    id: 'super_admin',
+    id: 'Admin',
     name: 'Super Admin',
     description: 'Acceso total a todas las funciones del sistema'
   },
@@ -223,7 +224,7 @@ export function PermissionsAdmin() {
   };
 
   return (
-    <RequireAuth allowedRoles={['super_admin']}>
+    <RequireAuth allowedRoles={['Admin']}>
       <div className="min-h-screen bg-background pb-20 md:pb-0 md:ml-64">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-6">

@@ -12,6 +12,9 @@ import { usePermissions } from '../contexts/PermissionsContext';
 import { RequirePermission } from './RequirePermission';
 import { Tooltip } from './Tooltip';
 import { useAuth } from '../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
+import Logo from '../assets/logo.svg';
 
 interface NavigationProps {
   isCollapsed: boolean;
@@ -34,6 +37,7 @@ interface NavGroup {
 
 export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) {
   const location = useLocation();
+  const { user } = useSelector((state: RootState) => state.auth);
   const { hasRole } = usePermissions();
   const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -57,18 +61,18 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
   const generalNavItems: NavGroup = {
     title: 'Plataforma',
     items: [
-      { path: '/', icon: Home, label: 'Inicio' },
-      { path: '/marketplace', icon: Store, label: 'Marketplace' },
+      { path: '/dashboard', icon: Home, label: 'Inicio' },
+      //{ path: '/marketplace', icon: Store, label: 'Marketplace' },
       { path: '/sports-events', icon: Trophy, label: 'Eventos Deportivos' },
-      { 
-        path: '/create', 
-        icon: PlusSquare, 
-        label: 'Crear',
-        requiresPermission: 'campaigns.create'
-      },
-      { path: '/mis-campanas', icon: Layout, label: 'Mis Campañas' },
-      { path: '/biblioteca', icon: ImageIcon, label: 'Biblioteca' },
-      { path: '/payments', icon: CreditCard, label: 'Métodos de Pago' }
+      // { 
+      //   path: '/create', 
+      //   icon: PlusSquare, 
+      //   label: 'Crear',
+      //   requiresPermission: 'campaigns.create'
+      // },
+      // { path: '/mis-campanas', icon: Layout, label: 'Mis Campañas' },
+      // { path: '/biblioteca', icon: ImageIcon, label: 'Biblioteca' },
+      // { path: '/payments', icon: CreditCard, label: 'Métodos de Pago' }
     ]
   };
 
@@ -76,79 +80,80 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
     {
       title: 'Gestión',
       items: [
-        { 
-          path: '/admin/screens', 
-          icon: Monitor, 
-          label: 'Pantallas',
-          description: 'Gestionar pantallas digitales',
-          requiresRole: ['super_admin', 'ads_admin']
-        },
+        // { 
+        //   path: '/admin/screens', 
+        //   icon: Monitor, 
+        //   label: 'Pantallas',
+        //   description: 'Gestionar pantallas digitales',
+        //   requiresRole: ['super_admin', 'ads_admin']
+        // },
         {
           path: '/admin/sports-events',
           icon: Trophy,
           label: 'Eventos',
           description: 'Gestionar eventos deportivos',
-          requiresRole: ['super_admin', 'ads_admin']
+         requiresRole: ['Admin']
+          
         },
-        {
-          path: '/admin/inventory',
-          icon: Boxes,
-          label: 'Inventario',
-          description: 'Control de inventario',
-          requiresRole: ['super_admin', 'ads_admin']
-        },
-        {
-          path: '/admin/cms',
-          icon: FileText,
-          label: 'CMS',
-          description: 'Gestión de contenido',
-          requiresRole: ['super_admin', 'ads_admin']
-        },
-        {
-          path: '/admin/content-review',
-          icon: CheckSquare,
-          label: 'Revisión',
-          description: 'Revisión de contenido',
-          requiresRole: ['super_admin', 'ads_admin', 'content_moderator']
-        }
+        // {
+        //   path: '/admin/inventory',
+        //   icon: Boxes,
+        //   label: 'Inventario',
+        //   description: 'Control de inventario',
+        //   requiresRole: ['super_admin', 'ads_admin']
+        // },
+        // {
+        //   path: '/admin/cms',
+        //   icon: FileText,
+        //   label: 'CMS',
+        //   description: 'Gestión de contenido',
+        //   requiresRole: ['super_admin', 'ads_admin']
+        // },
+        // {
+        //   path: '/admin/content-review',
+        //   icon: CheckSquare,
+        //   label: 'Revisión',
+        //   description: 'Revisión de contenido',
+        //   requiresRole: ['super_admin', 'ads_admin', 'content_moderator']
+        // }
       ]
     },
-    {
-      title: 'Administración',
-      items: [
-        {
-          path: '/admin/analytics',
-          icon: BarChart3,
-          label: 'Analytics',
-          description: 'Métricas y reportes',
-          requiresRole: ['super_admin', 'ads_admin']
-        },
-        {
-          path: '/admin/billing',
-          icon: Wallet,
-          label: 'Facturación',
-          description: 'Gestión de pagos',
-          requiresRole: ['super_admin', 'financial_admin']
-        },
-        {
-          path: '/admin/settings',
-          icon: Cog,
-          label: 'Configuración',
-          description: 'Configuración del sistema',
-          requiresRole: ['super_admin']
-        }
-      ]
-    }
+    // {
+    //   title: 'Administración',
+    //   items: [
+    //     // {
+    //     //   path: '/admin/analytics',
+    //     //   icon: BarChart3,
+    //     //   label: 'Analytics',
+    //     //   description: 'Métricas y reportes',
+    //     //   requiresRole: ['super_admin', 'ads_admin']
+    //     // },
+    //     // {
+    //     //   path: '/admin/billing',
+    //     //   icon: Wallet,
+    //     //   label: 'Facturación',
+    //     //   description: 'Gestión de pagos',
+    //     //   requiresRole: ['super_admin', 'financial_admin']
+    //     // },
+    //     // {
+    //     //   path: '/admin/settings',
+    //     //   icon: Cog,
+    //     //   label: 'Configuración',
+    //     //   description: 'Configuración del sistema',
+    //     //   requiresRole: ['super_admin']
+    //     // }
+    //   ]
+    // }
   ];
 
-  const accountNavItems: NavGroup = {
-    title: 'Mi Cuenta',
-    items: [
-      { path: '/profile', icon: User, label: 'Perfil' },
-      { path: '/notifications', icon: Bell, label: 'Notificaciones' },
-      { path: '/settings', icon: Settings, label: 'Configuración' }
-    ]
-  };
+  // const accountNavItems: NavGroup = {
+  //   title: 'Mi Cuenta',
+  //   items: [
+  //     // { path: '/profile', icon: User, label: 'Perfil' },
+  //     // { path: '/notifications', icon: Bell, label: 'Notificaciones' },
+  //     // { path: '/settings', icon: Settings, label: 'Configuración' }
+  //   ]
+  // };
 
   const NavLink = ({ item }: { item: NavItem }) => (
     <RequirePermission
@@ -264,7 +269,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
             <div className="flex flex-col h-full">
               <div className="flex items-center h-16 px-4 border-b border-neutral-200">
                 <img 
-                  src="https://shareflow.me/logo.svg" 
+                  src={Logo}
                   alt="Shareflow" 
                   className="h-8"
                 />
@@ -273,12 +278,12 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
               <div className="flex-1 overflow-y-auto px-2 py-4">
                 <div className="space-y-6">
                   <NavGroup group={generalNavItems} />
-                  {hasRole(['super_admin', 'ads_admin']) && (
+                  {hasRole(['Admin']) && (
                     adminNavItems.map((group) => (
                       <NavGroup key={group.title} group={group} />
                     ))
                   )}
-                  <NavGroup group={accountNavItems} />
+                  {/* <NavGroup group={accountNavItems} /> */}
                 </div>
               </div>
 
@@ -322,13 +327,13 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           <div className="flex items-center h-16 px-4 border-b border-neutral-200">
             {!isCollapsed ? (
               <img 
-                src="https://shareflow.me/logo.svg" 
+                 src={Logo}
                 alt="Shareflow" 
                 className="h-8"
               />
             ) : (
               <img 
-                src="https://shareflow.me/icon.svg" 
+                src={Logo}
                 alt="Shareflow" 
                 className="h-8 w-8"
               />
@@ -349,12 +354,12 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           {/* Navigation Groups */}
           <div className="flex-1 overflow-y-auto px-2 py-4 space-y-6">
             <NavGroup group={generalNavItems} />
-            {hasRole(['super_admin', 'ads_admin']) && (
+            {hasRole(['Admin']) && (
               adminNavItems.map((group) => (
                 <NavGroup key={group.title} group={group} />
               ))
             )}
-            <NavGroup group={accountNavItems} />
+            {/* <NavGroup group={accountNavItems} /> */}
           </div>
 
           {/* Footer */}
@@ -381,7 +386,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                 </div>
               )}
               {isCollapsed ? (
-                <Tooltip content="John Doe">
+                <Tooltip content={ user?.username ?? ''}>
                   <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                     <User className="w-5 h-5 text-primary" />
                   </div>
@@ -395,9 +400,12 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                     <User className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">John Doe</p>
+                      <p className="font-medium truncate">{ user?.username }</p>
                     <p className="text-sm text-neutral-500 truncate">
-                      john@example.com
+                        {user?.email}
+                      </p>
+                      <p className="text-sm text-neutral-500 truncate">
+                        { user?.roles }
                     </p>
                   </div>
                 </Link>

@@ -1,5 +1,6 @@
 export type Role = 
   | 'super_admin'
+  | 'Admin'
   | 'ads_admin'
   | 'pixel_admin'
   | 'asset_manager'
@@ -20,49 +21,49 @@ export const permissions: Permission[] = [
     id: 'screens.create',
     name: 'Create Screens',
     description: 'Ability to create new digital screens',
-    roles: ['super_admin', 'pixel_admin']
+    roles: ['Admin', 'pixel_admin']
   },
   {
     id: 'screens.edit',
     name: 'Edit Screens',
     description: 'Ability to edit existing screens',
-    roles: ['super_admin', 'pixel_admin', 'field_operator']
+    roles: ['Admin', 'pixel_admin', 'field_operator']
   },
   {
     id: 'screens.delete',
     name: 'Delete Screens',
     description: 'Ability to remove screens from the system',
-    roles: ['super_admin']
+    roles: ['Admin']
   },
   {
     id: 'campaigns.create',
     name: 'Create Campaigns',
     description: 'Ability to create new ad campaigns',
-    roles: ['super_admin', 'ads_admin']
+    roles: ['Admin', 'ads_admin']
   },
   {
     id: 'campaigns.approve',
     name: 'Approve Campaigns',
     description: 'Ability to approve or reject campaigns',
-    roles: ['super_admin', 'ads_admin', 'content_moderator']
+    roles: ['Admin', 'ads_admin', 'content_moderator']
   },
   {
     id: 'analytics.view',
     name: 'View Analytics',
     description: 'Access to analytics and reporting',
-    roles: ['super_admin', 'ads_admin', 'financial_admin']
+    roles: ['Admin', 'ads_admin', 'financial_admin']
   },
   {
     id: 'users.manage',
     name: 'Manage Users',
     description: 'Ability to manage user accounts and roles',
-    roles: ['super_admin']
+    roles: ['Admin']
   },
   {
     id: 'billing.access',
     name: 'Access Billing',
     description: 'Access to billing and payment information',
-    roles: ['super_admin', 'financial_admin']
+    roles: ['Admin', 'financial_admin']
   }
 ];
 
@@ -79,5 +80,5 @@ export function getRolePermissions(role: Role): string[] {
 }
 
 export function isAdmin(role: Role): boolean {
-  return role === 'super_admin' || role === 'ads_admin';
+  return role === 'Admin' || role === 'ads_admin';
 }
