@@ -58,17 +58,17 @@ export function EventDetail() {
     },
   ];
 
-  const toggleMoment = (momentId: string) => {
+  const toggleMoment = (momentId: string, price: number) => {
     setSelectedMoments(prev => {
       const isSelected = prev.some(m => m.momentId === momentId);
       if (isSelected) {
         return prev.filter(m => m.momentId !== momentId);
       }
-      return [...prev, { momentId, minutes: [25] }];
+      return [...prev, { momentId, minutes: [25], price }];
     });
   };
 
-  const addMomentInstance = (momentId: string) => {
+  const addMomentInstance = (momentId: string, price: number) => {
     setSelectedMoments(prev => {
       const momentGroup = prev.find(m => m.momentId === momentId);
       if (!momentGroup) return prev;
@@ -77,7 +77,8 @@ export function EventDetail() {
         if (m.momentId === momentId) {
           return {
             ...m,
-            minutes: [...m.minutes, 25]
+            minutes: [...m.minutes, 25],
+            price
           };
         }
         return m;
@@ -101,13 +102,13 @@ export function EventDetail() {
     });
   };
 
-  const updateMomentMinute = (momentId: string, index: number, minute: number) => {
+  const updateMomentMinute = (momentId: string, index: number, minute: number, price: number) => {
     setSelectedMoments(prev => 
       prev.map(m => {
         if (m.momentId === momentId) {
           const newMinutes = [...m.minutes];
           newMinutes[index] = minute;
-          return { ...m, minutes: newMinutes };
+          return { ...m, minutes: newMinutes, price };
         }
         return m;
       })
@@ -391,7 +392,7 @@ export function EventDetail() {
                           : 'bg-white border-neutral-200 hover:border-primary-50'
                         }
                       `}
-                      onClick={() => toggleMoment(moment.id)}
+                      onClick={() => toggleMoment(moment.id, moment.price)}
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
@@ -429,8 +430,8 @@ export function EventDetail() {
                               momentNumber={parseInt(moment.id)}
                               maxMinutes={moment.maxMinutes}
                               selectedMinutes={selectedMoments.find(m => m.momentId === moment.id)?.minutes || []}
-                              onMinuteSelect={(index, minute) => updateMomentMinute(moment.id, index, minute)}
-                              onAddMoment={() => addMomentInstance(moment.id)}
+                              onMinuteSelect={(index, minute) => updateMomentMinute(moment.id, index, minute, moment.price)}
+                              onAddMoment={() => addMomentInstance(moment.id, moment.price)}
                               onRemoveMoment={(index) => removeMomentInstance(moment.id, index)}
                             />
                           </Suspense>

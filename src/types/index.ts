@@ -102,6 +102,7 @@ export interface SportEvent {
   price?: number;
   homeTeamName: string;
   awayTeamName: string;
+  estimatedTvAudience: number;
   stadiumName: string;
   homeTeamImage: string;
   homeAwayImage: string;

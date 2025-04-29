@@ -4,36 +4,150 @@ import { Button } from '../components/Button';
 import { useSportEvents } from '../hooks/useSportEvents';
 import { constants } from '../config/constants';
 import { useMomentPurchases } from '../hooks/useMomentPurchases';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { paymentApi } from '../api/payment';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
+
+const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
+
+// Componente de formulario de pago
+const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: () => void, onError: (error: any) => void, amount: number }) => {
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { state } = useLocation();
+  const { id } = useParams();
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+
+      const PurchaseDetails = state.selectedMoments.map((item: any) => ({
+        momentId: item.momentId,
+        minutes: item.minutes.join(','),
+        price: item.price
+      }));
+
+      const data = {
+        sportEventId: id ?? "0",
+        PurchaseDetails,
+        amount,
+        currency: 'cop'
+      };
+      
+      const { clientSecret } = await paymentApi.createPaymentIntent(data);
+
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+        clientSecret,
+        {
+          payment_method: {
+            card: elements.getElement(CardElement)!,
+            billing_details: {
+              name: user?.username,
+              email:user?.email, 
+            },
+          },
+        }
+      );
+
+      if (stripeError) {
+        onError(stripeError.message);
+      } else if (paymentIntent.status === 'succeeded') {
+        onSuccess();
+      }
+    } catch (error) {
+      onError(error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="p-3 bg-white rounded-lg border border-[#B8B8C0]">
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#424770',
+                '::placeholder': {
+                  color: '#aab7c4',
+                },
+              },
+              invalid: {
+                color: '#9e2146',
+              },
+            },
+          }}
+        />
+      </div>
+
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        fullWidth
+        icon={ArrowRight}
+        disabled={!stripe || isProcessing}
+      >
+        {isProcessing ? 'Procesando...' : `Pagar ${amount.toLocaleString('es-CO')} COP`}
+      </Button>
+    </form>
+  );
+};
 
 export function PaymentDetails() {
   const navigate = useNavigate();
   const { purchaseMoments } = useMomentPurchases();
   const { id } = useParams();
   const { state } = useLocation();
-  
-   const {event} = useSportEvents({id});
-  
+  const { event } = useSportEvents({ id });
+
   if (!event) {
-    return <div><h1>HELLO</h1></div>;
+    return <div></div>;
   }
-  const Handlepayment = () => {
-    const PurchaseDetails = state.selectedMoments.map((item: any) => {
-      return {
-        momentId: item.momentId,
-        minutes: item.minutes.join(',')
-      }
-    });
+
+  const handlePaymentSuccess = async () => {
+    const PurchaseDetails = state.selectedMoments.map((item: any) => ({
+      momentId: item.momentId,
+      minutes: item.minutes.join(',')
+    }));
+
     const data = {
-      "sportEventId": id ?? "0",
-      "FilePath": state.file,
+      sportEventId: id ?? "0",
+      FilePath: state.file,
       PurchaseDetails
-    }
-    purchaseMoments(data).then(() => {
-      alert("Sucess")
-    }).catch((error) => {
-      alert(error)
-    });
-  }
+    };
+
+    console.log({data})
+    // try {
+    //   await purchaseMoments(data);
+    //   alert("Pago exitoso");
+    //   navigate('/success');
+    // } catch (error) {
+    //   alert(error);
+    // }
+  };
+
+  const handlePaymentError = (error: any) => {
+    alert(`Error en el pago: ${error}`);
+  };
+
+  // Calcular el monto total
+  const totalAmount = 4500000; // Este valor debería venir de tu lógica de negocio
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:ml-64">
       {/* Header */}
@@ -135,7 +249,7 @@ export function PaymentDetails() {
                   <Clock size={20} className="text-primary" />
                   <span className="text-[14px] text-primary">Cantidad:</span>
                 </div>
-                <span className="text-[14px] text-[#1A1A35]">2 momentos</span>
+                <span className="text-[14px] text-[#1A1A35]">{state.selectedMoments.length} momentos</span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -156,43 +270,13 @@ export function PaymentDetails() {
         </div>
 
         {/* Payment Form */}
-        <div className="space-y-3">
-          <div className="flex items-center p-3 bg-white rounded-lg border border-[#B8B8C0]">
-            <input
-              type="text"
-              placeholder="Número de tarjeta"
-              className="flex-1 text-[12px] text-[#9696A2] bg-transparent outline-none"
-            />
-            <img
-              src="/path/to/card-icons.png"
-              alt="Card types"
-              className="w-[97px] h-[27px]"
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Fecha de caducidad"
-                className="w-full p-3 text-[12px] text-[#9696A2] bg-white rounded-lg border border-[#B8B8C0]"
-              />
-            </div>
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="CVV"
-                className="w-full p-3 text-[12px] text-[#9696A2] bg-white rounded-lg border border-[#B8B8C0]"
-              />
-            </div>
-          </div>
-
-          <input
-            type="text"
-            placeholder="Nombre del titular"
-            className="w-full p-3 text-[12px] text-[#9696A2] bg-white rounded-lg border border-[#B8B8C0]"
+        <Elements stripe={stripePromise}>
+          <PaymentForm
+            onSuccess={handlePaymentSuccess}
+            onError={handlePaymentError}
+            amount={totalAmount}
           />
-        </div>
+        </Elements>
 
         {/* Terms and Time Info */}
         <div className="text-center mt-6 mb-8">
@@ -208,17 +292,6 @@ export function PaymentDetails() {
             </a>
           </p>
         </div>
-
-        {/* Pay Button */}
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          icon={ArrowRight}
-          onClick={Handlepayment}
-        >
-          Pagar Ahora
-        </Button>
       </div>
     </div>
   );

@@ -181,7 +181,7 @@ export const screens: Screen[] = [
   }
 ];
 
-export const sportEvents: SportEvent[] = [
+export const sportEvents: any[] = [
   {
     id: '1',
     homeTeam: 'Atlético Nacional',
