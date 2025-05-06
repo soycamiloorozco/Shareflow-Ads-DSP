@@ -58,7 +58,6 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  console.log({mockPermissions})
   
   // In a real app, you'd fetch this from your auth system
   const permissions = mockPermissions;
@@ -74,7 +73,6 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
    
     const roleArray = Array.isArray(roles) ? roles : [roles];
 
-    console.log({roleArray})
     return roleArray.includes(permissions.role);
   };
 

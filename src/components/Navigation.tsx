@@ -272,6 +272,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                   src={Logo}
                   alt="Shareflow" 
                   className="h-8"
+                  style={{width: 100}}
                 />
               </div>
 
@@ -330,6 +331,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                  src={Logo}
                 alt="Shareflow" 
                 className="h-8"
+                style={{width: 150}}
               />
             ) : (
               <img 

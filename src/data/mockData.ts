@@ -181,7 +181,7 @@ export const screens: Screen[] = [
   }
 ];
 
-export const sportEvents: any[] = [
+export const sportEvents: SportEvent[] = [
   {
     id: '1',
     homeTeam: 'Atlético Nacional',
@@ -191,7 +191,18 @@ export const sportEvents: any[] = [
     screens: screens.filter(screen => screen.id === '3'),
     price: 2500000,
     time: '19:30',
-    city: 'Medellín'
+    city: 'Medellín',
+    momentPricing: {
+      firstHalf: 2500000,
+      halftime: 1800000,
+      secondHalf: 2500000
+    },
+    status: 'scheduled',
+    capacity: 45000,
+    estimatedAttendance: 40000,
+    estimatedTvAudience: 1200000,
+    broadcastChannels: ['Win Sports+', 'RCN'],
+    maxMoments: 20
   },
   {
     id: '2',
@@ -202,6 +213,17 @@ export const sportEvents: any[] = [
     screens: screens.filter(screen => screen.id === '1'),
     price: 2000000,
     time: '17:00',
-    city: 'Bogotá'
+    city: 'Bogotá',
+    momentPricing: {
+      firstHalf: 2000000,
+      halftime: 1500000,
+      secondHalf: 2000000
+    },
+    status: 'scheduled',
+    capacity: 36000,
+    estimatedAttendance: 30000,
+    estimatedTvAudience: 950000,
+    broadcastChannels: ['Win Sports+'],
+    maxMoments: 15
   }
 ];

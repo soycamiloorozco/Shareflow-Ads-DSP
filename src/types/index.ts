@@ -121,6 +121,7 @@ export interface SelectedMomentDetails {
   id: string;
   momentId: string;
   minute: number;
+  price: number;
 }
 
 export interface CreativeAsset {
