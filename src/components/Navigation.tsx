@@ -61,7 +61,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
   const generalNavItems: NavGroup = {
     title: 'Plataforma',
     items: [
-      { path: '/dashboard', icon: Home, label: 'Inicio' },
+      //{ path: '/dashboard', icon: Home, label: 'Inicio' },
       //{ path: '/marketplace', icon: Store, label: 'Marketplace' },
       { path: '/sports-events', icon: Trophy, label: 'Eventos Deportivos' },
       // { 

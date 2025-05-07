@@ -268,7 +268,7 @@ export function EventDetail() {
       await purchaseMoments(data);
       setPaymentComplete(true);
       setFlowStep("confirmation")
-      setStep(3);
+      
       //navigate('/success');
     } catch (error) {
       alert(error);
@@ -476,7 +476,7 @@ export function EventDetail() {
   const handleProceedToPayment = () => {
     if (file) {
       setFlowStep('payment');
-      setStep(2);
+      setStep(3);
       window.scrollTo(0, 0);
     }
   };
@@ -1122,6 +1122,16 @@ export function EventDetail() {
                     </div>
                   </div>
                 </div>
+                <br/>
+
+                <Elements stripe={stripePromise}>
+                  <PaymentForm
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    amount={totalPrice}
+                    selectedMoments={selectedMoments}
+                  />
+                </Elements>
               </div>
               
               <div className="flex items-center justify-between">
@@ -1138,14 +1148,7 @@ export function EventDetail() {
                 </Button>
                 
                 {/* Payment Form */}
-                <Elements stripe={stripePromise}>
-                  <PaymentForm
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                    amount={totalPrice}
-                    selectedMoments={selectedMoments}
-                  />
-                </Elements>
+                
               </div>
             </div>
           </div>

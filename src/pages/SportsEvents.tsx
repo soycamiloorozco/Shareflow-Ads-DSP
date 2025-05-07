@@ -87,14 +87,14 @@ export function SportsEvents() {
               >
                 Crear
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="lg"
                 className="hidden md:flex !text-white !border-white/20 hover:!bg-white/10"
                 onClick={() => navigate('/create')}
               >
                 Crear campaña
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

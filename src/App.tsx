@@ -48,7 +48,8 @@ export default function App() {
                   {/* Public Routes */}
                   <Route path="/dashboard" element={
                     <RequireAuth>
-                      <Home />
+                      {/* <Home /> */}
+                      <SportsEvents />
                     </RequireAuth>
                   } />
                   <Route path="/marketplace" element={<Marketplace />} />

@@ -20,7 +20,15 @@ import { useStadiums, Stadium } from '../../hooks/useStadiums';
 import { useSportEvents, SportEvents } from '../../hooks/useSportEvents';
 import { constants } from '../../config/constants';
 
-
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}k`;
+  }
+  return num.toString();
+};
 
 export function SportsEventsAdmin() {
 
@@ -157,7 +165,7 @@ export function SportsEventsAdmin() {
               </div>
               <div>
                 <p className="text-sm text-neutral-600">Momentos Disponibles</p>
-                <p className="text-2xl font-semibold">150+</p>
+                <p className="text-2xl font-semibold">{ sportEvents.reduce((acc, event) => acc + event.maxMoments, 0)}</p>
               </div>
             </Card.Body>
           </Card>
@@ -169,7 +177,7 @@ export function SportsEventsAdmin() {
               </div>
               <div>
                 <p className="text-sm text-neutral-600">Alcance Potencial</p>
-                <p className="text-2xl font-semibold">450k</p>
+                <p className="text-2xl font-semibold">{formatNumber(sportEvents.reduce((acc, event) => acc + event.estimatedAttendance, 0))}</p>
               </div>
             </Card.Body>
           </Card>
@@ -181,7 +189,7 @@ export function SportsEventsAdmin() {
               </div>
               <div>
                 <p className="text-sm text-neutral-600">Precio Promedio</p>
-                <p className="text-2xl font-semibold">$2.2M</p>
+                <p className="text-2xl font-semibold">{ formatNumber(sportEvents.reduce((acc, event) => acc + event.moments[0].price, 0))}</p>
               </div>
             </Card.Body>
           </Card>
