@@ -19,7 +19,7 @@ export function useAuth() {
       }
 
       const result = await dispatch(login({ email, password, remember })).unwrap();
-      
+      console.log({result});
       // Almacenar el token en localStorage para asegurar persistencia
       if (result.token) {
         localStorage.setItem('auth_token', result.token);

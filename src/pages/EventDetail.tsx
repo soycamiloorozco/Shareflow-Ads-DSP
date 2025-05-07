@@ -152,7 +152,7 @@ const PaymentForm = ({ onSuccess, onError, amount, selectedMoments }: { onSucces
 export function EventDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { event } = useSportEvents({ id });
+  const { event, loading } = useSportEvents({ id });
     const { purchaseMoments } = useMomentPurchases();
   const [step, setStep] = useState(1);
   const [flowStep, setFlowStep] = useState<FlowStep>('select-moments');
@@ -323,16 +323,23 @@ export function EventDetail() {
   }, []);
 
 
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setVisible(true);
+    }, 2000);
+  }, []);
   if (!event) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
+        {visible && <div className="text-center">
           <h2 className="text-2xl font-bold text-neutral-800 mb-2">Evento no encontrado</h2>
           <p className="text-neutral-600 mb-4">El evento que buscas no existe o ha sido removido.</p>
           <Button variant="primary" onClick={() => navigate(-1)}>
             Volver atrás
           </Button>
-        </div>
+        </div>}
       </div>
     );
   }
@@ -565,7 +572,7 @@ export function EventDetail() {
           <div className="bg-white p-6 rounded-2xl shadow-sm mb-6">
             <h2 className="text-2xl font-bold text-neutral-800 mb-6 flex items-center gap-2">
               <Trophy className="w-6 h-6 text-primary" />
-              Selecciona tus momentos
+              Selecciona tus momentos 
             </h2>
 
             {/* Enhanced Limited Availability Alert */}

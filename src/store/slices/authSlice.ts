@@ -26,10 +26,6 @@ interface LoginCredentials {
   remember?: boolean;
 }
 
-interface LoginResponse {
-  token: string;
-  user: User;
-}
 
 interface RegisterCredentials {
   username: string;
@@ -38,10 +34,6 @@ interface RegisterCredentials {
   phone: string;
 }
 
-interface GoogleAuthResponse {
-  token: string;
-  user: User;
-}
 
 const initialState: AuthState = {
   user: null,
@@ -82,6 +74,12 @@ export const login = createAsyncThunk(
         
         return data;
       } catch (apiError: any) {
+        if (apiError.response && apiError.response.data.message) { 
+          alert(apiError.response.data.message);
+        } else {
+          alert('Error al iniciar sesión');
+        }
+        
         if (apiError.response && apiError.response.data) {
           return rejectWithValue(apiError.response.data.message || 'Error al iniciar sesión');
         }

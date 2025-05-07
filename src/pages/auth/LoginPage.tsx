@@ -24,7 +24,8 @@ export function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    await login(data.email, data.password, data.remember);
+    const response = await login(data.email, data.password, data.remember);
+    console.log({response});
   };
 
   const useDemoCredentials = () => {
