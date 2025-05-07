@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail, Lock, User, ArrowRight, Loader2, Check, X, Phone } from 'lucide-react';
-import GoogleButton from 'react-google-button';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/Button';
 
@@ -22,7 +21,7 @@ const whatsappSchema = z.string()
 const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Correo electrónico inválido'),
-  whatsapp: whatsappSchema,
+  whatsapp: z.string().min(2, 'El nummero debe tener al menos 2 caracteres'),
   password: passwordSchema,
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -46,7 +45,7 @@ const passwordRequirements: PasswordRequirement[] = [
 ];
 
 export function RegisterPage() {
-  const { register: registerUser, googleAuth, isLoading, error } = useAuth();
+  const { register: registerUser, isLoading, error } = useAuth();
   const [password, setPassword] = useState('');
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema)
@@ -56,17 +55,6 @@ export function RegisterPage() {
     await registerUser(data.name, data.email, data.password, data.whatsapp);
   };
 
-  const handleGoogleRegister = async () => {
-    try {
-      // Initialize Google Sign-In
-      const auth2 = await window.gapi.auth2.getAuthInstance();
-      const googleUser = await auth2.signIn();
-      const token = googleUser.getAuthResponse().id_token;
-      await googleAuth(token);
-    } catch (error) {
-      console.error('Google Sign-In Error:', error);
-    }
-  };
 
   const getPasswordStrength = (password: string) => {
     const meetsRequirements = passwordRequirements.filter(
@@ -277,13 +265,6 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <div className="flex justify-center">
-              <GoogleButton
-                onClick={handleGoogleRegister}
-                disabled={isLoading}
-                label="Registrarse con Google"
-              />
-            </div>
 
             <p className="text-center text-sm text-neutral-600">
               ¿Ya tienes una cuenta?{' '}

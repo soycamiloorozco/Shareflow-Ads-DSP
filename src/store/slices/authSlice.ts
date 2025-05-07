@@ -32,10 +32,10 @@ interface LoginResponse {
 }
 
 interface RegisterCredentials {
-  name: string;
+  username: string;
   email: string;
   password: string;
-  whatsapp: string;
+  phone: string;
 }
 
 interface GoogleAuthResponse {

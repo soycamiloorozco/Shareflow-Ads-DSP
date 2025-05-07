@@ -78,8 +78,9 @@ export function useAuth() {
         throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
       //@ts-ignore
-      await dispatch(register({ name, email, password, whatsapp })).unwrap();
-      navigate('/');
+      await dispatch(register({ username: name, email, password, phone: whatsapp })).unwrap();
+      alert('Registro exitoso. Por favor, inicie sesión.');
+      window.location.href = '/login';
     } catch (error: any) {
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);

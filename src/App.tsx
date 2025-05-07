@@ -31,7 +31,7 @@ import { LandingPage } from './pages/landing/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { store, persistor } from './store/store';
 import { PersistGate } from 'redux-persist/integration/react';
-
+import { RegisterPage } from './pages/auth/RegisterPage';
 
 export default function App() {
   return (
@@ -43,6 +43,7 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path='/register' element={<RegisterPage />} />
                 <Route element={<Layout />}>
                   {/* Public Routes */}
                   <Route path="/dashboard" element={
