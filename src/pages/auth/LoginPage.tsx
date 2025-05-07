@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,9 +19,21 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const { login, isLoading, error } = useAuth();
+  const [searchParams] = useSearchParams();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema)
   });
+
+  const urlError = searchParams.get('error');
+  const isVerified = searchParams.get('verified') === 'true';
+  
+  const errorMessage = urlError === 'invalid_token' 
+    ? 'Tu sesión ha expirado o el token es inválido. Por favor, inicia sesión nuevamente.'
+    : null;
+
+  const successMessage = isVerified
+    ? '¡Tu cuenta ha sido verificada exitosamente! Ya puedes iniciar sesión.'
+    : null;
 
   const onSubmit = async (data: LoginFormData) => {
     const response = await login(data.email, data.password, data.remember);
@@ -41,8 +53,35 @@ export function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
+        
         <div className="bg-white p-8 rounded-2xl shadow-lg">
           <div className="text-center mb-8">
+            {errorMessage && (
+              <div className="p-4 bg-error-50 border border-error-200 rounded-lg flex items-start gap-3 mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-error-800">{errorMessage}</p>
+                </div>
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="p-4 bg-success-50 border border-success-200 rounded-lg flex items-start gap-3 mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-success-800">{successMessage}</p>
+                </div>
+              </div>
+            )}
+
             <h1 className="text-2xl font-bold mb-2">Bienvenido de nuevo</h1>
             <p className="text-neutral-600">
               Inicia sesión para continuar con tu experiencia
@@ -141,11 +180,7 @@ export function LoginPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="p-4 bg-error-50 text-error-600 rounded-lg">
-                {error}
-              </div>
-            )}
+        
 
             <Button
               type="submit"
