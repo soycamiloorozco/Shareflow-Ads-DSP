@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Layout } from './components/Layout';
-import { AIAssistant } from './components/AIAssistant';
+// import { AIAssistant } from './components/AIAssistant';
 import { Home } from './pages/Home';
 import { EventDetail } from './pages/EventDetail';
 import { CreativeUpload } from './pages/CreativeUpload';
@@ -215,7 +215,7 @@ export default function App() {
                   <Route path="/not-authorized" element={<NotAuthorized />} />
                 </Route>
               </Routes>
-              <AIAssistant />
+              {/* <AIAssistant /> */}
             </Router>
           </PermissionsProvider>
         </AuthProvider>

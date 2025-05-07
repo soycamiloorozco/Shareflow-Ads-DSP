@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigation } from './Navigation';
 import { Outlet } from 'react-router-dom';
-import { AIAssistant } from './AIAssistant';
+// import { AIAssistant } from './AIAssistant';
 
 export function Layout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -20,7 +20,7 @@ export function Layout() {
       >
         <Outlet />
       </main>
-      <AIAssistant />
+      {/* <AIAssistant /> */}
     </div>
   );
 }

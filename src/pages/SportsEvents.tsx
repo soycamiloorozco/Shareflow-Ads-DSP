@@ -325,7 +325,7 @@ export function SportsEvents() {
                   Conecta con audiencias apasionadas en los momentos más emocionantes del deporte
                 </p>
               </div>
-              <Button
+              {/* <Button
                 variant="primary"
                 size="lg"
                 className="!bg-white !text-primary hover:!bg-white/90 h-14 px-6 text-base"
@@ -333,7 +333,7 @@ export function SportsEvents() {
                 onClick={() => navigate('/create')}
               >
                 Crear campaña
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

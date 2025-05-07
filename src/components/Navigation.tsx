@@ -404,7 +404,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                   <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{ user?.username }</p>
                     <p className="text-sm text-neutral-500 truncate">
-                        {user?.email}
+                        {/* {user?.email} */}
                       </p>
                       <p className="text-sm text-neutral-500 truncate">
                         { user?.roles }
