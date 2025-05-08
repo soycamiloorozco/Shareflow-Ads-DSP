@@ -11,6 +11,7 @@ import { Card } from '../components/Card';
 import Select from 'react-select';
 import { useSportEvents } from '../hooks/useSportEvents';
 import { constants } from '../config/constants';
+import estadioImage from '../assets/estadio.png';
 
 export function SportsEvents() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export function SportsEvents() {
       <div className="relative h-[40vh] md:h-[50vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1577223625816-7546f13df25d?auto=format&fit=crop&q=80&w=2000"
+            src={estadioImage}
             alt="Stadium at night"
             className="w-full h-full object-cover"
           />
@@ -79,14 +80,14 @@ export function SportsEvents() {
               >
                 ¿Cómo funciona?
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="lg"
                 className="md:hidden h-12 px-6 text-base !text-white !border-white/20 hover:!bg-white/10"
                 onClick={() => navigate('/create')}
               >
                 Crear
-              </Button>
+              </Button> */}
               {/* <Button
                 variant="outline"
                 size="lg"
@@ -309,11 +310,7 @@ export function SportsEvents() {
         <div className="mt-12 md:mt-16">
           <div className="relative overflow-hidden rounded-xl md:rounded-2xl">
             <div className="absolute inset-0">
-              <img
-                src="https://images.unsplash.com/photo-1508098682722-e99c643e7f0b?auto=format&fit=crop&q=80&w=2000"
-                alt="Stadium crowd"
-                className="w-full h-full object-cover"
-              />
+              
               <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary-600/90" />
             </div>
             <div className="relative py-8 px-6 md:py-12 md:px-10 flex flex-col md:flex-row md:items-center md:justify-between">

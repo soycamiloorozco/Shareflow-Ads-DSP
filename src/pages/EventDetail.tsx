@@ -21,6 +21,7 @@ import { paymentApi } from '../api/payment';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { useMomentPurchases } from '../hooks/useMomentPurchases';
+import estadioImage from '../assets/crowd.png';
 
 type GamePeriod = 'FirstHalf' | 'SecondHalf' | 'Halftime';
 type FlowStep = 'select-moments' | 'upload-creative' | 'payment' | 'confirmation';
@@ -172,6 +173,7 @@ export function EventDetail() {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
 
   const [paymentComplete, setPaymentComplete] = useState(false);
 
@@ -290,24 +292,62 @@ export function EventDetail() {
     e.preventDefault();
     setIsDragging(false);
   }, []);
- const handleDrop = useCallback((e: React.DragEvent) => {
+
+  const validateVideoDuration = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        setVideoDuration(video.duration);
+        resolve(video.duration <= 15);
+      };
+      
+      video.onerror = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(false);
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
 
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type.startsWith('image/')) {
+    if (droppedFile) {
+      if (droppedFile.type.startsWith('video/')) {
+        const isValidDuration = await validateVideoDuration(droppedFile);
+        if (!isValidDuration) {
+          setUploadError('El video no debe superar los 15 segundos');
+          return;
+        }
+      }
+      
       setFile(droppedFile);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
       };
       reader.readAsDataURL(droppedFile);
+      setUploadError(null);
     }
   }, []);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      if (selectedFile.type.startsWith('video/')) {
+        const isValidDuration = await validateVideoDuration(selectedFile);
+        if (!isValidDuration) {
+          setUploadError('El video no debe superar los 15 segundos');
+          return;
+        }
+      }
+      
       setFile(selectedFile);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -863,20 +903,29 @@ export function EventDetail() {
                   </div>
                 ) : (
                   <div className="relative">
-                    <div className="max-h-64 overflow-hidden rounded-lg">
-                      {file.type.startsWith('video/') ? (
-                        <video
-                          src={preview!}
-                          controls
-                          className="max-h-64 mx-auto object-contain"
-                        />
-                      ) : (
-                        <img
-                          src={preview!}
-                          alt="Preview"
-                          className="max-h-64 mx-auto object-contain"
-                        />
-                      )}
+                    <div className="relative w-full max-w-[1920px] mx-auto">
+                      {/* Contenedor con proporción 20:1 (1920:96) */}
+                      <div className="relative w-full" style={{ paddingBottom: '5%' }}>
+                        <div className="absolute inset-0 bg-neutral-100 rounded-lg overflow-hidden">
+                          {file.type.startsWith('video/') ? (
+                            <video
+                              src={preview!}
+                              controls
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <img
+                              src={preview!}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                        {/* Indicador de dimensiones */}
+                        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                          1920 x 96 px
+                        </div>
+                      </div>
                     </div>
                     <button
                       onClick={removeFile}
@@ -904,7 +953,7 @@ export function EventDetail() {
                 
                 <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden">
                   <img
-                    src="https://images.unsplash.com/photo-1577223625816-7546f13df25d?auto=format&fit=crop&q=80&w=1200"
+                    src={estadioImage}
                     alt="Stadium"
                     className="w-full h-full object-cover opacity-75"
                   />
@@ -1244,13 +1293,13 @@ export function EventDetail() {
             </div>
             
             <div className="flex items-center justify-between">
-              <Button
+              {/* <Button
                 variant="outline"
                 size="lg"
                 onClick={() => navigate('/mis-campanas')}
               >
                 Ver mis campañas
-              </Button>
+              </Button> */}
               
               <Button
                 variant="primary"
