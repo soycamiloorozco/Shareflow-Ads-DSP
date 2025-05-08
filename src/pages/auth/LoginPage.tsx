@@ -137,7 +137,7 @@ export function LoginPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -152,34 +152,7 @@ export function LoginPage() {
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-            </div>
-
-            {/* Demo Credentials Info */}
-            <div className="bg-primary-50 p-4 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-primary mb-1">
-                    Modo Demo
-                  </p>
-                  <p className="text-sm text-primary-600 mb-2">
-                    Puedes utilizar las siguientes credenciales para probar la aplicación:
-                  </p>
-                  <div className="space-y-1 text-sm text-primary-700">
-                    <p><strong>Email:</strong> demo@shareflow.me</p>
-                    <p><strong>Contraseña:</strong> ShareFlow2024!</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={useDemoCredentials}
-                    className="mt-2 text-sm font-medium text-primary hover:underline"
-                  >
-                    Usar credenciales demo
-                  </button>
-                </div>
-              </div>
-            </div>
-
+            </div> */}
         
 
             <Button
