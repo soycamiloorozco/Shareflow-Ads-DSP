@@ -1026,7 +1026,12 @@ export function EventDetail() {
                       <div key={period.id} className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <div className={`w-3 h-3 rounded-full ${period.color}`}></div>
-                          <span className="text-sm">{period.name}</span>
+                          <div>
+                            <span className="text-sm">{period.name}</span>
+                            <p className="text-xs text-neutral-500">
+                              Minutos: {periodMoments.map(m => m.minute).join(', ')}
+                            </p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">{periodMoments.length} x</span>
@@ -1488,6 +1493,7 @@ export function EventDetail() {
                   <h3 className="font-medium mb-3">Momentos seleccionados</h3>
                   <div className="space-y-3">
                     {gamePeriods.map(period => {
+                     
                       const periodMoments = selectedMoments.filter(m => m.momentId === period.id);
                       if (periodMoments.length === 0) return null;
                       
@@ -1495,7 +1501,12 @@ export function EventDetail() {
                         <div key={period.id} className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <div className={`w-3 h-3 rounded-full ${period.color}`}></div>
-                            <span className="text-sm">{period.name}</span>
+                            <div>
+                              <span className="text-sm">{period.name}</span>
+                              <p className="text-xs text-neutral-500">
+                                Minutos: {periodMoments.map(m => m.minute).join(', ')}
+                              </p>
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">{periodMoments.length} x</span>
