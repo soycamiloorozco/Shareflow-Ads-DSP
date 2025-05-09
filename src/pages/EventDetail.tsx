@@ -1190,6 +1190,7 @@ export function EventDetail() {
                 {loading ? (
                   <div className="flex justify-center items-center">
                     <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                    <p className="text-sm text-neutral-600">Procesando pago... no cierre la página</p>
                   </div>
                 ) : (
                   <Elements stripe={stripePromise}>
