@@ -7,7 +7,8 @@ import {
   Trophy, Heart, BarChart3, Flame,
   ShoppingBag, Eye, Zap, Upload, X,
   CreditCard, Check, Image as ImageIcon, Lock,
-  Mail, Phone, ChevronLeft
+  Mail, Phone, ChevronLeft,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { MomentSelector } from '../components/MomentSelector';
@@ -153,7 +154,7 @@ const PaymentForm = ({ onSuccess, onError, amount, selectedMoments }: { onSucces
 export function EventDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { event, loading } = useSportEvents({ id });
+  const { event } = useSportEvents({ id });
     const { purchaseMoments } = useMomentPurchases();
   const [step, setStep] = useState(1);
   const [flowStep, setFlowStep] = useState<FlowStep>('select-moments');
@@ -171,6 +172,7 @@ export function EventDetail() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [videoDuration, setVideoDuration] = useState<number>(0);
@@ -237,7 +239,7 @@ export function EventDetail() {
 
 
   const handlePaymentSuccess = async (paymentId: string) => {
-     
+    setLoading(true);
     const grouped = Object.values(
         selectedMoments.reduce((acc: any, item: any) => {
           if (!acc[item.id]) {
@@ -270,10 +272,11 @@ export function EventDetail() {
       await purchaseMoments(data);
       setPaymentComplete(true);
       setFlowStep("confirmation")
-      
+      setLoading(false);
       //navigate('/success');
     } catch (error) {
       alert(error);
+      setLoading(false);
      }
   };
 
@@ -1184,15 +1187,20 @@ export function EventDetail() {
                   </div>
                 </div>
                 <br/>
-
-                <Elements stripe={stripePromise}>
-                  <PaymentForm
+                {loading ? (
+                  <div className="flex justify-center items-center">
+                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  </div>
+                ) : (
+                  <Elements stripe={stripePromise}>
+                    <PaymentForm
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                     amount={totalPrice}
                     selectedMoments={selectedMoments}
                   />
                 </Elements>
+                )}
               </div>
               
               <div className="flex items-center justify-between">

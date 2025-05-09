@@ -79,7 +79,8 @@ export function useAuth() {
       }
       //@ts-ignore
       await dispatch(register({ username: name, email, password, phone: whatsapp })).unwrap();
-      alert('Registro exitoso. Por favor, inicie sesión.');
+      alert('Registro exitoso. Por favor, revisa tu correo electrónico para validar tu cuenta antes de iniciar sesión.');
+
       window.location.href = '/login';
     } catch (error: any) {
       if (error.response?.data?.message) {
