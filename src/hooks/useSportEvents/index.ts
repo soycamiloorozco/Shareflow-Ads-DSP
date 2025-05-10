@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import request  from '../../helpers/request';
+import { Trash2 } from 'lucide-react';
 
 
 export interface SportEvents {
@@ -19,6 +20,7 @@ export interface SportEvents {
     homeTeamImage?: string;
     awayTeamImage?: string;
     stadiumName: string;
+    status?: 'Inactive' | 'Active' | 'Eliminated';
     momentPrices: {
         moment: string;
         price: number;
@@ -38,6 +40,8 @@ interface useSportEventsReturn {
   listSportEvent: () => Promise<void>;
   sportEventById: (id: string) => Promise<void>;
   createSportEvent: (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments' | 'stadiumPhotos'>) => Promise<void>;
+  updateEventStatus: (id: string, status: 'Active' | 'Inactive' | 'Eliminated') => Promise<void>;
+  updateEventMoments: (id: string, data: { maxMoments: number, momentPrices: { moment: number, price: number }[] }) => Promise<void>;
 }
 
 export function useSportEvents(
@@ -90,6 +94,41 @@ export function useSportEvents(
     }
   };
 
+  const updateEventStatus = async (id: string, status: 'Active' | 'Inactive' | 'Eliminated') => {
+    try {
+      setLoading(true);
+      setError(null);
+      const statusMap = {
+        'Active': 1,
+        'Inactive': 0,
+        'Eliminated': 2
+      };
+      await request.patch(`/SportEvents/${id}/status`, {
+        status: statusMap[status]
+      });
+      await listSportEvent(); // Recargar la lista para reflejar los cambios
+    } catch (err) {
+      setError('Error al actualizar el estado del evento');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateEventMoments = async (id: string, data: { maxMoments: number, momentPrices: { moment: number, price: number }[] }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await request.patch(`/SportEvents/${id}/moments`, data);
+      await listSportEvent(); // Recargar la lista para reflejar los cambios
+    } catch (err) {
+      setError('Error al actualizar los momentos del evento');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (id) {
        sportEventById(id);
@@ -106,6 +145,8 @@ export function useSportEvents(
     listSportEvent,
     createSportEvent,
     sportEventById,
-    event
+    event,
+    updateEventStatus,
+    updateEventMoments
   };
 }

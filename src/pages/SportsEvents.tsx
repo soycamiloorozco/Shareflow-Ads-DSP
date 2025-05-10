@@ -24,14 +24,15 @@ export function SportsEvents() {
 
   const filteredEvents = sportEvents.filter(event => {
     const matchesSearch = 
-      event.homeTeamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.awayTeamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.homeTeamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.awayTeamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.stadiumName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTeam = !selectedTeam || 
       event.homeTeamName === selectedTeam || 
       event.awayTeamName === selectedTeam;
     const matchesStadium = !selectedStadium || event.stadiumName === selectedStadium;
-    return matchesSearch && matchesTeam && matchesStadium;
+    const matchesStatus = event.status === 'Active';
+    return matchesSearch && matchesTeam && matchesStadium && matchesStatus;
   });
 
 

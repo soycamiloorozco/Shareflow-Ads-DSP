@@ -9,7 +9,9 @@ import {
   Info,
   Clock,
   MapPin,
-  Edit} from 'lucide-react';
+  Edit,
+  Trash2
+} from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { TeamSelector } from '../../components/admin/TeamSelector';
@@ -34,7 +36,7 @@ export function SportsEventsAdmin() {
 
   const { createTeam, teams, listTeams } = useTeams();
   const { createStadiums, stadiums, listStadiums } = useStadiums();
-  const { createSportEvent, listSportEvent, sportEvents } = useSportEvents();
+  const { createSportEvent, listSportEvent, sportEvents, updateEventStatus, updateEventMoments } = useSportEvents();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
@@ -58,7 +60,8 @@ export function SportsEventsAdmin() {
       secondHalf: 2500000,
     },
     estimatedAttendance: 0,
-    broadcastChannels: ""
+    broadcastChannels: "",
+    status: 'Active' as 'Active' | 'Inactive' | 'Eliminated'
   });
 
   const handleCreateEvent = async () => {
@@ -110,9 +113,51 @@ export function SportsEventsAdmin() {
   };
 
 
-  const handleUpdateEvent = (_: any) => {
-    //TODO
-  }
+  const handleUpdateEvent = async (event: SportEvents) => {
+    try {
+      const momentPrices = [
+        {
+          moment: 0, // FirstHalf
+          price: event.moments.find(m => m.moment === "FirstHalf")?.price || 0
+        },
+        {
+          moment: 1, // Halftime
+          price: event.moments.find(m => m.moment === "Halftime")?.price || 0
+        },
+        {
+          moment: 2, // SecondHalf
+          price: event.moments.find(m => m.moment === "SecondHalf")?.price || 0
+        }
+      ];
+
+      await updateEventMoments(event.id, {
+        maxMoments: event.maxMoments,
+        momentPrices
+      });
+      
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error al actualizar el evento:', error);
+    }
+  };
+
+  const handleStatusChange = async (eventId: string, newStatus: 'Active' | 'Inactive' | 'Eliminated') => {
+    try {
+      await updateEventStatus(eventId, newStatus);
+    } catch (error) {
+      console.error('Error al actualizar el estado:', error);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este evento?')) {
+      try {
+        await updateEventStatus(eventId, 'Eliminated');
+      } catch (error) {
+        console.error('Error al eliminar el evento:', error);
+      }
+    }
+  };
 
   const filteredEvents = sportEvents.filter(event => {
     const matchesSearch = 
@@ -230,6 +275,7 @@ export function SportsEventsAdmin() {
                   <th className="text-left p-4 font-medium text-neutral-600">Fecha</th>
                   <th className="text-left p-4 font-medium text-neutral-600">Estadio</th>
                   <th className="text-left p-4 font-medium text-neutral-600">Momentos</th>
+                  <th className="text-left p-4 font-medium text-neutral-600">Estado</th>
                   <th className="text-right p-4 font-medium text-neutral-600">Acciones</th>
                 </tr>
               </thead>
@@ -292,13 +338,38 @@ export function SportsEventsAdmin() {
                       </div>
                     </td>
                     <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={event.status === 'Active'}
+                            onChange={(e) => handleStatusChange(event.id, e.target.checked ? 'Active' : 'Inactive')}
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                          <span className="ml-3 text-sm font-medium text-gray-900">
+                            {event.status === 'Active' ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </label>
+                      </div>
+                    </td>
+                    <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
                           icon={Edit}
-                          onClick={() => handleEditEvent(event)} children={undefined}                        />
-                        
+                          onClick={() => handleEditEvent(event)}
+                          children={undefined}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Trash2}
+                          onClick={() => handleDeleteEvent(event.id)}
+                          className="text-error-500 hover:text-error-600 hover:bg-error-50"
+                          children={undefined}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -580,6 +651,33 @@ export function SportsEventsAdmin() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Moment Pricing */}
+                    <MomentPricing
+                      prices={{
+                        firstHalf: selectedEvent.moments.find(m => m.moment === "FirstHalf")?.price || 0,
+                        halftime: selectedEvent.moments.find(m => m.moment === "Halftime")?.price || 0,
+                        secondHalf: selectedEvent.moments.find(m => m.moment === "SecondHalf")?.price || 0
+                      }}
+                      onChange={(prices) => {
+                        const updatedMoments = selectedEvent.moments.map(moment => {
+                          switch(moment.moment) {
+                            case "FirstHalf":
+                              return { ...moment, price: prices.firstHalf };
+                            case "Halftime":
+                              return { ...moment, price: prices.halftime };
+                            case "SecondHalf":
+                              return { ...moment, price: prices.secondHalf };
+                            default:
+                              return moment;
+                          }
+                        });
+                        setSelectedEvent({
+                          ...selectedEvent,
+                          moments: updatedMoments
+                        });
+                      }}
+                    />
                   </div>
 
                   <div className="p-6 border-t border-neutral-200 bg-neutral-50">
