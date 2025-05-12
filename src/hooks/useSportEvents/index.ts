@@ -11,6 +11,7 @@ export interface SportEvents {
     eventDate: string;
     eventTime: string;
     estimatedAttendance: number;
+    estimatedAttendanceTv: number;
     maxMoments: number;
     broadcastChannels: string;
     createdAt: string;
@@ -41,7 +42,12 @@ interface useSportEventsReturn {
   sportEventById: (id: string) => Promise<void>;
   createSportEvent: (data: Omit<SportEvents, 'id' | 'createdAt' | 'updatedAt' | 'moments' | 'stadiumPhotos'>) => Promise<void>;
   updateEventStatus: (id: string, status: 'Active' | 'Inactive' | 'Eliminated') => Promise<void>;
-  updateEventMoments: (id: string, data: { maxMoments: number, momentPrices: { moment: number, price: number }[] }) => Promise<void>;
+  updateEventMoments: (id: string, data: { 
+    maxMoments: number, 
+    momentPrices: { moment: number, price: number }[],
+    estimatedAttendance: number,
+    estimatedAttendanceTv: number 
+  }) => Promise<void>;
 }
 
 export function useSportEvents(
@@ -115,7 +121,12 @@ export function useSportEvents(
     }
   };
 
-  const updateEventMoments = async (id: string, data: { maxMoments: number, momentPrices: { moment: number, price: number }[] }) => {
+  const updateEventMoments = async (id: string, data: { 
+    maxMoments: number, 
+    momentPrices: { moment: number, price: number }[],
+    estimatedAttendance: number,
+    estimatedAttendanceTv: number 
+  }) => {
     try {
       setLoading(true);
       setError(null);

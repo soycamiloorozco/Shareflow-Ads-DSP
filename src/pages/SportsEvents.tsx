@@ -171,7 +171,7 @@ export function SportsEvents() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredEvents.map((event) => {
             // Calculate CPM for this event
-            const firstHalfCPM = event.moments.length  > 0 ? ((event.moments[0].price / (event.estimatedAttendance + (event.estimatedAttendance || 0))) * 1000).toFixed(2): 0;
+            //cons firstHalfCPM = event.moments.length  > 0 ? ((event.moments[0].price / (event.estimatedAttendance + (event.estimatedAttendance || 0))) * 1000).toFixed(2): 0;
             
             return (
               <motion.div
@@ -262,13 +262,13 @@ export function SportsEvents() {
                       {event.estimatedAttendance && (
                         <div className="flex items-center gap-2 text-sm text-neutral-600">
                           <Tv className="w-4 h-4 text-neutral-400" />
-                          <span>{event.estimatedAttendance.toLocaleString()} televidentes</span>
+                          <span>{event.estimatedAttendanceTv.toLocaleString()} televidentes</span>
                         </div>
                       )}
 
                       <div className="flex items-center gap-2 text-sm text-neutral-600">
                         <BarChart3 className="w-4 h-4 text-neutral-400" />
-                        <span>CPM: ${firstHalfCPM}</span>
+                        <span>CPM: {event.estimatedAttendanceTv + event.estimatedAttendance}</span>
                       </div>
                     </div>
                     

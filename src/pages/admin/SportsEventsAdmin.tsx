@@ -60,6 +60,7 @@ export function SportsEventsAdmin() {
       secondHalf: 2500000,
     },
     estimatedAttendance: 0,
+    estimatedAttendanceTv: 0,
     broadcastChannels: "",
     status: 'Active' as 'Active' | 'Inactive' | 'Eliminated'
   });
@@ -132,7 +133,9 @@ export function SportsEventsAdmin() {
 
       await updateEventMoments(event.id, {
         maxMoments: event.maxMoments,
-        momentPrices
+        momentPrices,
+        estimatedAttendance: event.estimatedAttendance,
+        estimatedAttendanceTv: event.estimatedAttendanceTv
       });
       
       setIsEditModalOpen(false);
@@ -222,7 +225,7 @@ export function SportsEventsAdmin() {
               </div>
               <div>
                 <p className="text-sm text-neutral-600">Alcance Potencial</p>
-                <p className="text-2xl font-semibold">{formatNumber(sportEvents.reduce((acc, event) => acc + event.estimatedAttendance, 0))}</p>
+                <p className="text-2xl font-semibold">{formatNumber(sportEvents.reduce((acc, event) => acc + event.estimatedAttendance + event.estimatedAttendanceTv, 0))}</p>
               </div>
             </Card.Body>
           </Card>
@@ -540,6 +543,20 @@ export function SportsEventsAdmin() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-neutral-700 mb-1">
+                            Asistencia Estimada TV
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.estimatedAttendanceTv}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              estimatedAttendanceTv: Number(e.target.value)
+                            })}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">
                             Canales de Transmisión
                           </label>
                           <input
@@ -678,6 +695,44 @@ export function SportsEventsAdmin() {
                         });
                       }}
                     />
+
+                    {/* Attendance Details */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Detalles de Asistencia</h3>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">
+                            Asistencia Estimada
+                          </label>
+                          <input
+                            type="number"
+                            value={selectedEvent.estimatedAttendance}
+                            onChange={(e) => setSelectedEvent({
+                              ...selectedEvent,
+                              estimatedAttendance: Number(e.target.value)
+                            })}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">
+                            Asistencia Estimada TV
+                          </label>
+                          <input
+                            type="number"
+                            value={selectedEvent.estimatedAttendanceTv}
+                            onChange={(e) => setSelectedEvent({
+                              ...selectedEvent,
+                              estimatedAttendanceTv: Number(e.target.value)
+                            })}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="p-6 border-t border-neutral-200 bg-neutral-50">
