@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Layout } from './components/Layout';
 // import { AIAssistant } from './components/AIAssistant';
-import { Home } from './pages/Home';
+import { Toaster } from 'react-hot-toast';
 import { EventDetail } from './pages/EventDetail';
 import { CreativeUpload } from './pages/CreativeUpload';
 import { PaymentDetails } from './pages/PaymentDetails';
@@ -216,6 +216,7 @@ export default function App() {
                 </Route>
               </Routes>
               {/* <AIAssistant /> */}
+              <Toaster position="top-right" />
             </Router>
           </PermissionsProvider>
         </AuthProvider>

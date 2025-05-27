@@ -65,8 +65,8 @@ request.interceptors.request.use(async (config: any) => {
 request.interceptors.response.use(
   (response) => {
     if (constants.env === 'dev') {
-      console.log('Response status:', response.status);
-      console.log('Response data:', response.data);
+      //console.log('Response status:', response.status);
+      //console.log('Response data:', response.data);
     }
     return response;
   },

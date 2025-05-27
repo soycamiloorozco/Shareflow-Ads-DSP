@@ -109,13 +109,13 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
         //   description: 'Gestión de contenido',
         //   requiresRole: ['super_admin', 'ads_admin']
         // },
-        // {
-        //   path: '/admin/content-review',
-        //   icon: CheckSquare,
-        //   label: 'Revisión',
-        //   description: 'Revisión de contenido',
-        //   requiresRole: ['super_admin', 'ads_admin', 'content_moderator']
-        // }
+        {
+          path: '/admin/content-review',
+          icon: CheckSquare,
+          label: 'Revisión',
+          description: 'Revisión de contenido',
+          requiresRole: ['Admin']
+        }
       ]
     },
     // {
