@@ -115,6 +115,13 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           label: 'Revisión',
           description: 'Revisión de contenido',
           requiresRole: ['Admin']
+        },
+
+        {
+          path: '/wallet',
+          icon: CheckSquare,
+          label: 'Mis Créditos',
+          requiresRole: ['Admin']
         }
       ]
     },

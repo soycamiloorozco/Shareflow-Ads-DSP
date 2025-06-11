@@ -1,0 +1,8 @@
+{
+  "correo": "ejemplo@correo.com",
+  "nombre": "Juan Pérez",
+  "celular": "+573001234567",
+  "pais": "Colombia",
+  "motivoRechazo": "Documentación incompleta",
+  "notaMotivoRechazo": "El usuario no proporcionó la documentación de identidad requerida para la verificación"
+} 

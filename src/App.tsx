@@ -32,6 +32,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { store, persistor } from './store/store';
 import { PersistGate } from 'redux-persist/integration/react';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { WalletPage } from './pages/WalletPage';
 
 export default function App() {
   return (
@@ -88,6 +89,7 @@ export default function App() {
                     } 
                   />
                   
+                   <Route path="/wallet" element={<WalletPage />} />
                   {/* Admin Routes */}
                   <Route 
                     path="/screens" 

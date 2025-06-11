@@ -238,7 +238,7 @@ export function EventDetail() {
   }, [remainingMoments]);
 
 
-  const handlePaymentSuccess = async (paymentId: string) => {
+  const handlePaymentSuccess = async () => {
     setLoading(true);
     const grouped = Object.values(
         selectedMoments.reduce((acc: any, item: any) => {
@@ -265,7 +265,6 @@ export function EventDetail() {
       sportEventId: id ?? "0",
       FilePath: preview ?? '',
       PurchaseDetails,
-      paymentId
     };
 
     try {
@@ -278,10 +277,6 @@ export function EventDetail() {
       alert(error);
       setLoading(false);
      }
-  };
-
-  const handlePaymentError = (error: any) => {
-    alert(`Error en el pago: ${error}`);
   };
 
 
@@ -1193,14 +1188,19 @@ export function EventDetail() {
                     <p className="text-sm text-neutral-600">Procesando pago... no cierre la página</p>
                   </div>
                 ) : (
-                  <Elements stripe={stripePromise}>
-                    <PaymentForm
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                    amount={totalPrice}
-                    selectedMoments={selectedMoments}
-                  />
-                </Elements>
+                    
+                    <Button
+                      type="button"
+                      onClick={handlePaymentSuccess}
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      icon={ArrowRight}
+                      disabled={loading}
+                    >
+                      {loading ? 'Procesando...' : `Pagar ${totalPrice.toLocaleString('es-CO')} COP`}
+                    </Button>
+                 
                 )}
               </div>
               
