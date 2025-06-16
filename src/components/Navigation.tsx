@@ -116,6 +116,12 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           description: 'Revisión de contenido',
           requiresRole: ['Admin']
         },
+        { 
+          path: '/partner/screens', 
+          icon: Monitor, 
+          label: 'Pantallas',
+          description: 'Gestiona tus pantallas digitales'
+        },
 
         {
           path: '/wallet',

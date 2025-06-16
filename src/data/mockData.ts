@@ -54,14 +54,104 @@ const santafeCircuitScreens: CircuitScreen[] = [
 ];
 
 export const screens: Screen[] = [
+  // Billboard screens
   {
-    id: 'screen-1',
+    id: 'screen-billboard-1',
+    name: 'Gran Valla Digital Av. Poblado',
+    location: 'Av. El Poblado, Medellín',
+    price: 350000,
+    availability: true,
+    image: 'https://images.unsplash.com/photo-1561898329-9ad7d76fbb2a?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'billboard')!,
+    environment: 'outdoor',
+    specs: {
+      width: 1280,
+      height: 720,
+      resolution: '2K',
+      brightness: '7000 nits'
+    },
+    views: {
+      daily: 85000,
+      monthly: 2550000
+    },
+    rating: 4.7,
+    reviews: 118,
+    isPartOfCircuit: false,
+    coordinates: { lat: 6.2105, lng: -75.5725 },
+    pricing: {
+      allowMoments: true,
+      deviceId: 'DEV_B001',
+      bundles: {
+        hourly: { enabled: true, price: 200000, spots: 4 },
+        daily: { enabled: true, price: 800000, spots: 24 },
+        weekly: { enabled: true, price: 3500000, spots: 168 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 35000,
+      monthlyTraffic: 1050000,
+      averageEngagement: 78
+    },
+    operatingHours: {
+      start: '00:00',
+      end: '23:59',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  {
+    id: 'screen-billboard-2',
+    name: 'Valla Premium Av. Libertadores',
+    location: 'Av. Libertadores, Bogotá',
+    price: 450000,
+    availability: true,
+    image: 'https://images.unsplash.com/photo-1620001796685-adf7110fe1a7?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'billboard')!,
+    environment: 'outdoor',
+    specs: {
+      width: 1920,
+      height: 1080,
+      resolution: '4K',
+      brightness: '8000 nits'
+    },
+    views: {
+      daily: 120000,
+      monthly: 3600000
+    },
+    rating: 4.9,
+    reviews: 135,
+    isPartOfCircuit: false,
+    coordinates: { lat: 4.6097, lng: -74.0817 },
+    pricing: {
+      allowMoments: true,
+      deviceId: 'DEV_B002',
+      bundles: {
+        hourly: { enabled: true, price: 250000, spots: 4 },
+        daily: { enabled: true, price: 1000000, spots: 24 },
+        weekly: { enabled: true, price: 4200000, spots: 168 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 45000,
+      monthlyTraffic: 1350000,
+      averageEngagement: 82
+    },
+    operatingHours: {
+      start: '00:00',
+      end: '23:59',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  
+  // Mall screens
+  {
+    id: 'screen-mall-1',
     name: 'El Poblado Plaza',
-    location: 'Calle 10 #43D-12',
+    location: 'Calle 10 #43D-12, Medellín',
     price: 250000,
     availability: true,
     image: 'https://images.unsplash.com/photo-1567967455389-e696c1a95d21?auto=format&fit=crop&q=80&w=1200',
-    category: categories.find(c => c.id === 'malls')!,
+    category: categories.find(c => c.id === 'mall')!,
+    environment: 'indoor',
     specs: {
       width: 1920,
       height: 1080,
@@ -97,13 +187,14 @@ export const screens: Screen[] = [
     }
   },
   {
-    id: 'screen-2',
+    id: 'screen-mall-2',
     name: 'Santafé Mall Circuit',
-    location: 'Cra. 43A #7 Sur-170',
+    location: 'Cra. 43A #7 Sur-170, Medellín',
     price: 450000,
     availability: true,
-    image: 'https://images.unsplash.com/photo-1567967455389-e696c1a95d21?auto=format&fit=crop&q=80&w=1200',
-    category: categories.find(c => c.id === 'malls')!,
+    image: 'https://images.unsplash.com/photo-1581650326785-3f7c880886ee?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'mall')!,
+    environment: 'indoor',
     specs: {
       width: 1920,
       height: 1080,
@@ -139,14 +230,193 @@ export const screens: Screen[] = [
       daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
     }
   },
+  
+  // Airport screens
   {
-    id: 'screen-3',
+    id: 'screen-airport-1',
+    name: 'Aeropuerto El Dorado Terminal 1',
+    location: 'Terminal 1, Aeropuerto El Dorado, Bogotá',
+    price: 550000,
+    availability: true,
+    image: 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'airport')!,
+    environment: 'indoor',
+    specs: {
+      width: 3840,
+      height: 2160,
+      resolution: '8K',
+      brightness: '6000 nits'
+    },
+    views: {
+      daily: 95000,
+      monthly: 2850000
+    },
+    rating: 4.9,
+    reviews: 189,
+    isPartOfCircuit: false,
+    coordinates: { lat: 4.7016, lng: -74.1469 },
+    pricing: {
+      allowMoments: true,
+      deviceId: 'DEV_A001',
+      bundles: {
+        hourly: { enabled: true, price: 300000, spots: 4 },
+        daily: { enabled: true, price: 1500000, spots: 24 },
+        weekly: { enabled: true, price: 6500000, spots: 168 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 42000,
+      monthlyTraffic: 1260000,
+      averageEngagement: 90
+    },
+    operatingHours: {
+      start: '00:00',
+      end: '23:59',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  {
+    id: 'screen-airport-2',
+    name: 'Aeropuerto JMC Zona Internacional',
+    location: 'Zona Internacional, Aeropuerto José María Córdova, Rionegro',
+    price: 480000,
+    availability: false,
+    image: 'https://images.unsplash.com/photo-1532973497172-04b34d604825?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'airport')!,
+    environment: 'indoor',
+    specs: {
+      width: 2560,
+      height: 1440,
+      resolution: '2K',
+      brightness: '5500 nits'
+    },
+    views: {
+      daily: 65000,
+      monthly: 1950000
+    },
+    rating: 4.7,
+    reviews: 142,
+    isPartOfCircuit: false,
+    coordinates: { lat: 6.1642, lng: -75.4233 },
+    pricing: {
+      allowMoments: true,
+      deviceId: 'DEV_A002',
+      bundles: {
+        hourly: { enabled: true, price: 280000, spots: 4 },
+        daily: { enabled: true, price: 1300000, spots: 24 },
+        weekly: { enabled: true, price: 5800000, spots: 168 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 32000,
+      monthlyTraffic: 960000,
+      averageEngagement: 88
+    },
+    operatingHours: {
+      start: '05:00',
+      end: '23:00',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  
+  // Transport screens
+  {
+    id: 'screen-transport-1',
+    name: 'Estación Transmilenio Calle 100',
+    location: 'Calle 100 con Autopista Norte, Bogotá',
+    price: 180000,
+    availability: true,
+    image: 'https://images.unsplash.com/photo-1586348943529-beaae6c28db9?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'transport')!,
+    environment: 'outdoor',
+    specs: {
+      width: 1920,
+      height: 1080,
+      resolution: '4K',
+      brightness: '5000 nits'
+    },
+    views: {
+      daily: 85000,
+      monthly: 2550000
+    },
+    rating: 4.5,
+    reviews: 98,
+    isPartOfCircuit: false,
+    coordinates: { lat: 4.6021, lng: -74.0721 },
+    pricing: {
+      allowMoments: false,
+      deviceId: 'DEV_T001',
+      bundles: {
+        hourly: { enabled: true, price: 120000, spots: 4 },
+        daily: { enabled: true, price: 400000, spots: 24 },
+        weekly: { enabled: true, price: 2000000, spots: 168 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 65000,
+      monthlyTraffic: 1950000,
+      averageEngagement: 75
+    },
+    operatingHours: {
+      start: '05:00',
+      end: '23:00',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  {
+    id: 'screen-transport-2',
+    name: 'Estación Metro Poblado',
+    location: 'Estación Metro El Poblado, Medellín',
+    price: 160000,
+    availability: true,
+    image: 'https://images.unsplash.com/photo-1601240311785-3c9055205b4f?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'transport')!,
+    environment: 'indoor',
+    specs: {
+      width: 1280,
+      height: 720,
+      resolution: '2K',
+      brightness: '4500 nits'
+    },
+    views: {
+      daily: 70000,
+      monthly: 2100000
+    },
+    rating: 4.6,
+    reviews: 87,
+    isPartOfCircuit: false,
+    coordinates: { lat: 6.2109, lng: -75.5689 },
+    pricing: {
+      allowMoments: false,
+      deviceId: 'DEV_T002',
+      bundles: {
+        hourly: { enabled: true, price: 100000, spots: 4 },
+        daily: { enabled: true, price: 350000, spots: 24 },
+        weekly: { enabled: true, price: 1800000, spots: 168 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 55000,
+      monthlyTraffic: 1650000,
+      averageEngagement: 72
+    },
+    operatingHours: {
+      start: '04:30',
+      end: '23:00',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  
+  // Stadium screens
+  {
+    id: 'screen-stadium-1',
     name: 'Estadio Atanasio Girardot',
-    location: 'Cra. 74 #48010',
+    location: 'Cra. 74 #48010, Medellín',
     price: 350000,
     availability: true,
     image: 'https://images.unsplash.com/photo-1577223625816-7546f13df25d?auto=format&fit=crop&q=80&w=1200',
-    category: categories.find(c => c.id === 'fpc')!,
+    category: categories.find(c => c.id === 'stadium')!,
+    environment: 'outdoor',
     specs: {
       width: 1920,
       height: 96,
@@ -172,6 +442,88 @@ export const screens: Screen[] = [
       dailyTraffic: 35000,
       monthlyTraffic: 140000,
       averageEngagement: 95
+    },
+    operatingHours: {
+      start: '00:00',
+      end: '23:59',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  {
+    id: 'screen-stadium-2',
+    name: 'Estadio El Campín',
+    location: 'Cra. 30 entre Calles 57 y 53, Bogotá',
+    price: 380000,
+    availability: true,
+    image: 'https://images.unsplash.com/photo-1610196810656-25e55fedf3cf?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'stadium')!,
+    environment: 'outdoor',
+    specs: {
+      width: 2048,
+      height: 128,
+      resolution: 'HD+',
+      brightness: '7000 nits'
+    },
+    views: {
+      daily: 50000,
+      monthly: 200000
+    },
+    rating: 4.8,
+    reviews: 95,
+    isPartOfCircuit: false,
+    coordinates: { lat: 4.6451, lng: -74.0785 },
+    pricing: {
+      allowMoments: true,
+      deviceId: 'DEV_S001',
+      bundles: {
+        hourly: { enabled: true, price: 220000, spots: 4 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 40000,
+      monthlyTraffic: 160000,
+      averageEngagement: 93
+    },
+    operatingHours: {
+      start: '00:00',
+      end: '23:59',
+      daysActive: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    }
+  },
+  {
+    id: 'screen-stadium-3',
+    name: 'Estadio Metropolitano',
+    location: 'Cra. 46 #40-02, Barranquilla',
+    price: 320000,
+    availability: true,
+    image: 'https://images.unsplash.com/photo-1626065698004-e446ef13035d?auto=format&fit=crop&q=80&w=1200',
+    category: categories.find(c => c.id === 'stadium')!,
+    environment: 'outdoor',
+    specs: {
+      width: 1792,
+      height: 112,
+      resolution: 'HD',
+      brightness: '6500 nits'
+    },
+    views: {
+      daily: 42000,
+      monthly: 168000
+    },
+    rating: 4.7,
+    reviews: 82,
+    isPartOfCircuit: false,
+    coordinates: { lat: 11.0007, lng: -74.7873 },
+    pricing: {
+      allowMoments: true,
+      deviceId: 'DEV_S002',
+      bundles: {
+        hourly: { enabled: true, price: 180000, spots: 4 }
+      }
+    },
+    metrics: {
+      dailyTraffic: 32000,
+      monthlyTraffic: 128000,
+      averageEngagement: 91
     },
     operatingHours: {
       start: '00:00',

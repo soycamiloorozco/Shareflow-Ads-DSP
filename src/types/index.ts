@@ -8,11 +8,12 @@ export interface Screen {
   availability: boolean;
   image: string;
   category: ScreenCategory;
+  environment: 'indoor' | 'outdoor';
   specs: {
     width: number;
     height: number;
     resolution: string;
-    brightness: string;
+    brightness?: string;
   };
   views: {
     daily: number;
@@ -20,13 +21,8 @@ export interface Screen {
   };
   rating: number;
   reviews: number;
-  isPartOfCircuit?: boolean;
-  circuitId?: string;
-  circuitScreens?: CircuitScreen[];
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
+  isPartOfCircuit: boolean;
+  coordinates: { lat: number; lng: number };
   pricing: {
     allowMoments: boolean;
     deviceId?: string;
