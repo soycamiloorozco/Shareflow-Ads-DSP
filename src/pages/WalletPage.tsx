@@ -20,6 +20,7 @@ import { paymentApi } from '../api/payment';
 import { Button } from '../components/Button';
 import { useWallet } from '../hooks/useWallet';
 import { Transaction } from '../hooks/useWallet/types';
+import { Bonus, useBonus } from '../hooks/useBonus';
 
 const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
 
@@ -692,7 +693,7 @@ interface RechargeModalProps {
   onClose: () => void;
   onRecharge: (amount: number) => Promise<void>;
   currentBalance: number;
-  currentCampaign: Campaign | null;
+  currentCampaign: Bonus | null;
   isReturningUser: boolean;
   userBonusPercentage: number;
   userType: string;
@@ -767,7 +768,7 @@ const RechargeModal: React.FC<RechargeModalProps> = memo(({
   ];
 
   const calculateBonus = (amount: number) => {
-    if (!currentCampaign || amount < currentCampaign.minAmount) return 0;
+    if (!currentCampaign || amount < currentCampaign.minRecharge) return 0;
     const levelBonus = Math.floor((amount * currentLevel.bonusPercentage) / 100);
     const campaignBonus = Math.floor((amount * userBonusPercentage) / 100);
     return levelBonus + campaignBonus;
@@ -778,8 +779,8 @@ const RechargeModal: React.FC<RechargeModalProps> = memo(({
   };
 
   const calculateCampaignBonus = (amount: number) => {
-    if (!currentCampaign || amount < currentCampaign.minAmount) return 0;
-    return Math.floor((amount * currentCampaign.bonusPercentage) / 100);
+    if (!currentCampaign || amount < currentCampaign.minRecharge) return 0;
+    return Math.floor((amount * currentCampaign.value) / 100);
   };
 
   // Función para calcular la comisión financiera (5% solo para tarjeta de crédito)
@@ -906,7 +907,7 @@ const RechargeModal: React.FC<RechargeModalProps> = memo(({
                     <span className="text-2xl">{currentCampaign.icon}</span>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold">{currentCampaign.title}</h3>
+                        <h3 className="font-bold">{currentCampaign.name}</h3>
                         <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
                           ¡{timeLeft} DÍAS!
                         </span>
@@ -914,7 +915,7 @@ const RechargeModal: React.FC<RechargeModalProps> = memo(({
                       <p className="text-blue-100 text-sm">{currentCampaign.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-lg">+{userBonusPercentage}%</p>
+                      <p className="font-bold text-lg">+{currentCampaign.value}%</p>
                       <p className="text-blue-200 text-xs">Usuario {userType}</p>
                     </div>
                   </div>
@@ -1047,7 +1048,7 @@ const RechargeModal: React.FC<RechargeModalProps> = memo(({
                       <div className="flex justify-between items-center">
                         <span className="text-green-600 flex items-center gap-1">
                           <Gift className="w-4 h-4" />
-                          Bonus {currentCampaign?.title}:
+                          Bonus {currentCampaign?.name}:
                         </span>
                         <span className="font-bold text-green-600">
                           +{formatCreditsText(calculateCampaignBonus(finalAmount))}
@@ -1257,7 +1258,7 @@ const RechargeModal: React.FC<RechargeModalProps> = memo(({
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <Gift className="w-4 h-4 text-green-600 flex-shrink-0" />
                           <span className="text-green-600 text-sm truncate">
-                            Bonus {currentCampaign?.title} ({currentCampaign?.bonusPercentage}%):
+                            Bonus {currentCampaign?.name} ({currentCampaign?.value}%):
                           </span>
                         </div>
                         <span className="font-bold text-green-600 ml-2 text-sm">
@@ -1894,6 +1895,8 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = memo(({ isOpen, 
 // Mobile-optimized Main Dashboard Component
 const WalletDashboard: React.FC = memo(() => {
   const { wallet, currentCampaign, loading, recharge, refreshData } = useWallets();
+    const { getActiveBonus } = useBonus();
+
   const { transactions: getTransactions, getBalance } = useWallet();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [isLevelsModalOpen, setIsLevelsModalOpen] = useState(false);
@@ -1901,6 +1904,8 @@ const WalletDashboard: React.FC = memo(() => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState<number>(0);
+  const [activeBonus, setActiveBonus] = useState<Bonus | null>(null);
+  
 
   // NUEVO: Estado para la página de celebración independiente
   const [isCelebrationOpen, setIsCelebrationOpen] = useState(false);
@@ -1915,6 +1920,11 @@ const WalletDashboard: React.FC = memo(() => {
     campaignName: ''
   });
 
+  useEffect(() => {
+    getActiveBonus().then((response) => {
+      setActiveBonus(response);
+    })
+  }, []);
   useEffect(() => {
     getTransactions().then((data) => {
       setTransactions(data.transactions)
@@ -1953,8 +1963,7 @@ const WalletDashboard: React.FC = memo(() => {
   const userBonusPercentage = isReturningUser ? 8 : 5;
 
   // Campaign countdown
-  const timeLeft = currentCampaign ? Math.ceil((currentCampaign.endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
-
+const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
 
   
   // Calculate totals for compact view
@@ -2206,7 +2215,7 @@ const WalletDashboard: React.FC = memo(() => {
         </div>
 
         {/* Campaign Banner - Mobile optimized */}
-        {currentCampaign && (
+        {activeBonus && (
           <div className="relative mb-6 sm:mb-8 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl sm:rounded-3xl p-4 sm:p-8 relative overflow-hidden">
               {/* Main content - Mobile first */}
@@ -2214,21 +2223,18 @@ const WalletDashboard: React.FC = memo(() => {
                 <div className="flex items-center gap-3 sm:gap-6">
                   {/* Icon */}
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl border border-white/30">
-                    {currentCampaign.icon}
+                    {activeBonus.icon}
                   </div>
 
                   {/* Campaign info */}
                   <div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                       <h3 className="text-lg sm:text-2xl font-bold text-white">
-                        {currentCampaign.title}
+                        {activeBonus.name}
                       </h3>
-                      <span className="bg-red-500 text-white text-xs px-2 sm:px-3 py-1 rounded-full font-bold w-fit">
-                        ¡ESTAMOS DE VUELTA!
-                      </span>
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm mb-3 max-w-lg">
-                      {currentCampaign.description}
+                      {activeBonus.description}
                     </p>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/30 w-fit">
@@ -2238,7 +2244,7 @@ const WalletDashboard: React.FC = memo(() => {
                         </span>
                       </div>
                       <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-3 sm:px-4 py-2 rounded-lg font-bold text-sm w-fit">
-                        Hasta +{userBonusPercentage}% bonus
+                        Hasta +{activeBonus.value}% bonus
                       </div>
                     </div>
                   </div>
@@ -2401,7 +2407,7 @@ const WalletDashboard: React.FC = memo(() => {
           onClose={() => setIsRechargeModalOpen(false)}
           onRecharge={handleRecharge}
           currentBalance={wallet.balance}
-          currentCampaign={currentCampaign}
+          currentCampaign={activeBonus}
           isReturningUser={isReturningUser}
           userBonusPercentage={userBonusPercentage}
           userType={userType}

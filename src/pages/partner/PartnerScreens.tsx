@@ -15,17 +15,10 @@ import {
   
   } from 'lucide-react';
 import { Button } from '../../components/Button';
-// import { screens } from '../../data/mockData';
 import toast from 'react-hot-toast';
-// Charts temporarily disabled - recharts not installed
-// import {
-//   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-//   PieChart, Pie, Cell, Legend, LineChart, Line, Bar, BarChart,
-// } from 'recharts';
 import { AddScreenModal } from '../../components/partner/AddScreenModal';
 import { ScreenConfigModal } from '../../components/partner/ScreenConfigModal';
 import { ImportInventoryModal } from '../../components/partner/ImportInventoryModal';
-import { ScreenDetailModal } from '../../components/partner/ScreenDetailModal';
 import {ScreenType, useScreen} from '../../hooks/useScreen';
 import { constants } from '../../config/constants';
 import { EditScreenModal } from '../../components/partner/EditScreenModal';
@@ -325,6 +318,7 @@ export function PartnerScreens() {
     createScreen(screenData).then(() => {
        toast.success('Pantalla agregada exitosamente');
       setIsAddModalOpen(false);
+      get();
     });
   }
 
@@ -1111,18 +1105,7 @@ export function PartnerScreens() {
           />
         )}
       </AnimatePresence>
-
-      <AnimatePresence>
-        {isDetailModalOpen && selectedScreen && (
-          <ScreenDetailModal
-            isOpen={isDetailModalOpen}
-            onClose={() => setIsDetailModalOpen(false)}
-            screen={selectedScreen}
-            performance={selectedScreenPerformance || undefined}
-            config={selectedScreenConfig || undefined}
-          />
-        )}
-      </AnimatePresence>
+    
     </div>
   );
 }

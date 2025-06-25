@@ -6,7 +6,8 @@ import {
   Monitor, Shield, BarChart3, FileText, Wallet, CreditCard,
   Users, Bell, HardDrive, Boxes, ChevronDown,
   ChevronLeft, Sun, Moon, Menu, X, LogOut,
-  Cog, CheckSquare, ImageIcon, Trophy
+  Cog, CheckSquare, ImageIcon, Trophy,
+  Gift
 } from 'lucide-react';
 import { usePermissions } from '../contexts/PermissionsContext';
 import { RequirePermission } from './RequirePermission';
@@ -121,6 +122,13 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           icon: Monitor, 
           label: 'Pantallas',
           description: 'Gestiona tus pantallas digitales'
+        },
+        {
+          path: '/admin/discounts',
+          icon: Gift,
+          label: 'Bonos y Promociones',
+          description: 'Gestión de bonos y códigos promocionales',
+          requiresRole: ['Admin']
         },
 
         {

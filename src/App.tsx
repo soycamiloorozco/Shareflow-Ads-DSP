@@ -34,6 +34,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { WalletPage } from './pages/WalletPage';
 import { PartnerScreens } from './pages/partner/PartnerScreens';
+import { WalletCampaignManagement } from './pages/admin/BonusManagement';
 
 export default function App() {
   return (
@@ -102,6 +103,18 @@ export default function App() {
                       </RequireAuth>
                     } 
                   />
+
+                  <Route 
+                    path="/admin/discounts" 
+                    element={
+                      <RequireAuth allowedRoles={['Admin', 'ads_admin']}>
+                        <RequirePermission roles={['Admin', 'ads_admin']}>
+                          <WalletCampaignManagement />
+                        </RequirePermission>
+                      </RequireAuth>
+                    } 
+                  />
+
                   <Route 
                     path="/admin/screens" 
                     element={
