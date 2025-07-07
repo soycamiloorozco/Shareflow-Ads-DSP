@@ -35,6 +35,7 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { WalletPage } from './pages/WalletPage';
 import { PartnerScreens } from './pages/partner/PartnerScreens';
 import { WalletCampaignManagement } from './pages/admin/BonusManagement';
+import PartnersRelations2 from './pages/admin/PartnersRelations2';
 
 export default function App() {
   return (
@@ -103,6 +104,15 @@ export default function App() {
                       </RequireAuth>
                     } 
                   />
+
+                   <Route 
+                  path="/admin/partners-relations" 
+                  element={
+                     <RequirePermission roles={['Admin', 'ads_admin']}>
+                      <PartnersRelations2 />
+                    </RequirePermission>
+                  }
+                />
 
                   <Route 
                     path="/admin/discounts" 

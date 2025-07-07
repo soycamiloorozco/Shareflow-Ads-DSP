@@ -1247,22 +1247,22 @@ export function LandingPage() {
     
     switch (itemTitle) {
       case 'For Media Owners':
-        navigate('/partners-landing');
+        //navigate('/partners-landing');
         break;
       case 'For Brands & Media Agencies':
-        navigate('/marketplace');
+        //navigate('/marketplace');
         break;
       case 'For Creators':
-        navigate('/marketplace');
+        //navigate('/marketplace');
         break;
       case 'For AdTech Partners':
-        navigate('/contact');
+        //navigate('/contact');
         break;
       case 'Ads':
-        navigate('/marketplace');
+        //navigate('/marketplace');
         break;
       case 'Platform':
-        navigate('/partners-landing');
+        //navigate('/partners-landing');
         break;
       default:
         break;
@@ -1610,19 +1610,19 @@ export function LandingPage() {
                 <MenuItem setActive={setActive} active={active} item="Recursos">
                   <div className="text-sm min-w-[200px]">
                     <div className="space-y-2">
-                      <HoveredLink to="/thinking">
+                      <HoveredLink to="/#">
                         <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
                           <h4 className="text-base font-semibold text-gray-900 mb-1">🧠 Thinking</h4>
                           <p className="text-gray-600 text-sm">Investigación e insights DOOH</p>
                         </div>
                       </HoveredLink>
-                      <HoveredLink to="/blog">
+                      <HoveredLink to="/#">
                         <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
                           <h4 className="text-base font-semibold text-gray-900 mb-1">📚 Blog</h4>
                           <p className="text-gray-600 text-sm">Artículos y guías sobre DOOH</p>
                         </div>
                       </HoveredLink>
-                      <HoveredLink to="/help">
+                      <HoveredLink to="/#">
                         <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
                           <h4 className="text-base font-semibold text-gray-900 mb-1">❓ Centro de Ayuda</h4>
                           <p className="text-gray-600 text-sm">Soporte y documentación</p>
@@ -1645,7 +1645,7 @@ export function LandingPage() {
                   Iniciar sesión
                 </motion.div>
               </Link>
-              <Link to="/register">
+              {/* <Link to="/register">
                 <motion.div
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.98 }}
@@ -1653,7 +1653,7 @@ export function LandingPage() {
                 >
                   Registrarse
                 </motion.div>
-              </Link>
+              </Link> */}
             </div>
             
             {/* Mobile Menu Button */}
@@ -1716,12 +1716,12 @@ export function LandingPage() {
                     Iniciar sesión
                   </button>
                 </Link>
-                <Link to="/register" onClick={toggleMenu}>
+                {/* <Link to="/register" onClick={toggleMenu}>
                   <button className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2">
                     <Rocket className="w-4 h-4" />
                     Registrarse
                   </button>
-                </Link>
+                </Link> */}
               </div>
             </div>
           </motion.div>

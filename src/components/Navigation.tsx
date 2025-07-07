@@ -7,7 +7,8 @@ import {
   Users, Bell, HardDrive, Boxes, ChevronDown,
   ChevronLeft, Sun, Moon, Menu, X, LogOut,
   Cog, CheckSquare, ImageIcon, Trophy,
-  Gift
+  Gift,
+  Building
 } from 'lucide-react';
 import { usePermissions } from '../contexts/PermissionsContext';
 import { RequirePermission } from './RequirePermission';
@@ -136,7 +137,14 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           icon: CheckSquare,
           label: 'Mis Créditos',
           requiresRole: ['Admin']
-        }
+        },
+        {
+          path: '/admin/partners-relations',
+          icon: Building,
+          label: 'Partners Relations',
+          description: 'Control de márgenes y pagos a partners',
+           requiresRole: ['Admin']
+        },
       ]
     },
     // {
