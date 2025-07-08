@@ -4556,6 +4556,7 @@ const PartnersRelations2: React.FC = () => {
 
   // Partner creation handler
   const handleCreatePartner = async () => {
+    console.log({createPartnerData})
     if (!createPartnerData.name || !createPartnerData.companyName || !createPartnerData.email) {
       toast.error('Por favor complete todos los campos requeridos');
       return;
