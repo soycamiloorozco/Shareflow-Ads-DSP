@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import request from '../../helpers/request';
+import { constants } from '../../config/constants';
 
 // ================================
 // UNIFIED DESIGN SYSTEM
@@ -266,7 +268,9 @@ import {
   Locate,
   Navigation2,
   Compass,
-  Route
+  Route,
+  Percent,
+  Target
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -2261,7 +2265,7 @@ const SearchBar: React.FC<{
   placeholder?: string;
   value: string;
   onChange: (value: string) => void;
-}> = ({ placeholder = "Buscar partners...", value, onChange }) => {
+}> = ({ placeholder = "Buscar partners, ciudades o ubicaciones...", value, onChange }) => {
   return (
     <div className="relative group">
       <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors" />
@@ -2775,33 +2779,33 @@ const PartnersTable: React.FC<{ partners: Partner[]; selectedPartner?: Partner |
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-gray-900">{partner.networkInventory.activeScreens}</span>
+                        <span className="text-sm font-medium text-gray-900">{partner.networkInventory?.activeScreens ?? 0}</span>
                       </div>
                       <span className="text-xs text-gray-500">online</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
                         <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <span className="text-sm text-gray-600">{partner.networkInventory.inactiveScreens}</span>
+                        <span className="text-sm text-gray-600">{partner.networkInventory?.inactiveScreens ?? 0}</span>
                       </div>
                       <span className="text-xs text-gray-500">offline</span>
                     </div>
                     <div className="text-xs text-gray-500">
-                      Total: {partner.networkInventory.totalScreens} pantallas
+                      Total: {partner.networkInventory?.totalScreens ?? 0} pantallas
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="space-y-1">
                     <div className="text-sm font-medium text-gray-900">
-                      {partner.cities.length} ciudades
+                      {(partner.cities ?? []).length} ciudades
                     </div>
                     <div className="text-xs text-gray-500">
-                      {partner.cities.slice(0, 2).join(', ')}
-                      {partner.cities.length > 2 && ` +${partner.cities.length - 2} más`}
+                      {(partner.cities ?? []).slice(0, 2).join(', ')}
+                      {(partner.cities ?? []).length > 2 && ` +${(partner.cities ?? []).length - 2} más`}
                     </div>
                     <div className="text-xs text-gray-400">
-                      {partner.regions.join(', ')}
+                      {(partner.regions ?? []).join(', ')}
                     </div>
                   </div>
                 </td>
@@ -2809,20 +2813,20 @@ const PartnersTable: React.FC<{ partners: Partner[]; selectedPartner?: Partner |
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">Uptime</span>
-                      <span className="text-sm font-medium text-gray-900">{partner.networkInventory.uptime}%</span>
+                      <span className="text-sm font-medium text-gray-900">{partner.networkInventory?.uptime ?? 0}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div 
                         className={`h-1.5 rounded-full transition-all duration-300 ${
-                          partner.networkInventory.uptime >= 95 ? 'bg-green-500' :
-                          partner.networkInventory.uptime >= 90 ? 'bg-yellow-500' : 'bg-red-500'
+                          (partner.networkInventory?.uptime ?? 0) >= 95 ? 'bg-green-500' :
+                          (partner.networkInventory?.uptime ?? 0) >= 90 ? 'bg-yellow-500' : 'bg-red-500'
                         }`}
-                        style={{ width: `${partner.networkInventory.uptime}%` }}
+                        style={{ width: `${partner.networkInventory?.uptime ?? 0}%` }}
                       ></div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">Fill Rate</span>
-                      <span className="text-sm font-medium text-gray-900">{partner.networkInventory.fillRate}%</span>
+                      <span className="text-sm font-medium text-gray-900">{partner.networkInventory?.fillRate ?? 0}%</span>
                     </div>
                   </div>
                 </td>
@@ -2895,7 +2899,7 @@ const PartnerDetailPanel: React.FC<{ partner: Partner; onEditMargin?: (partner: 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Revenue Total</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(partner.revenue)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(partner.revenue ?? 0)}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-green-600" />
@@ -2907,7 +2911,7 @@ const PartnerDetailPanel: React.FC<{ partner: Partner; onEditMargin?: (partner: 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Pantallas</p>
-              <p className="text-2xl font-bold text-gray-900">{partner.screens}</p>
+              <p className="text-2xl font-bold text-gray-900">{partner.screens ?? 0}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <Monitor className="w-6 h-6 text-blue-600" />
@@ -2919,7 +2923,7 @@ const PartnerDetailPanel: React.FC<{ partner: Partner; onEditMargin?: (partner: 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Performance</p>
-              <p className="text-2xl font-bold text-gray-900">{partner.performance}%</p>
+              <p className="text-2xl font-bold text-gray-900">{partner.performance ?? 0}%</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-purple-600" />
@@ -2931,7 +2935,7 @@ const PartnerDetailPanel: React.FC<{ partner: Partner; onEditMargin?: (partner: 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Comisión</p>
-              <p className="text-2xl font-bold text-gray-900">{partner.commission}%</p>
+              <p className="text-2xl font-bold text-gray-900">{partner.commission ?? 0}%</p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <Star className="w-6 h-6 text-orange-600" />
@@ -2941,121 +2945,124 @@ const PartnerDetailPanel: React.FC<{ partner: Partner; onEditMargin?: (partner: 
       </div>
 
       {/* CMS Integration */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Monitor className="w-5 h-5" />
-            Integración CMS
-          </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Settings className="w-4 h-4" />}
-          >
-            Configurar
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Proveedor</span>
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: getCMSProviderInfo(partner.cmsIntegration.provider).bgColor }}
-                >
-                  <div style={{ color: getCMSProviderInfo(partner.cmsIntegration.provider).color }}>
-                    {getCMSProviderInfo(partner.cmsIntegration.provider).icon}
+      {partner.cmsIntegration && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 ">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Monitor className="w-5 h-5" />
+              Integración CMS
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Settings className="w-4 h-4" />}
+            >
+              Configurar
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Proveedor</span>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: getCMSProviderInfo(partner.cmsIntegration.provider)?.bgColor }}
+                  >
+                    <div style={{ color: getCMSProviderInfo(partner.cmsIntegration.provider)?.color }}>
+                      {getCMSProviderInfo(partner.cmsIntegration.provider)?.icon}
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {getCMSProviderInfo(partner.cmsIntegration.provider)?.name}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Estado</span>
+                <div className="flex items-center gap-2">
+                  <div style={{ color: getIntegrationStatusInfo(partner.cmsIntegration.status)?.color }}>
+                    {getIntegrationStatusInfo(partner.cmsIntegration.status)?.icon}
+                  </div>
+                  <span 
+                    className="text-sm font-semibold"
+                    style={{ color: getIntegrationStatusInfo(partner.cmsIntegration.status)?.color }}
+                  >
+                    {getIntegrationStatusInfo(partner.cmsIntegration.status)?.text}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Pantallas importadas</span>
+                <span className="text-sm font-semibold text-blue-600">
+                  {partner.cmsIntegration.screensImported}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Salud integración</span>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="px-2 py-1 rounded-full text-xs font-medium"
+                    style={{ 
+                      backgroundColor: getIntegrationHealthInfo(partner.cmsIntegration.integrationHealth)?.bgColor,
+                      color: getIntegrationHealthInfo(partner.cmsIntegration.integrationHealth)?.color
+                    }}
+                  >
+                    {getIntegrationHealthInfo(partner.cmsIntegration.integrationHealth)?.text}
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">
-                  {getCMSProviderInfo(partner.cmsIntegration.provider).name}
-                </span>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Estado</span>
-              <div className="flex items-center gap-2">
-                <div style={{ color: getIntegrationStatusInfo(partner.cmsIntegration.status).color }}>
-                  {getIntegrationStatusInfo(partner.cmsIntegration.status).icon}
-                </div>
-                <span 
-                  className="text-sm font-semibold"
-                  style={{ color: getIntegrationStatusInfo(partner.cmsIntegration.status).color }}
-                >
-                  {getIntegrationStatusInfo(partner.cmsIntegration.status).text}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Pantallas importadas</span>
-              <span className="text-sm font-semibold text-blue-600">
-                {partner.cmsIntegration.screensImported}
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Salud integración</span>
-              <div className="flex items-center gap-2">
-                <div 
-                  className="px-2 py-1 rounded-full text-xs font-medium"
-                  style={{ 
-                    backgroundColor: getIntegrationHealthInfo(partner.cmsIntegration.integrationHealth).bgColor,
-                    color: getIntegrationHealthInfo(partner.cmsIntegration.integrationHealth).color
-                  }}
-                >
-                  {getIntegrationHealthInfo(partner.cmsIntegration.integrationHealth).text}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Última sincronización</span>
-              <span className="text-sm text-gray-600">
-                {new Date(partner.cmsIntegration.lastSync).toLocaleDateString('es-CO', {
-                  day: 'numeric',
-                  month: 'numeric',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
-            </div>
-
-            {partner.cmsIntegration.apiVersion && (
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Versión API</span>
+                <span className="text-sm font-medium text-gray-700">Última sincronización</span>
                 <span className="text-sm text-gray-600">
-                  {partner.cmsIntegration.apiVersion}
+                  {new Date(partner.cmsIntegration.lastSync).toLocaleDateString('es-CO', {
+                    day: 'numeric',
+                    month: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </span>
               </div>
-            )}
-          </div>
-        </div>
 
-        {partner.cmsIntegration.connectionDetails?.capabilities && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Capacidades</h4>
-            <div className="flex flex-wrap gap-2">
-              {partner.cmsIntegration.connectionDetails.capabilities.map((capability, index) => (
-                <span 
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                >
-                  {capability}
-                </span>
-              ))}
+              {partner.cmsIntegration.apiVersion && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Versión API</span>
+                  <span className="text-sm text-gray-600">
+                    {partner.cmsIntegration.apiVersion}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
+
+          {partner.cmsIntegration.connectionDetails?.capabilities && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Capacidades</h4>
+              <div className="flex flex-wrap gap-2">
+                {partner.cmsIntegration.connectionDetails.capabilities.map((capability, index) => (
+                  <span 
+                    key={index}
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >
+                    {capability}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Screen Activity */}
+      {partner.screenActivity && (
       <div className="bg-white rounded-lg border border-gray-200 p-6 ">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -3111,1325 +3118,437 @@ const PartnerDetailPanel: React.FC<{ partner: Partner; onEditMargin?: (partner: 
           </div>
         </div>
       </div>
+      )}
 
       {/* Markup Configuration */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Configuración de Markups</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEditMargin?.(partner)}
-            icon={<Edit3 className="w-4 h-4" />}
-          >
-            Editar
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-6">
-          {/* Marketplace Markups by Type */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <ShoppingCart className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Markups Marketplace</h4>
-                  <p className="text-xs text-gray-500">Markups por tipo de compra</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {/* Momentos */}
-              <div className="bg-white rounded-lg p-3 border border-blue-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">⚡</span>
-                  <span className="text-sm font-medium text-gray-700">Momentos</span>
-                </div>
-                <div className="text-xl font-bold text-blue-600">{partner.marketplaceMargins.momentos}%</div>
-                <div className="w-full bg-blue-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-blue-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.marketplaceMargins.momentos}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Hourly */}
-              <div className="bg-white rounded-lg p-3 border border-cyan-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🕐</span>
-                  <span className="text-sm font-medium text-gray-700">Por hora</span>
-                </div>
-                <div className="text-xl font-bold text-cyan-600">{partner.marketplaceMargins.hourly}%</div>
-                <div className="w-full bg-cyan-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-cyan-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.marketplaceMargins.hourly}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Daily */}
-              <div className="bg-white rounded-lg p-3 border border-green-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">📅</span>
-                  <span className="text-sm font-medium text-gray-700">Por día</span>
-                </div>
-                <div className="text-xl font-bold text-green-600">{partner.marketplaceMargins.daily}%</div>
-                <div className="w-full bg-green-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-green-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.marketplaceMargins.daily}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Weekly */}
-              <div className="bg-white rounded-lg p-3 border border-orange-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">📊</span>
-                  <span className="text-sm font-medium text-gray-700">Por semana</span>
-                </div>
-                <div className="text-xl font-bold text-orange-600">{partner.marketplaceMargins.weekly}%</div>
-                <div className="w-full bg-orange-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-orange-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.marketplaceMargins.weekly}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Monthly */}
-              <div className="bg-white rounded-lg p-3 border border-pink-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🗓️</span>
-                  <span className="text-sm font-medium text-gray-700">Por mes</span>
-                </div>
-                <div className="text-xl font-bold text-pink-600">{partner.marketplaceMargins.monthly}%</div>
-                <div className="w-full bg-pink-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-pink-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.marketplaceMargins.monthly}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+      {partner.marketplaceMargins && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 ">
+          <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Configuración de Markups</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEditMargin?.(partner)}
+              icon={<Edit3 className="w-4 h-4" />}
+            >
+              Editar
+            </Button>
           </div>
-
-          {/* Programmatic Margin */}
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-purple-600" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Programático</h4>
-                  <p className="text-xs text-gray-500">Markup para campañas automáticas</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-purple-600">{partner.programmaticMargin || partner.customMargin || partner.grossMargin}%</p>
-              </div>
-            </div>
-            <div className="w-full bg-purple-200 rounded-full h-2">
-              <div 
-                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${partner.programmaticMargin || partner.customMargin || partner.grossMargin}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Info className="w-4 h-4" />
-            <span>
-              Los markups determinan la comisión que recibe Shareflow por cada venta. 
-                                Fórmula: Precio al cliente = Costo base / (1 - Markup %)
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Equipo del Partner */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Equipo del Partner
-          </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Miembros del equipo y sus permisos de acceso
-            </p>
-          </div>
-          <div className="text-sm text-gray-500">
-            {partner.teamMembers.length} miembro{partner.teamMembers.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          {partner.teamMembers.map((member) => {
-            const roleInfo = getRoleInfo(member.role);
-            return (
-              <div key={member.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                       style={{ backgroundColor: roleInfo.bgColor }}>
-                    <div style={{ color: roleInfo.color }}>
-                      {roleInfo.icon}
-                    </div>
+          
+          <div className="grid grid-cols-1 gap-6">
+            {/* Marketplace Markups by Type */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <ShoppingCart className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
-                      <h4 className="font-semibold text-gray-900">{member.name}</h4>
-                      <p className="text-sm text-gray-600">{member.email}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                    <span 
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                      style={{ 
-                        backgroundColor: roleInfo.bgColor,
-                        color: roleInfo.color
-                      }}
-                    >
-                      {roleInfo.label}
-                    </span>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      member.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {member.status === 'active' ? 'Activo' : 'Pendiente'}
-                    </span>
+                    <h4 className="font-medium text-gray-900">Markups Marketplace</h4>
+                    <p className="text-xs text-gray-500">Markups por tipo de compra</p>
                   </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {/* Momentos */}
+                <div className="bg-white rounded-lg p-3 border border-blue-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">⚡</span>
+                    <span className="text-sm font-medium text-gray-700">Momentos</span>
+                  </div>
+                  <div className="text-xl font-bold text-blue-600">{(partner.marketplaceMargins?.momentos) ?? 0}%</div>
+                  <div className="w-full bg-blue-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                      style={{ width: `${(partner.marketplaceMargins?.momentos) ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Hourly */}
+                <div className="bg-white rounded-lg p-3 border border-cyan-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🕐</span>
+                    <span className="text-sm font-medium text-gray-700">Por hora</span>
+                  </div>
+                  <div className="text-xl font-bold text-cyan-600">{(partner.marketplaceMargins?.hourly) ?? 0}%</div>
+                  <div className="w-full bg-cyan-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-cyan-600 h-1 rounded-full transition-all duration-300"
+                      style={{ width: `${(partner.marketplaceMargins?.hourly) ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Daily */}
+                <div className="bg-white rounded-lg p-3 border border-green-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">📅</span>
+                    <span className="text-sm font-medium text-gray-700">Por día</span>
+                  </div>
+                  <div className="text-xl font-bold text-green-600">{(partner.marketplaceMargins?.daily) ?? 0}%</div>
+                  <div className="w-full bg-green-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-green-600 h-1 rounded-full transition-all duration-300"
+                      style={{ width: `${(partner.marketplaceMargins?.daily) ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Weekly */}
+                <div className="bg-white rounded-lg p-3 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">📊</span>
+                    <span className="text-sm font-medium text-gray-700">Por semana</span>
+                  </div>
+                  <div className="text-xl font-bold text-orange-600">{(partner.marketplaceMargins?.weekly) ?? 0}%</div>
+                  <div className="w-full bg-orange-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-orange-600 h-1 rounded-full transition-all duration-300"
+                      style={{ width: `${(partner.marketplaceMargins?.weekly) ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Monthly */}
+                <div className="bg-white rounded-lg p-3 border border-pink-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🗓️</span>
+                    <span className="text-sm font-medium text-gray-700">Por mes</span>
+                  </div>
+                  <div className="text-xl font-bold text-pink-600">{(partner.marketplaceMargins?.monthly) ?? 0}%</div>
+                  <div className="w-full bg-pink-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-pink-600 h-1 rounded-full transition-all duration-300"
+                      style={{ width: `${(partner.marketplaceMargins?.monthly) ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Programmatic Margin */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">Programático</h4>
+                    <p className="text-xs text-gray-500">Markup para campañas automáticas</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-purple-600">{partner.programmaticMargin ?? partner.customMargin ?? partner.grossMargin ?? 0}%</p>
+                </div>
+              </div>
+              <div className="w-full bg-purple-200 rounded-full h-2">
+                <div 
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${partner.programmaticMargin ?? partner.customMargin ?? partner.grossMargin ?? 0}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Info className="w-4 h-4" />
+              <span>
+                Los markups determinan la comisión que recibe Shareflow por cada venta. 
+                                  Fórmula: Precio al cliente = Costo base / (1 - Markup %)
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Equipo del Partner */}
+      {partner.teamMembers && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 ">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Equipo del Partner
+            </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Miembros del equipo y sus permisos de acceso
+              </p>
+            </div>
+            <div className="text-sm text-gray-500">
+              {partner.teamMembers.length} miembro{partner.teamMembers.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            {partner.teamMembers.map((member) => {
+              const roleInfo = getRoleInfo(member.role);
+              return (
+                <div key={member.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                         style={{ backgroundColor: roleInfo.bgColor }}>
+                      <div style={{ color: roleInfo.color }}>
+                        {roleInfo.icon}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="text-right mr-4">
-                      <div className="text-sm text-gray-500">
-                        Desde {formatDate(member.joinedAt)}
+                    <div>
+                        <h4 className="font-semibold text-gray-900">{member.name}</h4>
+                        <p className="text-sm text-gray-600">{member.email}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                      <span 
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        style={{ 
+                          backgroundColor: roleInfo.bgColor,
+                          color: roleInfo.color
+                        }}
+                      >
+                        {roleInfo.label}
+                      </span>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        member.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {member.status === 'active' ? 'Activo' : 'Pendiente'}
+                      </span>
+                    </div>
                       </div>
                     </div>
                     
-                    {/* Accesos Directos de Contacto */}
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(`mailto:${member.email}`, '_blank')}
-                        icon={<Mail className="w-4 h-4" />}
-                        className="hover:bg-blue-50 hover:text-blue-600"
-                      >
-                        Email
-                      </Button>
+                      <div className="text-right mr-4">
+                        <div className="text-sm text-gray-500">
+                          Desde {formatDate(member.joinedAt)}
+                        </div>
+                      </div>
                       
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          // Aquí podrías abrir un modal de chat interno o WhatsApp
-                          toast.success(`Iniciando chat con ${member.name}`);
-                        }}
-                        icon={<Phone className="w-4 h-4" />}
-                        className="hover:bg-green-50 hover:text-green-600"
-                      >
-                        Chat
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Permisos Detallados del Miembro */}
-                <div className="mt-4 pt-3 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Permisos de Acceso:</span>
-                    <div className="flex items-center gap-4 text-xs">
-                      <div className={`flex items-center gap-1 ${
-                        member.permissions.canViewBilling ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <DollarSign className="w-3 h-3" />
-                        <span>Facturación</span>
-                        {member.permissions.canViewBilling && <CheckCircle className="w-3 h-3" />}
-                      </div>
-                      <div className={`flex items-center gap-1 ${
-                        member.permissions.canManageTeam ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <Shield className="w-3 h-3" />
-                        <span>Gestión</span>
-                        {member.permissions.canManageTeam && <CheckCircle className="w-3 h-3" />}
-                      </div>
-                      <div className={`flex items-center gap-1 ${
-                        member.permissions.canViewAnalytics ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <BarChart3 className="w-3 h-3" />
-                        <span>Analytics</span>
-                        {member.permissions.canViewAnalytics && <CheckCircle className="w-3 h-3" />}
+                      {/* Accesos Directos de Contacto */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<Mail className="w-4 h-4" />}
+                        >
+                          Email
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<Phone className="w-4 h-4" />}
+                        >
+                          Llamar
+                        </Button>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Resumen de Permisos del Equipo */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Permisos del Equipo
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Facturación</span>
-                </div>
-                <span className="text-lg font-bold text-blue-800">
-                  {partner.teamMembers.filter(m => m.permissions.canViewBilling).length}
-              </span>
-            </div>
-            </div>
-            <div className="bg-white rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                  <Settings className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Gestión</span>
-                </div>
-                <span className="text-lg font-bold text-blue-800">
-                  {partner.teamMembers.filter(m => m.permissions.canManageTeam).length}
-              </span>
-            </div>
-            </div>
-            <div className="bg-white rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Analytics</span>
-                </div>
-                <span className="text-lg font-bold text-blue-800">
-                  {partner.teamMembers.filter(m => m.permissions.canViewAnalytics).length}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-        {/* Acciones Rápidas del Equipo */}
-        <div className="mt-6 flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900">Acciones del Equipo</h4>
-              <p className="text-sm text-gray-600">Gestiona el equipo del partner</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const emails = partner.teamMembers.map(m => m.email).join(',');
-                window.open(`mailto:${emails}`, '_blank');
-              }}
-              icon={<Mail className="w-4 h-4" />}
-            >
-              Email Grupal
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                toast.success('Función de videollamada próximamente');
-              }}
-              icon={<Phone className="w-4 h-4" />}
-            >
-              Reunión
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Pagos y Facturación */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              Pagos y Facturación
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Resumen financiero y historial de pagos
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<FileText className="w-4 h-4" />}
-          >
-            Ver Historial Completo
-          </Button>
-        </div>
-
-        {/* Métricas Financieras Principales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Revenue del Mes</span>
-              </div>
-            </div>
-            <div className="mb-1">
-              <span className="text-2xl font-bold text-green-800">
-                {formatCurrency(partner.financialMetrics.monthlyRecurringRevenue)}
-              </span>
-            </div>
-            <div className="text-xs text-green-600">
-              {partner.financialMetrics.transactionsThisMonth} plays consumidos
-            </div>
-          </div>
-
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium text-blue-900">Próximo Pago</span>
-              </div>
-            </div>
-            <div className="mb-1">
-              <span className="text-2xl font-bold text-blue-800">
-                {formatCurrency(partner.financialMetrics.nextPaymentAmount)}
-              </span>
-            </div>
-            <div className="text-xs text-blue-600">
-              {formatDate(partner.financialMetrics.nextPaymentDate)}
-            </div>
-          </div>
-
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-purple-600" />
-                <span className="text-sm font-medium text-purple-900">Campañas Activas</span>
-              </div>
-            </div>
-            <div className="mb-1">
-              <span className="text-2xl font-bold text-purple-800">
-                {Math.floor(partner.financialMetrics.totalTransactions / 30)}
-              </span>
-            </div>
-            <div className="text-xs text-purple-600">
-              {partner.financialMetrics.totalTransactions} total este periodo
-            </div>
-          </div>
-        </div>
-
-        {/* Pagos Recientes */}
-        <div className="mb-6">
-          <h4 className="text-md font-semibold text-gray-900 mb-4">Pagos Recientes</h4>
-          <div className="space-y-3">
-            {/* Próximo Pago Programado */}
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">
-                    {formatCurrency(partner.financialMetrics.nextPaymentAmount)}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {formatDate(partner.financialMetrics.nextPaymentDate).split(' ')[0]} • {partner.networkInventory.activeScreens} pantallas
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="px-3 py-1 bg-blue-200 text-blue-800 text-sm font-medium rounded-full">
-                  Programado
-                </span>
-                <div className="text-xs text-blue-600 mt-1">
-                  {formatDate(partner.financialMetrics.nextPaymentDate)}
-                </div>
-              </div>
-            </div>
-
-            {/* Último Pago */}
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">
-                    {formatCurrency(partner.financialMetrics.monthlyRecurringRevenue * 0.85)}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {formatDate(partner.financialMetrics.lastPaymentDate).split(' ')[0]} • {Math.floor(partner.networkInventory.activeScreens * 0.8)} pantallas
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="px-3 py-1 bg-green-200 text-green-800 text-sm font-medium rounded-full">
-                  Pagado
-                </span>
-                <div className="text-xs text-green-600 mt-1">
-                  {formatDate(partner.financialMetrics.lastPaymentDate)}
-                </div>
-              </div>
-            </div>
-
-            {/* Pago Anterior */}
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">
-                    {formatCurrency(partner.financialMetrics.monthlyRecurringRevenue * 0.72)}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Abril 2024 • {Math.floor(partner.networkInventory.activeScreens * 0.6)} pantallas
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="px-3 py-1 bg-green-200 text-green-800 text-sm font-medium rounded-full">
-                  Pagado
-                </span>
-                <div className="text-xs text-green-600 mt-1">
-                  30/4/2024
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Métodos de Pago */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Wallet className="w-5 h-5" />
-            Métodos de Pago
-          </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Información financiera para el procesamiento de pagos
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">
-                Próximo Pago: {formatCurrency(partner.financialMetrics.nextPaymentAmount)}
-              </div>
-              <div className="text-xs text-gray-500">
-                {formatDate(partner.financialMetrics.nextPaymentDate)}
-              </div>
-            </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Settings className="w-4 h-4" />}
-          >
-            Configurar
-          </Button>
-          </div>
-        </div>
-        
-        {/* Payment Status Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-900">Método Preferido</p>
-                <p className="text-lg font-bold text-blue-800">
-                  {getPaymentMethodInfo(partner.paymentMethods.preferredMethod).label}
-                </p>
-              </div>
-              <div style={{ color: getPaymentMethodInfo(partner.paymentMethods.preferredMethod).color }}>
-                {getPaymentMethodInfo(partner.paymentMethods.preferredMethod).icon}
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-900">Balance Pendiente</p>
-                <p className="text-lg font-bold text-green-800">
-                  {formatCurrency(partner.financialMetrics.pendingBalance)}
-                </p>
-              </div>
-              <DollarSign className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-900">Frecuencia de Pago</p>
-                <p className="text-lg font-bold text-purple-800 capitalize">
-                  {partner.financialMetrics.paymentFrequency === 'weekly' ? 'Semanal' : 
-                   partner.financialMetrics.paymentFrequency === 'biweekly' ? 'Quincenal' : 'Mensual'}
-                </p>
-              </div>
-              <Calendar className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Preferred Method Details */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 p-4 rounded-lg border-2"
-               style={{ 
-                 borderColor: getPaymentMethodInfo(partner.paymentMethods.preferredMethod).color + '40',
-                 backgroundColor: getPaymentMethodInfo(partner.paymentMethods.preferredMethod).bgColor
-               }}>
-            <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                 style={{ backgroundColor: getPaymentMethodInfo(partner.paymentMethods.preferredMethod).color + '20' }}>
-              <div style={{ color: getPaymentMethodInfo(partner.paymentMethods.preferredMethod).color }}>
-                {getPaymentMethodInfo(partner.paymentMethods.preferredMethod).icon}
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="font-semibold text-gray-900">
-                  {getPaymentMethodInfo(partner.paymentMethods.preferredMethod).label}
-                </h4>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                  Método Principal
-                </span>
-              </div>
-              <p className="text-sm text-gray-600">
-                {getPaymentMethodInfo(partner.paymentMethods.preferredMethod).description}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="flex items-center gap-1 mb-1">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-600">Configurado</span>
-              </div>
-              <p className="text-xs text-gray-500">
-                Último pago: {formatDate(partner.financialMetrics.lastPaymentDate)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Payment Information */}
-        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-              {partner.paymentMethods.preferredMethod === 'bank' && <Building2 className="w-5 h-5 text-gray-600" />}
-              {partner.paymentMethods.preferredMethod === 'paypal' && <Wallet className="w-5 h-5 text-blue-600" />}
-              {partner.paymentMethods.preferredMethod === 'payoneer' && <CreditCard className="w-5 h-5 text-orange-600" />}
-              {partner.paymentMethods.preferredMethod === 'bank' && 'Información Bancaria Completa'}
-              {partner.paymentMethods.preferredMethod === 'paypal' && 'Información de PayPal'}
-              {partner.paymentMethods.preferredMethod === 'payoneer' && 'Información de Payoneer'}
-            </h4>
-            <div className="flex items-center gap-2">
-              {(partner.paymentMethods.preferredMethod === 'bank' && partner.paymentMethods.bankAccount.verified) ||
-               (partner.paymentMethods.preferredMethod === 'paypal' && partner.paymentMethods.paypal.verified) ||
-               (partner.paymentMethods.preferredMethod === 'payoneer' && partner.paymentMethods.payoneer.verified) ? (
-                <>
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-600 font-medium">Verificado</span>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm text-amber-600 font-medium">Pendiente Verificación</span>
-                </>
-              )}
-              </div>
-              </div>
-
-          {partner.paymentMethods.preferredMethod === 'bank' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                    <span className="text-sm font-medium text-gray-600">Entidad Bancaria:</span>
-                    <span className="font-semibold text-gray-900">{partner.paymentMethods.bankAccount.bankName}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                    <span className="text-sm font-medium text-gray-600">Número de Cuenta:</span>
-                    <span className="font-mono text-gray-900">{partner.paymentMethods.bankAccount.accountNumber}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                    <span className="text-sm font-medium text-gray-600">Tipo de Cuenta:</span>
-                    <span className="font-medium text-gray-900 capitalize">
-                  {partner.paymentMethods.bankAccount.accountType === 'checking' ? 'Corriente' : 'Ahorros'}
-                </span>
-              </div>
-              </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                    <span className="text-sm font-medium text-gray-600">Código SWIFT:</span>
-                    <span className="font-mono text-gray-900">{partner.paymentMethods.bankAccount.swiftCode}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                    <span className="text-sm font-medium text-gray-600">Routing Number:</span>
-                    <span className="font-mono text-gray-900">{partner.paymentMethods.bankAccount.routingNumber}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                    <span className="text-sm font-medium text-gray-600">Titular de Cuenta:</span>
-                <span className="font-medium text-gray-900">{partner.paymentMethods.bankAccount.accountHolderName}</span>
-              </div>
-            </div>
-            </div>
-              
-              {!partner.paymentMethods.bankAccount.verified && (
-                <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
-                    <div>
-                      <h5 className="text-sm font-medium text-amber-900 mb-1">Verificación Pendiente</h5>
-                      <p className="text-sm text-amber-800">
-                        La cuenta bancaria requiere verificación antes de procesar pagos. 
-                        Los pagos se procesarán una vez completada la verificación.
-                      </p>
+                  {/* Permisos */}
+                  {member.permissions && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <h5 className="text-xs font-semibold text-gray-500 mb-2">Permisos</h5>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {Object.entries(member.permissions).map(([key, value]) => (
+                          <div key={key} className="flex items-center gap-2">
+                            {value ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-gray-400" />
+                            )}
+                            <span className="text-sm text-gray-700">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              );
+            })}
           </div>
-        )}
-
-        {partner.paymentMethods.preferredMethod === 'paypal' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-white rounded-lg border border-gray-200">
-              <div>
-                  <span className="text-sm font-medium text-gray-600">Email de PayPal:</span>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">{partner.paymentMethods.paypal.email}</p>
-              </div>
-                <div className="text-right">
-                {partner.paymentMethods.paypal.verified ? (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="text-sm text-green-600 font-medium">Cuenta Verificada</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-amber-600" />
-                      <span className="text-sm text-amber-600 font-medium">No Verificada</span>
-                    </div>
-                )}
-              </div>
-            </div>
-              
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start gap-3">
-                  <Info className="w-5 h-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h5 className="text-sm font-medium text-blue-900 mb-1">Información de PayPal</h5>
-                    <p className="text-sm text-blue-800">
-                      Los pagos se enviarán directamente a esta cuenta de PayPal. 
-                      Asegúrate de que la cuenta esté configurada para recibir pagos comerciales.
-                    </p>
-                  </div>
-                </div>
-              </div>
-          </div>
-        )}
-
-        {partner.paymentMethods.preferredMethod === 'payoneer' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-white rounded-lg border border-gray-200">
-              <div>
-                  <span className="text-sm font-medium text-gray-600">Email de Payoneer:</span>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">{partner.paymentMethods.payoneer.email}</p>
-              </div>
-                <div className="text-right">
-                {partner.paymentMethods.payoneer.verified ? (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="text-sm text-green-600 font-medium">Cuenta Verificada</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-amber-600" />
-                      <span className="text-sm text-amber-600 font-medium">No Verificada</span>
-                    </div>
-                )}
-              </div>
-            </div>
-              
-              <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-                <div className="flex items-start gap-3">
-                  <Info className="w-5 h-5 text-orange-600 mt-0.5" />
-                  <div>
-                    <h5 className="text-sm font-medium text-orange-900 mb-1">Información de Payoneer</h5>
-                    <p className="text-sm text-orange-800">
-                      Los pagos se procesarán a través de Payoneer. 
-                      La cuenta debe estar activada y verificada para recibir fondos internacionales.
-                    </p>
-                  </div>
-                </div>
-              </div>
-          </div>
-        )}
-        </div>
-
-
-
-        {/* Payment Processing Information */}
-        <div className="mt-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-          <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-            <div>
-                  <h4 className="text-sm font-medium text-green-900 mb-1">Información de Pagos</h4>
-                  <p className="text-xs text-green-800">
-                Los pagos se procesan automáticamente cada {partner.tier === 'platinum' ? '7' : partner.tier === 'gold' ? '14' : '30'} días 
-                    usando el método preferido.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-blue-600 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-medium text-blue-900 mb-1">Historial de Pagos</h4>
-                  <p className="text-xs text-blue-800">
-                    Total pagado: {formatCurrency(partner.financialMetrics.totalPaidToDate)} • 
-                    Último pago: {formatDate(partner.financialMetrics.lastPaymentDate)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-medium text-amber-900 mb-1">Importante</h4>
-                <p className="text-xs text-amber-800">
-                  Asegúrate de que la información de pago esté actualizada y verificada. 
-                  Los pagos pendientes se procesarán automáticamente una vez verificada la cuenta.
-                  {!((partner.paymentMethods.preferredMethod === 'bank' && partner.paymentMethods.bankAccount.verified) ||
-                     (partner.paymentMethods.preferredMethod === 'paypal' && partner.paymentMethods.paypal.verified) ||
-                     (partner.paymentMethods.preferredMethod === 'payoneer' && partner.paymentMethods.payoneer.verified)) && 
-                    ' Los pagos están pausados hasta completar la verificación.'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Information */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de Contacto</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">{partner.email}</p>
-                <p className="text-xs text-gray-500">Email corporativo</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">{partner.phone}</p>
-                <p className="text-xs text-gray-500">Teléfono principal</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">{partner.location}</p>
-                <p className="text-xs text-gray-500">Ubicación</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">{formatDate(partner.joinDate)}</p>
-                <p className="text-xs text-gray-500">Fecha de ingreso</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Description */}
-      {partner.description && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Descripción</h3>
-          <p className="text-gray-600">{partner.description}</p>
         </div>
       )}
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Button 
-            variant="ghost" 
-            className="h-16 flex-col gap-2"
-            onClick={() => window.open(`mailto:${partner.email}`)}
-          >
-            <Mail className="w-5 h-5" />
-            <span className="text-xs">Enviar Email</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="h-16 flex-col gap-2"
-            onClick={() => window.open(`tel:${partner.phone}`)}
-          >
-            <Phone className="w-5 h-5" />
-            <span className="text-xs">Llamar</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="h-16 flex-col gap-2"
-          >
-            <Activity className="w-5 h-5" />
-            <span className="text-xs">Ver Analytics</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="h-16 flex-col gap-2"
-          >
-            <Edit3 className="w-5 h-5" />
-            <span className="text-xs">Editar Partner</span>
-          </Button>
-        </div>
-      </div>
 
       {/* Financial Metrics */}
+      {partner.financialMetrics && (
       <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-gray-600" />
-            </div>
-            Métricas Financieras
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-green-600" />
+            Pagos y Facturación
           </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<BarChart3 className="w-4 h-4" />}
-          >
-            Ver Reporte Completo
-          </Button>
         </div>
-
-        {/* Key Financial Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* LTV */}
-          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                <TrendingUp className="w-5 h-5 text-gray-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Valor de Vida</p>
-                <p className="text-xs text-gray-400">(LTV)</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-green-600" />
             </div>
+            <div>
+              <p className="text-sm text-gray-500">LTV</p>
+              <p className="text-lg font-bold text-gray-900">{formatCurrency(partner.financialMetrics.ltv ?? 0)}</p>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {formatCurrency(partner.financialMetrics.ltv)}
-            </div>
-            <p className="text-xs text-gray-500">Valor total generado</p>
           </div>
-
           {/* Total Transactions */}
-          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                <Activity className="w-5 h-5 text-gray-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Transacciones</p>
-                <p className="text-xs text-gray-400">Total</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <ShoppingCart className="w-6 h-6 text-blue-600" />
             </div>
+            <div>
+              <p className="text-sm text-gray-500">Transacciones totales</p>
+              <p className="text-lg font-bold text-gray-900">{partner.financialMetrics.totalTransactions ?? 0}</p>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {partner.financialMetrics.totalTransactions.toLocaleString()}
-            </div>
-            <p className="text-xs text-blue-600 font-medium">
-              +{partner.financialMetrics.transactionsThisMonth} este mes
-            </p>
           </div>
-
-          {/* Average Transaction Value */}
-          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                <DollarSign className="w-5 h-5 text-gray-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Ticket Promedio</p>
-                <p className="text-xs text-gray-400">Por transacción</p>
-            </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {formatCurrency(partner.financialMetrics.averageTransactionValue)}
-            </div>
-            <p className="text-xs text-gray-500">Por transacción</p>
-          </div>
-
           {/* Conversion Rate */}
-          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                <Star className="w-5 h-5 text-gray-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Conversión</p>
-                <p className="text-xs text-gray-400">Tasa</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Percent className="w-6 h-6 text-purple-600" />
             </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {partner.financialMetrics.conversionRate}%
-            </div>
-            <p className="text-xs text-gray-500">Tasa de conversión</p>
-          </div>
-        </div>
-
-        {/* Payment Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Next Payment */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-gray-600" />
-              </div>
-              Próximo Pago
-            </h4>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-600">Fecha:</span>
-                <span className="font-medium text-gray-900">
-                  {new Date(partner.financialMetrics.nextPaymentDate).toLocaleDateString('es-ES', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-600">Monto:</span>
-                <span className="text-lg font-bold text-gray-900">
-                  {formatCurrency(partner.financialMetrics.nextPaymentAmount)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-600">Frecuencia:</span>
-                <span className="text-sm font-medium text-gray-900 capitalize">
-                  {partner.financialMetrics.paymentFrequency === 'weekly' ? 'Semanal' :
-                   partner.financialMetrics.paymentFrequency === 'biweekly' ? 'Quincenal' : 'Mensual'}
-                </span>
-              </div>
+            <div>
+              <p className="text-sm text-gray-500">Tasa de Conversión</p>
+              <p className="text-lg font-bold text-gray-900">{partner.financialMetrics.conversionRate ?? 0}%</p>
             </div>
           </div>
-
-          {/* Payment History Summary */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-gray-600" />
-              </div>
-              Historial de Pagos
-            </h4>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-600">Total pagado:</span>
-                <span className="text-lg font-bold text-gray-900">
-                  {formatCurrency(partner.financialMetrics.totalPaidToDate)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-600">Último pago:</span>
-                <span className="font-medium text-gray-900">
-                  {new Date(partner.financialMetrics.lastPaymentDate).toLocaleDateString('es-ES', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-600">Balance pendiente:</span>
-                <span className="text-lg font-bold text-orange-600">
-                  {formatCurrency(partner.financialMetrics.pendingBalance)}
-                </span>
-              </div>
+          {/* MRR */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">MRR</p>
+              <p className="text-lg font-bold text-gray-900">{formatCurrency(partner.financialMetrics.monthlyRecurringRevenue ?? 0)}</p>
+            </div>
+          </div>
+          {/* Average Transaction Value */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+              <Target className="w-6 h-6 text-cyan-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Valor Transacción Promedio</p>
+              <p className="text-lg font-bold text-gray-900">{formatCurrency(partner.financialMetrics.averageTransactionValue ?? 0)}</p>
+            </div>
+          </div>
+          {/* Revenue Growth Rate */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Crecimiento Ingresos</p>
+              <p className="text-lg font-bold text-gray-900">{partner.financialMetrics.revenueGrowthRate ?? 0}%</p>
             </div>
           </div>
         </div>
 
-        {/* Revenue Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Monthly Recurring Revenue */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold text-gray-900 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="w-4 h-4 text-gray-600" />
-                </div>
-                Ingresos Recurrentes (MRR)
-              </h4>
-              <div className="flex items-center gap-1 px-3 py-1 bg-green-50 rounded-full">
-                <TrendingUp className="w-3 h-3 text-green-600" />
-                <span className="text-sm font-medium text-green-600">
-                  +{partner.financialMetrics.revenueGrowthRate}%
-                </span>
-              </div>
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <p className="text-sm text-gray-500">Próximo Pago</p>
+              <p className="font-semibold text-gray-900">{formatDate(partner.financialMetrics.nextPaymentDate ?? '')}</p>
+              <p className="font-bold text-green-600 text-lg">{formatCurrency(partner.financialMetrics.nextPaymentAmount ?? 0)}</p>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-2">
-              {formatCurrency(partner.financialMetrics.monthlyRecurringRevenue)}
+            <div>
+              <p className="text-sm text-gray-500">Total Pagado</p>
+              <p className="font-semibold text-gray-900">{formatCurrency(partner.financialMetrics.totalPaidToDate ?? 0)}</p>
             </div>
-            <p className="text-sm text-gray-500">Ingresos mensuales proyectados</p>
-          </div>
-
-          {/* Performance Metrics */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Star className="w-4 h-4 text-gray-600" />
-              </div>
-              Rendimiento Financiero
-            </h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-600">ROI Partner:</span>
-                <span className="font-bold text-green-600">
-                  {((partner.financialMetrics.ltv / partner.financialMetrics.totalPaidToDate - 1) * 100).toFixed(1)}%
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-600">Crecimiento mensual:</span>
-                <span className="font-bold text-green-600">
-                  +{partner.financialMetrics.revenueGrowthRate}%
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-600">Eficiencia de pago:</span>
-                <span className="font-bold text-blue-600">
-                  {((partner.financialMetrics.totalPaidToDate / partner.financialMetrics.ltv) * 100).toFixed(1)}%
-                </span>
-              </div>
+            <div>
+              <p className="text-sm text-gray-500">Frecuencia de Pago</p>
+              <p className="font-semibold text-gray-900 capitalize">{partner.financialMetrics.paymentFrequency ?? 'N/A'}</p>
             </div>
-          </div>
-        </div>
-
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-3 text-sm text-gray-600">
-            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-              <Info className="w-3 h-3 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Saldo Pendiente</p>
+              <p className="font-semibold text-gray-900">{formatCurrency(partner.financialMetrics.pendingBalance ?? 0)}</p>
             </div>
-            <span>
-              Las métricas financieras se actualizan en tiempo real. Los datos incluyen todas las transacciones 
-              procesadas a través de las pantallas de este partner.
-            </span>
           </div>
         </div>
       </div>
+      )}
 
-      {/* Sports Events Markup Configuration - Conditional */}
-      {partner.sportsEventsPermissions.canCreateSportsEvents && partner.sportsEventsMargins && (
+      {/* Sports Events */}
+      {partner.sportsEventsPermissions?.canCreateSportsEvents && (
         <div className="bg-white rounded-lg border border-gray-200 p-6 ">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">⚽</span>
-              </div>
-              Configuración de Eventos Deportivos
+              <Zap className="w-5 h-5 text-orange-500" />
+              Eventos Deportivos
             </h3>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Habilitado
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<Settings className="w-4 h-4" />}
-              >
-                Configurar
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Settings className="w-4 h-4" />}
+            >
+              Configurar Márgenes
+            </Button>
           </div>
           
-          {/* Sports Events Pricing */}
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Precios por Momento Deportivo</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🏟️</span>
-                  <span className="text-sm font-medium text-gray-700">Primer Tiempo</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Margins by Event Type */}
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-6 border border-orange-200">
+              <h4 className="font-medium text-gray-900 mb-4">Márgenes por Tipo de Evento</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-3 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>⚽</span>
+                    <span className="text-sm font-medium text-gray-700">Fútbol</span>
+                  </div>
+                  <div className="text-xl font-bold text-orange-600">{partner.sportsEventsMargins?.eventTypes?.football ?? 0}%</div>
                 </div>
-                <div className="text-xl font-bold text-green-600">
-                  {formatCurrency(partner.sportsEventsMargins.momentPricing.firstHalf)}
+                <div className="bg-white rounded-lg p-3 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>🏀</span>
+                    <span className="text-sm font-medium text-gray-700">Baloncesto</span>
+                  </div>
+                  <div className="text-xl font-bold text-orange-600">{partner.sportsEventsMargins?.eventTypes?.basketball ?? 0}%</div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Precio base por momento</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">⏰</span>
-                  <span className="text-sm font-medium text-gray-700">Entre Tiempo</span>
+                <div className="bg-white rounded-lg p-3 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>⚾</span>
+                    <span className="text-sm font-medium text-gray-700">Béisbol</span>
+                  </div>
+                  <div className="text-xl font-bold text-orange-600">{partner.sportsEventsMargins?.eventTypes?.baseball ?? 0}%</div>
                 </div>
-                <div className="text-xl font-bold text-yellow-600">
-                  {formatCurrency(partner.sportsEventsMargins.momentPricing.halftime)}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Precio premium entretiempo</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🏆</span>
-                  <span className="text-sm font-medium text-gray-700">Segundo Tiempo</span>
-                </div>
-                <div className="text-xl font-bold text-blue-600">
-                  {formatCurrency(partner.sportsEventsMargins.momentPricing.secondHalf)}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Precio base por momento</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Sports Events Margins by Type */}
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Markups por Tipo de Deporte</h4>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              <div className="bg-white rounded-lg p-3 border border-green-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">⚽</span>
-                  <span className="text-sm font-medium text-gray-700">Fútbol</span>
-                </div>
-                <div className="text-lg font-bold text-green-600">{partner.sportsEventsMargins.eventTypes.football}%</div>
-                <div className="w-full bg-green-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-green-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.sportsEventsMargins.eventTypes.football}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-3 border border-orange-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🏀</span>
-                  <span className="text-sm font-medium text-gray-700">Baloncesto</span>
-                </div>
-                <div className="text-lg font-bold text-orange-600">{partner.sportsEventsMargins.eventTypes.basketball}%</div>
-                <div className="w-full bg-orange-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-orange-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.sportsEventsMargins.eventTypes.basketball}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-3 border border-blue-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">⚾</span>
-                  <span className="text-sm font-medium text-gray-700">Béisbol</span>
-                </div>
-                <div className="text-lg font-bold text-blue-600">{partner.sportsEventsMargins.eventTypes.baseball}%</div>
-                <div className="w-full bg-blue-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-blue-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.sportsEventsMargins.eventTypes.baseball}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-3 border border-purple-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🎾</span>
-                  <span className="text-sm font-medium text-gray-700">Tenis</span>
-                </div>
-                <div className="text-lg font-bold text-purple-600">{partner.sportsEventsMargins.eventTypes.tennis}%</div>
-                <div className="w-full bg-purple-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-purple-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.sportsEventsMargins.eventTypes.tennis}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-3 border border-pink-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🏐</span>
-                  <span className="text-sm font-medium text-gray-700">Vóley</span>
-                </div>
-                <div className="text-lg font-bold text-pink-600">{partner.sportsEventsMargins.eventTypes.volleyball}%</div>
-                <div className="w-full bg-pink-100 rounded-full h-1 mt-2">
-                  <div 
-                    className="bg-pink-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${partner.sportsEventsMargins.eventTypes.volleyball}%` }}
-                  />
+                <div className="bg-white rounded-lg p-3 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>🎾</span>
+                    <span className="text-sm font-medium text-gray-700">Tenis</span>
+                  </div>
+                  <div className="text-xl font-bold text-orange-600">{partner.sportsEventsMargins?.eventTypes?.tennis ?? 0}%</div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* General Sports Events Margin */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">%</span>
-                </div>
-                <div>
-                                  <h4 className="font-medium text-gray-900">Markup General Eventos Deportivos</h4>
-                <p className="text-xs text-gray-500">Markup aplicado a todos los eventos deportivos</p>
+            {/* Pricing by Moment */}
+            {partner.sportsEventsMargins?.momentPricing && (
+              <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg p-6 border border-teal-200">
+                <h4 className="font-medium text-gray-900 mb-4">Precios por Momento del Partido</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-teal-100">
+                    <span className="text-sm font-medium text-gray-700">Primer Tiempo</span>
+                    <span className="text-lg font-bold text-teal-600">
+                      {formatCurrency(partner.sportsEventsMargins.momentPricing.firstHalf)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-teal-100">
+                    <span className="text-sm font-medium text-gray-700">Medio Tiempo</span>
+                    <span className="text-lg font-bold text-teal-600">
+                      {formatCurrency(partner.sportsEventsMargins.momentPricing.halftime)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-teal-100">
+                    <span className="text-sm font-medium text-gray-700">Segundo Tiempo</span>
+                    <span className="text-lg font-bold text-teal-600">
+                      {formatCurrency(partner.sportsEventsMargins.momentPricing.secondHalf)}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-green-600">{partner.sportsEventsMargins.generalMargin}%</p>
-              </div>
-            </div>
-            <div className="w-full bg-green-200 rounded-full h-2">
-              <div 
-                className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${partner.sportsEventsMargins.generalMargin}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-            <div className="flex items-center gap-2 text-sm text-yellow-800">
-              <Info className="w-4 h-4" />
-              <span>
-                Los markups de eventos deportivos se aplican según el tipo de deporte y momento del evento. 
-                Los precios mostrados son configurados desde el módulo de Eventos Deportivos.
-              </span>
-            </div>
+            )}
           </div>
         </div>
       )}
-
-      {/* Last Activity */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 ">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h3>
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-          <Clock className="w-4 h-4" />
-          <span>Última actividad: {formatDate(partner.lastActivity)}</span>
-        </div>
-      </div>
     </motion.div>
   );
 };
@@ -4439,7 +3558,9 @@ const PartnersRelations2: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tierFilter, setTierFilter] = useState('all');
-  const [partners, setPartners] = useState<Partner[]>(mockPartners);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   
   // Modal states
@@ -4479,10 +3600,10 @@ const PartnersRelations2: React.FC = () => {
     email: '',
     phone: '',
     permissions: {
-      canManageContent: false, // Solo para shareflow screen
-      canManageSSP: true, // Funcionalidad básica de SSP
-      canCreateSportsEvents: false, // Requiere habilitación manual
-      canAccessAnalytics: false // Información sensible
+      canManageContent: true,
+      canManageSSP: true,
+      canCreateSportsEvents: false,
+      canAccessAnalytics: false
     }
   });
 
@@ -4528,12 +3649,12 @@ const PartnersRelations2: React.FC = () => {
     : partners;
 
   const filteredPartners = partnersWithFilteredScreens.filter(partner => {
-    const matchesSearch = partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         partner.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         partner.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (partner.name && partner.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (partner.contactPerson && partner.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (partner.email && partner.email.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = statusFilter === 'all' || partner.status === statusFilter;
-    const matchesTier = tierFilter === 'all' || partner.tier === tierFilter;
+    const matchesStatus = statusFilter === 'all' || (partner.status && partner.status === statusFilter);
+    const matchesTier = tierFilter === 'all' || (partner.tier && partner.tier === tierFilter);
     
     return matchesSearch && matchesStatus && matchesTier;
   });
@@ -4554,8 +3675,62 @@ const PartnersRelations2: React.FC = () => {
     { value: 'bronze', label: 'Bronze' }
   ];
 
+  const fetchPartners = async () => {
+    try {
+      setLoading(true);
+      const response = await request.get(`/UsersTeam/partners`);
+      const partnersData = response.data.map((partner: any) => ({
+        id: partner.id,
+        name: partner.name,
+        contactPerson: partner.contactPerson,
+        email: partner.email,
+        phone: partner.phone,
+        location: partner.location,
+        status: partner.status,
+        tier: partner.tier,
+        joinDate: partner.joinDate,
+        lastActivity: partner.lastActivity,
+        revenue: partner.revenue,
+        screens: partner.screens,
+        performance: partner.performance,
+        avatar: partner.avatar,
+        description: partner.description,
+        contractEndDate: partner.contractEndDate,
+        commission: partner.commission,
+        customMargin: partner.customMargin,
+        programmaticMargin: partner.programmaticMargin,
+        grossMargin: partner.grossMargin,
+        networkInventory: partner.networkInventory,
+        cities: partner.cities,
+        regions: partner.regions,
+        marketplaceMargins: partner.marketplaceMargins,
+        teamMembers: partner.teamMembers,
+        paymentMethods: partner.paymentMethods,
+        cmsIntegration: partner.cmsIntegration,
+        screenActivity: partner.screenActivity,
+        sportsEventsPermissions: partner.sportsEventsPermissions,
+        sportsEventsMargins: partner.sportsEventsMargins,
+        financialMetrics: partner.financialMetrics,
+      }));
+      setPartners(partnersData);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch partners');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPartners();
+  }, []);
+
+  // Remove any hardcoded partners data
+
   // Partner creation handler
   const handleCreatePartner = async () => {
+
     console.log({createPartnerData})
     if (!createPartnerData.name || !createPartnerData.companyName || !createPartnerData.email) {
       toast.error('Por favor complete todos los campos requeridos');
@@ -4569,150 +3744,26 @@ const PartnersRelations2: React.FC = () => {
     }
 
     setIsCreatingPartner(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newPartner: Partner = {
-        id: `partner-${Date.now()}`,
-        name: createPartnerData.companyName,
-        contactPerson: createPartnerData.name,
-        email: createPartnerData.email,
-        phone: createPartnerData.phone || '',
-        location: 'Colombia',
-        status: 'pending',
-        tier: 'bronze',
-        joinDate: new Date().toISOString().split('T')[0],
-        lastActivity: new Date().toISOString().split('T')[0],
-        revenue: 0,
-        screens: 0,
-        performance: 0,
-        commission: 10,
-        customMargin: 20,
-        programmaticMargin: 15,
-        grossMargin: 20,
-        networkInventory: {
-          totalScreens: 0,
-          activeScreens: 0,
-          inactiveScreens: 0,
-          maintenanceScreens: 0,
-          fillRate: 0,
-          avgCPM: 0,
-          totalImpressions: 0,
-          uptime: 0
-        },
-        cities: [],
-        regions: [],
-        marketplaceMargins: {
-          momentos: 20,
-          hourly: 18,
-          daily: 15,
-          weekly: 12,
-          monthly: 10
-        },
-        teamMembers: [
-          {
-            id: 'tm-12',
-            name: createPartnerData.name,
-            email: createPartnerData.email,
-            role: 'partner_owner',
-            status: 'pending',
-            joinedAt: new Date().toISOString().split('T')[0],
-            permissions: {
-              canViewBilling: true,
-              canModifyBankAccount: true,
-              canManageTeam: true,
-              canViewAnalytics: true,
-              canGenerateReports: true
-            }
-          }
-        ],
-        paymentMethods: {
-          preferredMethod: 'bank',
-          bankAccount: {
-            bankName: '',
-            accountNumber: '',
-            accountType: 'checking',
-            swiftCode: '',
-            routingNumber: '',
-            accountHolderName: '',
-            verified: false
-          },
-          paypal: {
-            email: '',
-            verified: false
-          },
-          payoneer: {
-            email: '',
-            verified: false
-          }
-        },
-        cmsIntegration: {
-          provider: 'manual',
-          status: 'pending',
-          screensImported: 0,
-          integrationHealth: 'good',
-          lastSync: new Date().toISOString(),
-          connectionDetails: {
-            authMethod: 'Manual Upload',
-            capabilities: ['manual-scheduling']
-          }
-        },
-        screenActivity: {
-          addedThisWeek: 0,
-          addedThisMonth: 0,
-          lastScreenAdded: new Date().toISOString().split('T')[0],
-          lastContentUpdate: new Date().toISOString().split('T')[0],
-          lastPaymentReceived: new Date().toISOString().split('T')[0]
-        },
-        sportsEventsPermissions: {
-          canCreateSportsEvents: createPartnerData.permissions.canCreateSportsEvents,
-          canManageEventPricing: false,
-          canViewEventAnalytics: false
-        },
-        financialMetrics: {
-          ltv: 0,
-          totalTransactions: 0,
-          transactionsThisMonth: 0,
-          totalPaidToDate: 0,
-          nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          nextPaymentAmount: 0,
-          averageTransactionValue: 0,
-          monthlyRecurringRevenue: 0,
-          conversionRate: 0,
-          revenueGrowthRate: 0,
-          paymentFrequency: 'monthly',
-          lastPaymentDate: new Date().toISOString().split('T')[0],
-          pendingBalance: 0
-        }
-      };
 
-      setPartners(prev => [newPartner, ...prev]);
-      
-      toast.success(
-        `Partner ${createPartnerData.companyName} creado exitosamente. 
-        Se ha enviado un email de activación a ${createPartnerData.email} 
-        para configurar su cuenta y acceder al portal en partners.shareflow.me`
-      );
-      
-      setIsCreatePartnerModalOpen(false);
-      setCreatePartnerData({ 
-        name: '', 
-        companyName: '', 
-        email: '', 
-        phone: '',
-        permissions: {
-          canManageContent: false,
-          canManageSSP: true,
-          canCreateSportsEvents: false,
-          canAccessAnalytics: false
-        }
-      });
+    try {
+      // Basic validation
+      if (!createPartnerData.name || !createPartnerData.companyName || !createPartnerData.email) {
+        toast.error('Por favor completa todos los campos obligatorios.');
+        return;
+      }
+
+      const response = await request.post('/UsersTeam/create-partner', createPartnerData);
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('¡Partner creado exitosamente!');
+        setIsCreatePartnerModalOpen(false);
+        fetchPartners(); // Refetch partners to update the list
+      } else {
+        toast.error('Hubo un error al crear el partner.');
+      }
     } catch (error) {
-      console.error('Error creating partner:', error);
-      toast.error('Error al crear el partner');
-    } finally {
-      setIsCreatingPartner(false);
+      console.error("Error creating partner:", error);
+      toast.error('Hubo un error al crear el partner. Revisa la consola para más detalles.');
     }
   };
 
@@ -4870,7 +3921,7 @@ const PartnersRelations2: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Modern Header */}
         <motion.div 
@@ -5487,7 +4538,7 @@ const PartnersRelations2: React.FC = () => {
                                      ...editingMargin,
                                      newMarketplaceMargins: {
                                        ...editingMargin.newMarketplaceMargins,
-                                       hourly: parseInt(e.target.value)
+                                       hourly: parseInt(e.target.value) || 0
                                      }
                                    })}
                                    className="flex-1 h-2 bg-cyan-200 rounded-lg appearance-none cursor-pointer slider-thumb-blue"
