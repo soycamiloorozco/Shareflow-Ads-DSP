@@ -8,6 +8,7 @@ import { CreativeUpload } from './pages/CreativeUpload';
 import { PaymentDetails } from './pages/PaymentDetails';
 import { CreateCampaign } from './pages/CreateCampaign';
 import { Marketplace } from './pages/Marketplace';
+import { MarketplaceRefactored } from './pages/marketplace/MarketplaceRefactored';
 import { ScreenDetail } from './pages/ScreenDetail';
 import { ScreensPage } from './pages/screens/ScreensPage';
 import { ScreensAdmin } from './pages/admin/ScreensAdmin';
@@ -56,7 +57,7 @@ export default function App() {
                       <SportsEvents />
                     </RequireAuth>
                   } />
-                  <Route path="/marketplace" element={<Marketplace />} />
+                  <Route path="/marketplace" element={<MarketplaceRefactored />} />
                   <Route path="/sports-events" element={<SportsEvents />} />
                   <Route path="/event/:id" element={<EventDetail />} />
                   <Route path="/screen/:id" element={<ScreenDetail />} />

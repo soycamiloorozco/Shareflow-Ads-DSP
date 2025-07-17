@@ -6,6 +6,7 @@ import {
   TrendingUp, Eye, Calendar, DollarSign, Monitor, Share2
 } from 'lucide-react';
 import { screens } from '../data/mockData';
+import { demoScreens } from '../data/demoScreens';
 import { Screen } from '../types';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -98,7 +99,9 @@ export function ScreenDetail() {
   }, []);
 
   useEffect(() => {
-    const foundScreen = screens.find(s => s.id === id);
+    // Combine both screen sources
+    const allScreens = [...screens, ...demoScreens];
+    const foundScreen = allScreens.find(s => s.id === id);
     if (foundScreen) {
       setScreen(foundScreen);
     }
@@ -117,7 +120,20 @@ export function ScreenDetail() {
   };
 
   if (!screen) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Pantalla no encontrada</h2>
+          <p className="text-gray-600 mb-6">La pantalla que buscas no existe o ha sido eliminada.</p>
+          <Button 
+            onClick={() => navigate('/marketplace')}
+            variant="primary"
+          >
+            Volver al Marketplace
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const calculateCPM = (bundle: Bundle) => {
@@ -125,7 +141,7 @@ export function ScreenDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0 md:ml-64">
+    <div className="min-h-screen bg-background">
       {/* Sticky Header */}
       <header 
         className={`
@@ -134,7 +150,7 @@ export function ScreenDetail() {
           ${isHeaderSticky ? 'shadow-md' : ''}
         `}
       >
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="px-4 lg:px-8 xl:px-12 py-4 max-w-[1600px] mx-auto">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => navigate(-1)} 
@@ -166,25 +182,25 @@ export function ScreenDetail() {
       </header>
 
       {/* Hero Section */}
-      <div className="relative h-[400px] overflow-hidden">
+      <div className="relative h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden">
         <img
           src={screen.image}
           alt={screen.location}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-2">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-12">
+          <div className="px-4 lg:px-8">
+            <h1 className="text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-4">
               {screen.location}
             </h1>
-            <div className="flex items-center gap-4 text-white">
+            <div className="flex flex-wrap items-center gap-6 text-white text-lg">
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
+                <MapPin className="w-6 h-6" />
                 <span>{screen.category.name}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-400" />
+                <Star className="w-6 h-6 text-yellow-400" />
                 <span>{screen.rating} ({screen.reviews} reseñas)</span>
               </div>
             </div>
@@ -192,17 +208,17 @@ export function ScreenDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="px-4 lg:px-8 xl:px-12 py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 max-w-[1600px] mx-auto">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="xl:col-span-3 space-y-8">
             {/* Screen Metrics */}
             <Card>
               <Card.Body>
                 <h2 className="text-2xl font-semibold mb-6">
                   Métricas de la Pantalla
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="space-y-2">
                     <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center">
                       <Eye className="w-6 h-6 text-primary" />
@@ -257,7 +273,7 @@ export function ScreenDetail() {
                 <h2 className="text-2xl font-semibold mb-6">
                   Selecciona tu Plan
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
                   {(['momentos', 'hourly', 'daily', 'weekly', 'monthly'] as AdMode[]).map((mode) => (
                     <button
                       key={mode}
@@ -351,7 +367,7 @@ export function ScreenDetail() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:sticky lg:top-24 space-y-6">
+          <div className="xl:col-span-2 xl:sticky xl:top-24 space-y-6">
             {selectedBundle ? (
               <Card>
                 <Card.Body className="space-y-6">
