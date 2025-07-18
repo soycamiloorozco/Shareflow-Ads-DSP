@@ -3,6 +3,9 @@
  * This file contains all core interfaces and types used throughout the marketplace
  */
 
+import { SearchSuggestion } from './filter.types';
+import { ConditionalFilterRule, FilterGroup, LogicOperator } from './conditional-filter.types';
+
 // =============================================================================
 // CORE SCREEN TYPES
 // =============================================================================
@@ -204,6 +207,32 @@ export interface FilterState {
   readonly showCircuits: boolean;
 }
 
+// Enhanced FilterState with conditional logic support
+export interface EnhancedFilterState extends FilterState {
+  readonly conditionalRules: ConditionalFilterRule[];
+  readonly filterGroups: FilterGroup[];
+  readonly globalLogic: LogicOperator;
+  readonly displayMode: 'sections' | 'individual';
+  readonly viewMode: 'grid' | 'list' | 'map';
+  readonly metadata: FilterStateMetadata;
+}
+
+export interface FilterStateMetadata {
+  readonly lastModified: Date;
+  readonly source: 'user' | 'suggestion' | 'saved' | 'migration';
+  readonly version: string;
+  readonly migrationInfo?: MigrationInfo;
+}
+
+export interface MigrationInfo {
+  readonly fromVersion: string;
+  readonly toVersion: string;
+  readonly migratedAt: Date;
+  readonly migrationStrategy: 'automatic' | 'manual' | 'hybrid';
+  readonly warnings: string[];
+  readonly dataLoss: boolean;
+}
+
 // =============================================================================
 // API TYPES
 // =============================================================================
@@ -282,7 +311,7 @@ export interface SearchHeaderProps extends BaseComponentProps {
   readonly onSearchChange: (query: string) => void;
   readonly onInfoClick: () => void;
   readonly filteredCount: number;
-  readonly suggestions?: string[];
+  readonly suggestions?: SearchSuggestion[];
   readonly loading?: boolean;
 }
 

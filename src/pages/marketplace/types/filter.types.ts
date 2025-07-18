@@ -3,7 +3,8 @@
  * Types for filtering, searching, and sorting functionality
  */
 
-import { FilterState, FilterOption } from './marketplace.types';
+import { FilterState, FilterOption, EnhancedFilterState } from './marketplace.types';
+import { LogicOperator } from './conditional-filter.types';
 
 // =============================================================================
 // VENUE TAXONOMY TYPES
@@ -346,6 +347,34 @@ export const getActiveFilterCount = (filters: FilterState): number => {
   if (!filters.showCircuits) count++;
   
   return count;
+};
+
+// Enhanced filter state utilities
+export const createEmptyEnhancedFilterState = (): EnhancedFilterState => ({
+  ...createEmptyFilterState(),
+  conditionalRules: [],
+  filterGroups: [],
+  globalLogic: 'AND' as LogicOperator,
+  displayMode: 'sections',
+  viewMode: 'grid',
+  metadata: {
+    lastModified: new Date(),
+    source: 'user',
+    version: '2.0'
+  }
+});
+
+export const isEnhancedFilterActive = (filters: EnhancedFilterState): boolean => {
+  const legacyActive = isFilterActive(filters);
+  const conditionalActive = filters.conditionalRules.length > 0 || filters.filterGroups.length > 0;
+  return legacyActive || conditionalActive;
+};
+
+export const getEnhancedActiveFilterCount = (filters: EnhancedFilterState): number => {
+  const legacyCount = getActiveFilterCount(filters);
+  const conditionalCount = filters.conditionalRules.length + 
+                          filters.filterGroups.reduce((sum, group) => sum + group.rules.length, 0);
+  return legacyCount + conditionalCount;
 };
 
 export const serializeFilters = (filters: FilterState): string => {

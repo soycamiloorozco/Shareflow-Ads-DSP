@@ -86,7 +86,13 @@ export const ScreenCard = React.memo<ScreenCardProps>(({
     }
   }, [screen.id, onFavoriteChange]);
 
-  const handleCardClick = useCallback(() => {
+  const handleCardClick = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('ScreenCard clicked:', screen.id, screen.name);
+    console.log('Calling onSelect with screen:', screen);
     onSelect(screen);
   }, [screen, onSelect]);
 
@@ -335,9 +341,9 @@ export const ScreenCard = React.memo<ScreenCardProps>(({
             {/* CTA Button - Enhanced Touch Target */}
             <button
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
-                handleCardClick();
+                console.log('CTA Button clicked for screen:', screen.id);
+                onSelect(screen);
               }}
               className="px-3 py-2 sm:px-4 sm:py-2.5 bg-[#353FEF] hover:bg-[#2A32C5] text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 shadow-sm touch-manipulation min-h-[44px]"
               aria-label={`Ver detalles de ${screen.name}`}

@@ -249,23 +249,26 @@ export const SectionedScreenGrid = React.memo<SectionedScreenGridProps>(({
 
   return (
     <div className={`relative ${className}`} aria-label={ariaLabel}>
-      {/* Refresh button */}
-      {onRefreshSections && (
-        <div className="flex justify-end mb-6">
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      {/* Auto-refresh indicator (only show when refreshing) */}
+      <AnimatePresence>
+        {isRefreshing && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex justify-center mb-6"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Actualizando...' : 'Actualizar secciones'}
-          </button>
-        </div>
-      )}
+            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span>Actualizando secciones...</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Sections container */}
       <div className="space-y-8 sm:space-y-12">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="wait">
           {lazyLoadedSections.map((item, index) => (
             <div
               key={item.section.id}

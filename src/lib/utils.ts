@@ -78,3 +78,30 @@ export function getInitials(name: string): string {
     .toUpperCase()
     .slice(0, 2);
 }
+
+// Margin calculation functions
+export function calculatePriceWithMargin(baseCost: number, marginPercent: number): number {
+  const marginDecimal = marginPercent / 100;
+  return baseCost / (1 - marginDecimal);
+}
+
+export function calculateBaseCostFromPrice(price: number, marginPercent: number): number {
+  const marginDecimal = marginPercent / 100;
+  return price * (1 - marginDecimal);
+}
+
+export function getPartnerMargin(partnerId: string): number {
+  // Mock data - in real app this would come from API/database
+  const partnerMargins: Record<string, number> = {
+    'partner-1': 29.4,
+    'partner-2': 30.1,
+    'partner-3': 25.8,
+    'partner-4': 32.5,
+    'partner-5': 28.0,
+    'partner-6': 31.2,
+    'partner-7': 27.5,
+    'partner-8': 33.0
+  };
+  
+  return partnerMargins[partnerId] || 30.0; // Default margin
+}

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Search, X, Loader2, MapPin, Monitor, Building2, Sparkles } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SearchSuggestions } from './SearchSuggestions';
 import { SearchSuggestion } from '../../types/filter.types';

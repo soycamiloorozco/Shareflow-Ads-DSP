@@ -60,7 +60,7 @@ export default function App() {
                   <Route path="/marketplace" element={<MarketplaceRefactored />} />
                   <Route path="/sports-events" element={<SportsEvents />} />
                   <Route path="/event/:id" element={<EventDetail />} />
-                  <Route path="/screen/:id" element={<ScreenDetail />} />
+                  <Route path="/screens/:id" element={<ScreenDetail />} />
                   <Route path="/payments" element={<Payments />} />
                   
                   {/* Protected Routes */}

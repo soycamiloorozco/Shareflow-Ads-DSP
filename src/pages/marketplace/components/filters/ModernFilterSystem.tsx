@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { FilterState, FilterOptions } from '../../types';
 import { MobileFilterDrawer } from './MobileFilterDrawer';
+import { SpecialFilters } from './SpecialFilters';
 
 interface ModernFilterSystemProps {
   filters: FilterState;
@@ -285,6 +286,22 @@ export const ModernFilterSystem = React.memo<ModernFilterSystemProps>(({
           </div>
         </div>
 
+        {/* Special Filters */}
+        <div className="mt-3">
+          <SpecialFilters
+            showFavoritesOnly={filters.showFavoritesOnly}
+            showCircuits={filters.showCircuits}
+            onShowFavoritesChange={(show) => onFiltersChange({
+              ...filters,
+              showFavoritesOnly: show
+            })}
+            onShowCircuitsChange={(show) => onFiltersChange({
+              ...filters,
+              showCircuits: show
+            })}
+          />
+        </div>
+
         {/* Active Filter Chips */}
         {activeChips.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -440,7 +457,7 @@ export const ModernFilterSystem = React.memo<ModernFilterSystemProps>(({
 
           {/* Mobile Quick Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {quickFilters.slice(0, 3).map(filter => {
+            {quickFilters.slice(0, 2).map(filter => {
               const Icon = filter.icon;
               return (
                 <button
@@ -455,6 +472,21 @@ export const ModernFilterSystem = React.memo<ModernFilterSystemProps>(({
                 </button>
               );
             })}
+            
+            {/* Special Filters for Mobile */}
+            <SpecialFilters
+              showFavoritesOnly={filters.showFavoritesOnly}
+              showCircuits={filters.showCircuits}
+              onShowFavoritesChange={(show) => onFiltersChange({
+                ...filters,
+                showFavoritesOnly: show
+              })}
+              onShowCircuitsChange={(show) => onFiltersChange({
+                ...filters,
+                showCircuits: show
+              })}
+              className="flex gap-2"
+            />
           </div>
 
           {/* Active Filter Chips - Mobile */}

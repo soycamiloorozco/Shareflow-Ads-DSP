@@ -21,10 +21,12 @@ export const MarketplaceSection = React.memo<MarketplaceSectionProps>(({
   className = '',
   'aria-label': ariaLabel
 }) => {
+  // ALL HOOKS MUST BE AT THE TOP - NO CONDITIONAL HOOKS!
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Check scroll position and update navigation buttons
   const checkScrollPosition = useCallback(() => {
@@ -74,9 +76,21 @@ export const MarketplaceSection = React.memo<MarketplaceSectionProps>(({
     };
   }, [checkScrollPosition]);
 
+  // Mobile detection effect - ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURNS
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Get section icon based on algorithm type
   const getSectionIcon = () => {
-    switch (section.metadata.algorithm) {
+    switch (section.metadata?.algorithm) {
       case 'ml-personalized':
         return <Sparkles className="w-5 h-5 text-purple-500" />;
       case 'trending-analysis':
@@ -90,12 +104,13 @@ export const MarketplaceSection = React.memo<MarketplaceSectionProps>(({
     }
   };
 
+  // CONDITIONAL RETURNS AFTER ALL HOOKS
   // Render loading skeleton
   if (loading) {
     return (
       <section 
         className={`mb-8 sm:mb-12 ${className}`}
-        aria-label={`${ariaLabel || section.title} (loading)`}
+        aria-label={`${ariaLabel || section?.title || 'Loading section'} (loading)`}
         aria-busy="true"
       >
         {/* Header skeleton */}
@@ -134,23 +149,9 @@ export const MarketplaceSection = React.memo<MarketplaceSectionProps>(({
   }
 
   // Don't render if no screens
-  if (!section.screens || section.screens.length === 0) {
+  if (!section?.screens || section.screens.length === 0) {
     return null;
   }
-
-  // Mobile detection with responsive hook
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // sm breakpoint
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // On mobile, all sections should use horizontal scroll for better UX
   // On desktop, respect the original displayType

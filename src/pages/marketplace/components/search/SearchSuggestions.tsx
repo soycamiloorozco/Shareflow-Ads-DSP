@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Monitor, Building2, Sparkles, TrendingUp } from 'lucide-react';
 import { SearchSuggestion } from '../../types/filter.types';
@@ -11,35 +11,23 @@ interface SearchSuggestionsProps {
   className?: string;
 }
 
-const getIconForType = (type: SearchSuggestion['type']) => {
-  switch (type) {
-    case 'location':
-      return MapPin;
-    case 'screen':
-      return Monitor;
-    case 'category':
-      return Building2;
-    case 'venue':
-      return Sparkles;
-    default:
-      return TrendingUp;
-  }
-};
+// Constants
+const SUGGESTION_ANIMATION_DELAY = 0.05;
+const POPULAR_THRESHOLD = 30;
 
-const getTypeLabel = (type: SearchSuggestion['type']) => {
-  switch (type) {
-    case 'location':
-      return 'Ubicación';
-    case 'screen':
-      return 'Pantalla';
-    case 'category':
-      return 'Categoría';
-    case 'venue':
-      return 'Característica';
-    default:
-      return 'Sugerencia';
-  }
-};
+const ICON_MAP = {
+  location: MapPin,
+  screen: Monitor,
+  category: Building2,
+  venue: Sparkles,
+} as const;
+
+const TYPE_LABELS = {
+  location: 'Ubicación',
+  screen: 'Pantalla',
+  category: 'Categoría',
+  venue: 'Característica',
+} as const;
 
 export const SearchSuggestions = React.memo<SearchSuggestionsProps>(({
   suggestions,
@@ -59,10 +47,20 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(({
     }
   }, [handleSuggestionClick]);
 
+  // Memoized utility functions
+  const getIconForType = useMemo(() => (type: SearchSuggestion['type']) => {
+    return ICON_MAP[type] || TrendingUp;
+  }, []);
+
+  const getTypeLabel = useMemo(() => (type: SearchSuggestion['type']) => {
+    return TYPE_LABELS[type] || 'Sugerencia';
+  }, []);
+
   const highlightText = useCallback((text: string, query: string) => {
     if (!query.trim()) return text;
     
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
     const parts = text.split(regex);
     
     return parts.map((part, index) => 
@@ -83,6 +81,8 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(({
       className={`bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden ${className}`}
       role="listbox"
       aria-label="Search suggestions"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <div className="max-h-80 overflow-y-auto">
         {suggestions.map((suggestion, index) => {
@@ -94,7 +94,7 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(({
               key={suggestion.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * SUGGESTION_ANIMATION_DELAY }}
               className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 ${
                 isSelected 
                   ? 'bg-[#353FEF]/10 border-l-4 border-[#353FEF]' 
@@ -138,13 +138,13 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(({
                 <div className="text-xs text-gray-500 mt-0.5">
                   {getTypeLabel(suggestion.type)}
                   {suggestion.metadata?.description && (
-                    <span> • {suggestion.metadata.description}</span>
+                    <span> • {String(suggestion.metadata.description)}</span>
                   )}
                 </div>
               </div>
               
               {/* Trending indicator for popular suggestions */}
-              {suggestion.count && suggestion.count > 30 && (
+              {suggestion.count && suggestion.count > POPULAR_THRESHOLD && (
                 <div className="flex-shrink-0">
                   <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
                     <TrendingUp className="w-3 h-3" />

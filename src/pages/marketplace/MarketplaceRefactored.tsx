@@ -6,88 +6,39 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { LayoutGrid, LayoutList, Map, Heart, Filter, Layers } from 'lucide-react';
+import { LayoutList, Map, Filter, Layers } from 'lucide-react';
 
 // Refactored Components
 import { SearchHeader } from './components/search/SearchHeader';
 import { ModernFilterSystem } from './components/filters/ModernFilterSystem';
-import { ScreenGrid } from './components/screens/ScreenGrid';
+import { MobileMarketplaceInterface } from './components/MobileMarketplaceInterface';
 import { ScreenList } from './components/screens/ScreenList';
 import { MarketplaceErrorBoundary } from './components/common/ErrorBoundary';
-import { NoResultsState, LoadingSpinner } from './components/common/LoadingStates';
 import { SectionedScreenGrid } from './components/sections/SectionedScreenGrid';
+import { MapContainer } from './components/map/MapContainer';
 
 // Hooks
 import { useMarketplaceData } from './hooks/useMarketplaceData';
 import { useDebounce } from './hooks/useDebounce';
+import { useSSPInventory } from './hooks/useSSPInventory';
 
 // Types
 import { Screen, FilterState, ViewMode, FilterOptions } from './types';
-import { MarketplaceSection } from './types/intelligent-grouping.types';
 import { getScreenMinPrice, groupScreensByCircuit, isScreenWithCircuit } from './utils/screen-utils';
 
-// Services
-import favoritesService from '../../services/favoritesService';
-import { groupingEngine } from './services/GroupingEngine';
+// API Hook for fetching real screens data
+import { useScreensApi } from './hooks/useScreensApi';
 
-// Mock data (would be replaced with API calls)
-import { screens as mockScreens } from '../../data/mockData';
+// API Initialization
+import { initializeApiServices } from './services/api/ApiInitializer';
 
-// Demo screens from original component
-const demoScreens = [
-  {
-    id: 'demo-stadium-1',
-    name: 'Pantalla LED Perimetral - Estadio Atanasio Girardot',
-    location: 'Estadio Atanasio Girardot, Medellín',
-    price: 1200000,
-    availability: true,
-    image: '/screens_photos/9007-639a2c4721253.jpg',
-    category: { id: 'stadium', name: 'Estadio' },
-    environment: 'outdoor' as const,
-    specs: {
-      width: 1920,
-      height: 128,
-      resolution: 'HD',
-      brightness: '7500 nits',
-      aspectRatio: '15:1',
-      orientation: 'landscape' as const,
-      pixelDensity: 72,
-      colorDepth: 24,
-      refreshRate: 60
-    },
-    views: { daily: 45000, monthly: 180000 },
-    rating: 4.9,
-    reviews: 76,
-    coordinates: { lat: 6.2447, lng: -75.5916 },
-    pricing: {
-      allowMoments: true,
-      deviceId: 'DEMO_S001',
-      bundles: {
-        hourly: { enabled: true, price: 800000, spots: 4 },
-        daily: { enabled: true, price: 4000000, spots: 24 },
-        weekly: { enabled: true, price: 18000000, spots: 168 }
-      }
-    },
-    metrics: {
-      dailyTraffic: 42000,
-      monthlyTraffic: 168000,
-      averageEngagement: 98
-    },
-    locationDetails: {
-      address: 'Estadio Atanasio Girardot',
-      city: 'Medellín',
-      region: 'Antioquia',
-      country: 'Colombia',
-      coordinates: { lat: 6.2447, lng: -75.5916 },
-      timezone: 'America/Bogota',
-      landmarks: ['Estadio Atanasio Girardot']
-    }
-  },
-  // Add more demo screens as needed...
-];
-
-// Combine all screens
-const allScreens = [...mockScreens, ...demoScreens] as Screen[];
+// API Test and Diagnostic (development only)
+if (process.env.NODE_ENV === 'development') {
+  import('./services/api/ApiTest');
+  import('./services/api/ApiDiagnostic');
+  import('./services/api/BackendTest');
+  import('./services/api/ForceApiTest');
+}
 
 // Generate filter options from available screens
 const generateFilterOptions = (screens: Screen[]): FilterOptions => {
@@ -144,7 +95,15 @@ const generateFilterOptions = (screens: Screen[]): FilterOptions => {
 export function MarketplaceRefactored() {
   const navigate = useNavigate();
   
-  // State management with custom hook
+  // Initialize API services on component mount
+  useEffect(() => {
+    initializeApiServices();
+  }, []);
+  
+  // SSP Inventory Hook
+  const { sspScreens, loading: sspLoading, totalSSPScreens, inventoryStats } = useSSPInventory();
+  
+  // State management with custom hook - will fetch from API
   const {
     screens,
     filteredScreens,
@@ -152,51 +111,99 @@ export function MarketplaceRefactored() {
     loading,
     error,
     updateFilters,
-    updateScreens,
-    setLoading,
-    clearFilters,
     activeFilterCount,
+    // API methods
+    fetchScreens,
+    searchScreens,
+    getTrendingScreens,
+    getFilterOptions,
     // Sectioned data
     sections: hookSections,
     sectionsLoading: hookSectionsLoading,
     sectionsError: hookSectionsError,
     loadSections,
-    refreshSections: hookRefreshSections,
-    totalScreensInSections
+    refreshSections: hookRefreshSections
   } = useMarketplaceData({
-    initialScreens: allScreens,
+    // No initial screens - will fetch from API
   });
 
-  // UI State
+  // Combine API screens with SSP inventory
+  const allCombinedScreens = useMemo(() => {
+    return [...screens, ...sspScreens];
+  }, [screens, sspScreens]);
+
+  // UI State - Default to sectioned view for better performance
   const [viewMode, setViewMode] = useState<ViewMode>('sectioned');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
-  const [favoritesUpdateTrigger, setFavoritesUpdateTrigger] = useState(0);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showCircuits, setShowCircuits] = useState(true);
+
+  // Get search query from filters state
+  const searchQuery = filters.search.query;
 
   // Debounced search
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Update search filter when debounced query changes
   useEffect(() => {
-    updateFilters({
-      ...filters,
-      search: { ...filters.search, query: debouncedSearchQuery }
+    if (debouncedSearchQuery !== filters.search.query) {
+      updateFilters({
+        ...filters,
+        search: { ...filters.search, query: debouncedSearchQuery }
+      });
+    }
+  }, [debouncedSearchQuery, filters, updateFilters]);
+
+  // Filter options based on combined screens
+  const filterOptions = useMemo(() => generateFilterOptions(allCombinedScreens), [allCombinedScreens]);
+
+  // Use combined screens for filtering
+  const combinedFilteredScreens = useMemo(() => {
+    // Apply the same filtering logic to combined screens
+    return allCombinedScreens.filter(screen => {
+      // Apply search filter
+      if (filters.search.query) {
+        const query = filters.search.query.toLowerCase();
+        const matchesSearch = screen.name.toLowerCase().includes(query) ||
+          screen.location.toLowerCase().includes(query) ||
+          screen.category?.name?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // Apply location filters
+      if (filters.location.cities.length > 0) {
+        const matchesLocation = filters.location.cities.some(city =>
+          screen.location.toLowerCase().includes(city.toLowerCase())
+        );
+        if (!matchesLocation) return false;
+      }
+
+      // Apply category filters
+      if (filters.category.categories.length > 0) {
+        const matchesCategory = filters.category.categories.includes(screen.category?.id || '');
+        if (!matchesCategory) return false;
+      }
+
+      // Apply feature filters
+      if (filters.features.allowsMoments !== null) {
+        const matchesMoments = screen.pricing?.allowMoments === filters.features.allowsMoments;
+        if (!matchesMoments) return false;
+      }
+
+      if (filters.features.rating !== null) {
+        const matchesRating = screen.rating >= (filters.features.rating || 0);
+        if (!matchesRating) return false;
+      }
+
+      return true;
     });
-  }, [debouncedSearchQuery, updateFilters]);
+  }, [allCombinedScreens, filters]);
 
-  // Filter options
-  const filterOptions = useMemo(() => generateFilterOptions(screens), [screens]);
-
-  // Group screens by circuits
-  const { circuits, individualScreens } = useMemo(() => {
-    const screensWithCircuit = filteredScreens.filter(isScreenWithCircuit);
+  // Group screens by circuits (for list view only)
+  const { individualScreens } = useMemo(() => {
+    const screensWithCircuit = combinedFilteredScreens.filter(isScreenWithCircuit);
     return groupScreensByCircuit(screensWithCircuit);
-  }, [filteredScreens]);
+  }, [combinedFilteredScreens]);
 
-  const circuitArrays = Object.values(circuits).filter(circuit => circuit.length > 1 && showCircuits);
-  const finalScreens = showCircuits ? individualScreens : filteredScreens;
+  const finalScreens = showCircuits ? individualScreens : combinedFilteredScreens;
 
   // Load sections when in sectioned view mode
   useEffect(() => {
@@ -221,24 +228,49 @@ export function MarketplaceRefactored() {
 
   // Event handlers
   const handleSearchChange = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
+    updateFilters({
+      ...filters,
+      search: { ...filters.search, query }
+    });
+  }, [filters, updateFilters]);
 
   const handleScreenSelect = useCallback((screen: Screen) => {
-    navigate(`/screen/${screen.id}`);
+    const targetPath = `/screens/${screen.id}`;
+    
+    // Development-only logging
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('Screen selection:', { screenId: screen.id, targetPath });
+    }
+    
+    try {
+      navigate(targetPath);
+    } catch (error) {
+      console.error('Navigation error:', { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        screenId: screen.id,
+        targetPath 
+      });
+      
+      // Robust fallback
+      window.location.assign(targetPath);
+    }
   }, [navigate]);
 
   const handleFavoriteChange = useCallback(() => {
-    setFavoritesUpdateTrigger(prev => prev + 1);
+    // Trigger re-render for favorites
+    // This could be enhanced with a proper favorites state management
   }, []);
 
   const handleInfoClick = useCallback(() => {
-    setIsInfoModalOpen(true);
+    // Show info modal - placeholder for future implementation
+    console.log('Info clicked');
   }, []);
 
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
     updateFilters(newFilters);
   }, [updateFilters]);
+
+
 
   // SEO metadata
   const title = `Marketplace de Pantallas Digitales Colombia 2025 | Shareflow.me`;
@@ -255,18 +287,49 @@ export function MarketplaceRefactored() {
           <link rel="canonical" href="https://shareflow.me/marketplace" />
         </Helmet>
 
-        {/* Search Header */}
-        <SearchHeader
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          onInfoClick={handleInfoClick}
-          filteredCount={filteredScreens.length}
-          loading={loading}
-        />
+        {/* Mobile Interface (< lg breakpoint) */}
+        <div className="lg:hidden">
+          <MobileMarketplaceInterface
+            sections={hookSections}
+            screens={filteredScreens}
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onScreenSelect={handleScreenSelect}
+            onFavoriteChange={handleFavoriteChange}
+            loading={loading || hookSectionsLoading}
+            error={error?.message || hookSectionsError}
+          />
+        </div>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Desktop Interface (>= lg breakpoint) */}
+        <div className="hidden lg:block">
+          {/* Search Header */}
+          <SearchHeader
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onInfoClick={handleInfoClick}
+            filteredCount={filteredScreens.length}
+            loading={loading}
+          />
+
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           
+          {/* SSP Inventory Indicator */}
+          {totalSSPScreens > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>
+                  {totalSSPScreens} pantallas adicionales disponibles via SSPs conectados
+                </span>
+                <span className="text-xs text-blue-600 ml-2">
+                  ({inventoryStats.bySSP && Object.keys(inventoryStats.bySSP).length} partners)
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Modern Filter System */}
           <div className="mb-8">
             <ModernFilterSystem
@@ -286,16 +349,17 @@ export function MarketplaceRefactored() {
               <p className="text-gray-600 mt-1">
                 {viewMode === 'sectioned' ? (
                   <>
-                    {hookSections.length} {hookSections.length === 1 ? 'sección disponible' : 'secciones disponibles'}
-                    {hookSections.length > 0 && (
-                      <> con {totalScreensInSections} pantallas</>
-                    )}
-                    {activeFilterCount > 0 && ` (${activeFilterCount} ${activeFilterCount === 1 ? 'filtro aplicado' : 'filtros aplicados'})`}
+                    {activeFilterCount > 0 && `${activeFilterCount} ${activeFilterCount === 1 ? 'filtro aplicado' : 'filtros aplicados'}`}
                   </>
                 ) : (
                   <>
                     {filteredScreens.length} {filteredScreens.length === 1 ? 'pantalla encontrada' : 'pantallas encontradas'}
                     {activeFilterCount > 0 && ` con ${activeFilterCount} ${activeFilterCount === 1 ? 'filtro' : 'filtros'}`}
+                    {totalSSPScreens > 0 && (
+                      <span className="text-blue-600">
+                        {' '}(incluyendo {totalSSPScreens} via SSPs)
+                      </span>
+                    )}
                   </>
                 )}
               </p>
@@ -315,13 +379,13 @@ export function MarketplaceRefactored() {
               </button>
               <button
                 className={`px-4 py-2 rounded-md text-sm flex items-center gap-1.5 transition-all min-h-[44px] ${
-                  viewMode === 'card' ? 'bg-white shadow text-indigo-600' : 'text-gray-600'
+                  viewMode === 'map' ? 'bg-white shadow text-indigo-600' : 'text-gray-600'
                 }`}
-                onClick={() => setViewMode('card')}
-                aria-label="Vista en tarjetas"
+                onClick={() => setViewMode('map')}
+                aria-label="Vista de mapa"
               >
-                <LayoutGrid className="w-4 h-4" />
-                <span className="hidden sm:inline">Tarjetas</span>
+                <Map className="w-4 h-4" />
+                <span className="hidden sm:inline">Mapa</span>
               </button>
               <button
                 className={`px-4 py-2 rounded-md text-sm flex items-center gap-1.5 transition-all min-h-[44px] ${
@@ -336,32 +400,7 @@ export function MarketplaceRefactored() {
             </div>
           </div>
 
-          {/* Additional Filters */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <button
-              onClick={() => setShowCircuits(!showCircuits)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all min-h-[44px] ${
-                showCircuits 
-                  ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              {showCircuits ? 'Ocultar circuitos' : 'Mostrar circuitos'}
-            </button>
 
-            <button
-              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all min-h-[44px] ${
-                showFavoritesOnly 
-                  ? 'bg-red-100 text-red-700 border border-red-200' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-red-500 text-red-500' : ''}`} />
-              {showFavoritesOnly ? 'Todos' : 'Solo favoritos'}
-            </button>
-          </div>
 
           {/* Results */}
           {error ? (
@@ -370,7 +409,7 @@ export function MarketplaceRefactored() {
                 <Filter className="w-8 h-8 text-red-600" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Error al cargar pantallas</h3>
-              <p className="text-gray-600 mb-6">{error.message}</p>
+              <p className="text-gray-600 mb-6">{typeof error === 'string' ? error : error?.message || 'Error desconocido'}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-[#353FEF] text-white rounded-lg font-medium hover:bg-[#2A32C5] transition-colors"
@@ -388,22 +427,24 @@ export function MarketplaceRefactored() {
               error={hookSectionsError}
               aria-label="Intelligent marketplace sections"
             />
-          ) : viewMode === 'card' ? (
-            <ScreenGrid
-              screens={finalScreens}
-              circuits={circuitArrays}
-              onScreenSelect={handleScreenSelect}
-              onFavoriteChange={handleFavoriteChange}
-              loading={loading}
-            />
+          ) : viewMode === 'map' ? (
+            <div className="h-[600px] bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <MapContainer
+                screens={filteredScreens}
+                onScreenSelect={handleScreenSelect}
+                onMarkerClick={handleScreenSelect}
+                onFavoriteChange={handleFavoriteChange}
+              />
+            </div>
           ) : (
             <ScreenList
               screens={finalScreens}
               onScreenSelect={handleScreenSelect}
               onFavoriteChange={handleFavoriteChange}
-              loading={loading}
+              loading={loading || sspLoading}
             />
           )}
+          </div>
         </div>
       </div>
     </MarketplaceErrorBoundary>

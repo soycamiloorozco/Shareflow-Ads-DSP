@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  X, Filter, Search, MapPin, Building2, DollarSign, Star, 
+  X, Search, MapPin, Building2, DollarSign, Star, 
   Sparkles, Check, ChevronRight, Zap, TrendingUp
 } from 'lucide-react';
 import { FilterState, FilterOptions } from '../../types';
+import { SpecialFilters } from './SpecialFilters';
 
 interface MobileFilterDrawerProps {
   isOpen: boolean;
@@ -178,6 +179,8 @@ export const MobileFilterDrawer = React.memo<MobileFilterDrawerProps>(({
                         onNavigate={setActiveStep}
                         getActiveCount={getActiveCount}
                         onClearAll={clearAllFilters}
+                        filters={filters}
+                        onFiltersChange={onFiltersChange}
                       />
                     )}
 
@@ -252,8 +255,28 @@ const MainFilterScreen: React.FC<{
   onNavigate: (step: any) => void;
   getActiveCount: (section: string) => number;
   onClearAll: () => void;
-}> = ({ quickActions, onNavigate, getActiveCount, onClearAll }) => (
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+}> = ({ quickActions, onNavigate, getActiveCount, onClearAll, filters, onFiltersChange }) => (
   <div className="space-y-6">
+    {/* Special Filters */}
+    <div>
+      <h3 className="font-medium text-gray-900 mb-3">Filtros Especiales</h3>
+      <SpecialFilters
+        showFavoritesOnly={filters.showFavoritesOnly}
+        showCircuits={filters.showCircuits}
+        onShowFavoritesChange={(show) => onFiltersChange({
+          ...filters,
+          showFavoritesOnly: show
+        })}
+        onShowCircuitsChange={(show) => onFiltersChange({
+          ...filters,
+          showCircuits: show
+        })}
+        className="flex-col gap-2"
+      />
+    </div>
+
     {/* Quick Actions */}
     <div>
       <h3 className="font-medium text-gray-900 mb-3">Filtros Rápidos</h3>

@@ -3,6 +3,7 @@ import { FilterState, Screen } from '../types';
 import { MarketplaceSection } from '../types/intelligent-grouping.types';
 import { getActiveFilterCount } from '../types/filter.types';
 import { groupingEngine } from '../services/GroupingEngine';
+import MarketplaceApiService, { ScreenFilters } from '../services/api/MarketplaceApiService';
 
 interface UseMarketplaceDataProps {
   initialScreens?: Screen[];
@@ -172,6 +173,136 @@ export const useMarketplaceData = ({
       }
     }));
   }, []);
+
+  // Convert FilterState to ScreenFilters for API
+  const convertFiltersToApiFormat = useCallback((filters: FilterState): ScreenFilters => {
+    return {
+      search: filters.search.query || undefined,
+      cities: filters.location.cities.length > 0 ? filters.location.cities : undefined,
+      categories: filters.category.categories.length > 0 ? filters.category.categories : undefined,
+      minPrice: filters.price.min > 0 ? filters.price.min : undefined,
+      maxPrice: filters.price.max < Number.MAX_SAFE_INTEGER ? filters.price.max : undefined,
+      environment: filters.category.environments.length === 1 ? filters.category.environments[0] as 'indoor' | 'outdoor' : undefined,
+      rating: filters.features.rating || undefined,
+      allowsMoments: filters.features.allowsMoments || undefined,
+      sortBy: filters.sort.field,
+      sortDirection: filters.sort.direction,
+    };
+  }, []);
+
+  // Fetch screens from API
+  const fetchScreens = useCallback(async (filters?: FilterState, page = 1, limit = 20) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const apiFilters = convertFiltersToApiFormat(filters || state.filters);
+      const response = await MarketplaceApiService.getScreens({
+        ...apiFilters,
+        page,
+        limit,
+      });
+
+      setState(prev => ({
+        ...prev,
+        screens: response.data,
+        loading: false,
+        error: null,
+      }));
+
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch screens';
+      setError(new Error(errorMessage));
+      setLoading(false);
+      throw error;
+    }
+  }, [state.filters, convertFiltersToApiFormat, setLoading, setError]);
+
+  // Fetch single screen by ID
+  const fetchScreen = useCallback(async (screenId: string) => {
+    try {
+      const screen = await MarketplaceApiService.getScreen(screenId);
+      return screen;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch screen';
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  // Search screens
+  const searchScreens = useCallback(async (query: string, limit = 10) => {
+    try {
+      const result = await MarketplaceApiService.searchScreens(query, limit);
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to search screens';
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  // Get trending screens
+  const getTrendingScreens = useCallback(async (location?: string, timeframe?: number) => {
+    try {
+      const trendingScreens = await MarketplaceApiService.getTrendingScreens(location, timeframe);
+      return trendingScreens;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch trending screens';
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  // Get filter options
+  const getFilterOptions = useCallback(async () => {
+    try {
+      const filterOptions = await MarketplaceApiService.getFilterOptions();
+      return filterOptions;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch filter options';
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  // Auto-fetch screens when component mounts or filters change (with debouncing)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (initialScreens.length === 0 && state.screens.length === 0 && !state.loading) {
+        // Only auto-fetch if no initial screens were provided and we don't have screens yet
+        console.log('Auto-fetching screens from API...');
+        fetchScreens().catch(error => {
+          console.error('Auto-fetch screens failed:', error);
+        });
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [state.filters, fetchScreens, initialScreens.length, state.screens.length, state.loading]);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    if (initialScreens.length === 0 && state.screens.length === 0 && !state.loading) {
+      console.log('Initial fetch of screens from API...');
+      fetchScreens().catch(error => {
+        console.error('Initial fetch screens failed:', error);
+      });
+    }
+  }, []); // Only run once on mount
+
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log('📊 Marketplace Data State:', {
+      screensCount: state.screens.length,
+      filteredScreensCount: state.filteredScreens.length,
+      loading: state.loading,
+      error: state.error?.message,
+      hasFilters: Object.keys(state.filters).length > 0
+    });
+
+    // Show success message when screens are loaded
+    if (state.screens.length > 0 && !state.loading) {
+      console.log('✅ Marketplace successfully loaded', state.screens.length, 'screens');
+    }
+  }, [state.screens.length, state.filteredScreens.length, state.loading, state.error]);
 
   // Computed values (needed before sectioned data methods)
   const activeFilterCount = useMemo(() => getActiveFilterCount(state.filters), [state.filters]);
@@ -403,6 +534,13 @@ export const useMarketplaceData = ({
     setError,
     clearFilters,
     applyFilters,
+    
+    // API actions
+    fetchScreens,
+    fetchScreen,
+    searchScreens,
+    getTrendingScreens,
+    getFilterOptions,
     
     // Sectioned data actions
     loadSections,

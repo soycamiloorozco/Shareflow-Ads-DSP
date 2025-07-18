@@ -12,6 +12,9 @@ export * from './screen.types';
 // Filter-specific types
 export * from './filter.types';
 
+// Conditional filter types
+export * from './conditional-filter.types';
+
 // API-specific types
 export * from './api.types';
 
