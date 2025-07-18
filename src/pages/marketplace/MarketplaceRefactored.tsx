@@ -32,6 +32,69 @@ import { useScreensApi } from './hooks/useScreensApi';
 // API Initialization
 import { initializeApiServices } from './services/api/ApiInitializer';
 
+// Demo data - temporary until API is fully implemented
+import { demoScreens } from '../../data/demoScreens';
+
+// Helper function to convert demo screens to Screen format
+const convertDemoScreensToScreens = (demoScreens: any[]): Screen[] => {
+  const converted = demoScreens.map(screen => {
+    const converted = {
+      ...screen,
+      // Ensure we have locationDetails for the Screen interface
+      locationDetails: {
+        address: screen.location || '',
+        city: screen.location?.split(',').pop()?.trim() || 'Colombia',
+        region: 'Colombia',
+        country: 'Colombia', 
+        coordinates: screen.coordinates || { lat: 4.7110, lng: -74.0721 },
+        timezone: 'America/Bogota',
+        landmarks: []
+      },
+      // Ensure specs are complete
+      specs: {
+        width: screen.specs?.width || 1920,
+        height: screen.specs?.height || 1080,
+        resolution: screen.specs?.resolution || 'HD',
+        brightness: screen.specs?.brightness || '5000 nits',
+        aspectRatio: '16:9',
+        orientation: 'landscape' as const,
+        pixelDensity: 72,
+        colorDepth: 24,
+        refreshRate: 60
+      },
+      // Ensure metrics exist
+      metrics: {
+        dailyTraffic: screen.views?.daily || 10000,
+        monthlyTraffic: screen.views?.monthly || 300000,
+        averageEngagement: 85
+      }
+    };
+    
+    // Debug log each conversion
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 Converting screen:', {
+        id: screen.id,
+        name: screen.name?.slice(0, 30) + '...',
+        originalCoords: screen.coordinates,
+        convertedCoords: converted.coordinates,
+        hasValidCoords: !!(converted.coordinates?.lat && converted.coordinates?.lng)
+      });
+    }
+    
+    return converted;
+  });
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('✅ Conversion complete:', {
+      total: converted.length,
+      withCoords: converted.filter(s => s.coordinates?.lat && s.coordinates?.lng).length,
+      withoutCoords: converted.filter(s => !s.coordinates?.lat || !s.coordinates?.lng).length
+    });
+  }
+  
+  return converted as Screen[];
+};
+
 // API Test and Diagnostic (development only)
 if (process.env.NODE_ENV === 'development') {
   import('./services/api/ApiTest');
@@ -124,7 +187,8 @@ export function MarketplaceRefactored() {
     loadSections,
     refreshSections: hookRefreshSections
   } = useMarketplaceData({
-    // No initial screens - will fetch from API
+    // Load demo screens as initial data
+    initialScreens: convertDemoScreensToScreens(demoScreens)
   });
 
   // Combine API screens with SSP inventory
@@ -225,6 +289,36 @@ export function MarketplaceRefactored() {
     const userId = undefined; // For now, no user ID for anonymous users
     await hookRefreshSections(userId);
   }, [hookRefreshSections]);
+
+  // Debug log when switching to map view
+  useEffect(() => {
+    if (viewMode === 'map' && process.env.NODE_ENV === 'development') {
+      console.log('🗺️ Switching to map view with screens:', {
+        combinedScreens: combinedFilteredScreens.length,
+        screensFromHook: screens.length,
+        sspScreens: sspScreens.length,
+        allCombinedScreens: allCombinedScreens.length,
+        screensWithCoords: combinedFilteredScreens.filter(s => s.coordinates?.lat && s.coordinates?.lng).length,
+        screensWithoutCoords: combinedFilteredScreens.filter(s => !s.coordinates?.lat || !s.coordinates?.lng).length,
+        firstFewWithCoords: combinedFilteredScreens
+          .filter(s => s.coordinates?.lat && s.coordinates?.lng)
+          .slice(0, 3)
+          .map(s => ({
+            id: s.id,
+            name: s.name?.slice(0, 30) + '...',
+            coordinates: s.coordinates
+          })),
+        firstFewWithoutCoords: combinedFilteredScreens
+          .filter(s => !s.coordinates?.lat || !s.coordinates?.lng)
+          .slice(0, 3)
+          .map(s => ({
+            id: s.id,
+            name: s.name?.slice(0, 30) + '...',
+            coordinates: s.coordinates
+          }))
+      });
+    }
+  }, [viewMode, combinedFilteredScreens, screens, sspScreens, allCombinedScreens]);
 
   // Event handlers
   const handleSearchChange = useCallback((query: string) => {
@@ -430,7 +524,7 @@ export function MarketplaceRefactored() {
           ) : viewMode === 'map' ? (
             <div className="h-[600px] bg-white rounded-lg border border-gray-200 overflow-hidden">
               <MapContainer
-                screens={filteredScreens}
+                screens={combinedFilteredScreens}
                 onScreenSelect={handleScreenSelect}
                 onMarkerClick={handleScreenSelect}
                 onFavoriteChange={handleFavoriteChange}
