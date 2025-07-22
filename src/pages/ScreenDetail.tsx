@@ -170,7 +170,8 @@ const demoScreens = [
         height: apiScreen.height || 1080,
         resolution: apiScreen.resolution || 'Full HD (1920x1080)',
         brightness: apiScreen.brightness?.toString() || '5000',
-        technology: apiScreen.displayType || 'LED'
+        technology: apiScreen.displayType || 'LED',
+        orientation: apiScreen.orientation || 'landscape' // Agregado para usar la orientación del API
       },
       operatingHours: {
         start: apiScreen.operationStartTime || '06:00:00',

@@ -60,7 +60,7 @@ const convertDemoScreensToScreens = (demoScreens: any[]): Screen[] => {
         resolution: screen.specs?.resolution || 'HD',
         brightness: screen.specs?.brightness || '5000 nits',
         aspectRatio: '16:9',
-        orientation: 'landscape' as const,
+        orientation: screen.specs?.orientation || (screen.specs?.width > screen.specs?.height ? 'landscape' : 'portrait'),
         pixelDensity: 72,
         colorDepth: 24,
         refreshRate: 60

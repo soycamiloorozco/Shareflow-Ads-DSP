@@ -13,8 +13,22 @@ interface ScreenSpecsProps {
 
 export function ModernScreenSpecs({ screen }: ScreenSpecsProps) {
   // Determinar la orientación de la pantalla
-  const getOrientation = (width: number, height: number): string => {
-    return width > height ? 'Horizontal' : 'Vertical';
+  const getOrientation = (specs: Screen["specs"]): string => {
+    if (specs.orientation) {
+      // Normalizar posibles valores del API
+      if (typeof specs.orientation === 'string') {
+        if (specs.orientation.toLowerCase() === 'portrait' || specs.orientation.toLowerCase() === 'vertical') {
+          return 'Vertical';
+        }
+        if (specs.orientation.toLowerCase() === 'landscape' || specs.orientation.toLowerCase() === 'horizontal') {
+          return 'Horizontal';
+        }
+        // Si viene otro valor, mostrarlo capitalizado
+        return specs.orientation.charAt(0).toUpperCase() + specs.orientation.slice(1);
+      }
+    }
+    // Fallback: inferir por dimensiones
+    return specs.width > specs.height ? 'Horizontal' : 'Vertical';
   };
 
   // Calcular resolución en píxeles (estimación basada en dimensiones y calidad)
@@ -45,7 +59,8 @@ export function ModernScreenSpecs({ screen }: ScreenSpecsProps) {
     {
       icon: Cpu,
       title: 'Resolución',
-      value: getResolutionPixels(screen.specs.width, screen.specs.height, screen.specs.resolution),
+      //value: getResolutionPixels(screen.specs.width, screen.specs.height, screen.specs.resolution),
+      value: '',
       description: `Calidad ${screen.specs.resolution}`
     },
     {
@@ -57,8 +72,8 @@ export function ModernScreenSpecs({ screen }: ScreenSpecsProps) {
     {
       icon: Smartphone,
       title: 'Orientación',
-      value: getOrientation(screen.specs.width, screen.specs.height),
-      description: `${screen.specs.width}×${screen.specs.height} cm`
+      value: getOrientation(screen.specs),
+      description: '' // Removido el texto de dimensiones
     }
   ];
 
