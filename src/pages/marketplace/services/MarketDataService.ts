@@ -17,6 +17,7 @@ import {
 } from '../types/intelligent-grouping.types';
 import { Screen } from '../types/marketplace.types';
 import { CacheService } from './CacheService';
+import { constants } from '../../../config/constants';
 
 /**
  * Implementation of MarketDataService for trending analysis and market insights
@@ -313,7 +314,7 @@ export class MarketDataServiceImpl implements MarketDataService {
           timestamp,
           bookingType: ['hourly', 'daily', 'weekly'][Math.floor(Math.random() * 3)],
           duration: Math.floor(Math.random() * 24) + 1,
-          price: screen.price * (0.8 + Math.random() * 0.4), // ±20% price variation
+          price: (screen.price || 50000) * (0.8 + Math.random() * 0.4), // ±20% price variation
           location: screen.location
         });
       }
@@ -333,16 +334,17 @@ export class MarketDataServiceImpl implements MarketDataService {
     }
 
     // Simulate metrics based on screen properties
-    const baseBookingRate = screen.rating * 2; // Higher rated screens get more bookings
-    const baseEngagement = screen.views.daily / 1000; // Convert views to engagement score
+    const baseBookingRate = (screen.rating || 3.5) * 2; // Higher rated screens get more bookings
+    const dailyViews = screen.views?.daily || screen.metrics?.dailyTraffic || 1000; // Use fallback if views not available
+    const baseEngagement = dailyViews / 1000; // Convert views to engagement score
     
     return {
       screenId,
       bookingRate: baseBookingRate + Math.random() * 5,
-      averageRating: screen.rating,
+      averageRating: screen.rating || 3.5,
       engagementScore: Math.min(baseEngagement + Math.random() * 20, 100),
-      revenueGenerated: screen.price * (5 + Math.random() * 10),
-      impressionCount: screen.views.daily,
+      revenueGenerated: (screen.price || 50000) * (5 + Math.random() * 10),
+      impressionCount: dailyViews,
       conversionRate: 0.02 + Math.random() * 0.08, // 2-10% conversion rate
       lastUpdated: new Date(),
       trendDirection: ['up', 'down', 'stable'][Math.floor(Math.random() * 3)] as 'up' | 'down' | 'stable'
@@ -365,7 +367,7 @@ export class MarketDataServiceImpl implements MarketDataService {
 
   private calculateAveragePrice(screens: Screen[]): number {
     if (screens.length === 0) return 0;
-    const total = screens.reduce((sum, screen) => sum + screen.price, 0);
+    const total = screens.reduce((sum, screen) => sum + (screen.price || 50000), 0);
     return total / screens.length;
   }
 
@@ -373,7 +375,7 @@ export class MarketDataServiceImpl implements MarketDataService {
     const categoryCount = new Map<string, number>();
     
     screens.forEach(screen => {
-      const category = screen.category.name;
+      const category = typeof screen.category === 'string' ? screen.category : screen.category?.name || 'General';
       categoryCount.set(category, (categoryCount.get(category) || 0) + 1);
     });
 
@@ -449,12 +451,26 @@ export class MarketDataServiceImpl implements MarketDataService {
   }
 
   private async getScreensData(location?: string): Promise<Screen[]> {
-    // This would typically fetch from your screens API
-    // For now, we'll import from demo data
+    // Fetch from real API first, fallback to demo data
     try {
-      const { demoScreens } = await import('../../../data/demoScreens');
-      let screens = demoScreens as Screen[];
+      let screens: Screen[] = [];
       
+      try {
+        const response = await fetch(`${constants.api_url}/Screens/all`);
+        
+        if (response.ok) {
+          const realScreens = await response.json();
+          screens = realScreens;
+        } else {
+          throw new Error(`API responded with status: ${response.status}`);
+        }
+      } catch (apiError) {
+        // Fallback to demo data if API fails
+        const { demoScreens } = await import('../../../data/demoScreens');
+        screens = demoScreens as Screen[];
+      }
+      
+      // Apply location filter if specified
       if (location) {
         screens = screens.filter(screen => 
           screen.location.toLowerCase().includes(location.toLowerCase()) ||

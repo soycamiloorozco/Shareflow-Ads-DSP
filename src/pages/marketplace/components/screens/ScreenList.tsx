@@ -1,12 +1,13 @@
 import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Star, Eye, ChevronRight, Heart, Clock, Sparkles } from 'lucide-react';
+import { MapPin, Star, Eye, ChevronRight, Heart, Clock, Sparkles, Monitor, Zap } from 'lucide-react';
+import { Screen } from '../../types/marketplace.types';
 import { getScreenMinPrice } from '../../utils/screen-utils';
 import favoritesService from '../../../../services/favoritesService';
 
 interface ScreenListProps {
-  screens: any[];
-  onScreenSelect: (screen: any) => void;
+  screens: Screen[];
+  onScreenSelect: (screen: Screen) => void;
   onFavoriteChange?: () => void;
   loading?: boolean;
   className?: string;
@@ -21,7 +22,7 @@ export const ScreenList = React.memo<ScreenListProps>(({
   className = '',
   'aria-label': ariaLabel = 'List of available screens'
 }) => {
-  const handleScreenSelect = useCallback((screen: any) => {
+  const handleScreenSelect = useCallback((screen: Screen) => {
     onScreenSelect(screen);
   }, [onScreenSelect]);
 
@@ -37,6 +38,26 @@ export const ScreenList = React.memo<ScreenListProps>(({
     }
   }, [onFavoriteChange]);
 
+  // Format price with Colombian peso format
+  const formatPrice = useCallback((price: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  }, []);
+
+  // Format views with K/M suffix
+  const formatViews = useCallback((views: number) => {
+    if (views >= 1000000) {
+      return `${(views / 1000000).toFixed(1)}M`;
+    } else if (views >= 1000) {
+      return `${(views / 1000).toFixed(0)}K`;
+    }
+    return views.toString();
+  }, []);
+
   if (loading) {
     return (
       <div 
@@ -51,12 +72,12 @@ export const ScreenList = React.memo<ScreenListProps>(({
           >
             <div className="flex items-center gap-4">
               <div className="w-24 h-16 bg-gray-200 rounded-lg"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/4"></div>
               </div>
-              <div className="w-20 h-10 bg-gray-200 rounded"></div>
+              <div className="w-20 h-6 bg-gray-200 rounded"></div>
             </div>
           </div>
         ))}
@@ -64,19 +85,14 @@ export const ScreenList = React.memo<ScreenListProps>(({
     );
   }
 
-  if (screens.length === 0) {
+  if (!screens || screens.length === 0) {
     return (
-      <div 
-        className={`text-center py-16 ${className}`}
-        aria-label={`${ariaLabel} (no results)`}
-      >
+      <div className={`text-center py-16 ${className}`}>
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <Monitor className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron pantallas</h3>
-        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay pantallas disponibles</h3>
+        <p className="text-gray-600 max-w-md mx-auto">
           No hay pantallas disponibles que coincidan con tus filtros actuales. 
           Intenta ajustar los criterios de búsqueda.
         </p>
@@ -103,7 +119,7 @@ export const ScreenList = React.memo<ScreenListProps>(({
             onClick={() => handleScreenSelect(screen)}
             role="button"
             tabIndex={0}
-            aria-label={`${screen.name} in ${screen.location}`}
+            aria-label={`${screen.name} en ${screen.location}`}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -119,13 +135,30 @@ export const ScreenList = React.memo<ScreenListProps>(({
                   alt={screen.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
+                  onError={(e) => {
+                    // Fallback if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-screen.jpg';
+                  }}
                 />
-                {/* Category badge */}
+                {/* Environment badge */}
                 <div className="absolute top-1 left-1">
-                  <span className="px-1.5 py-0.5 bg-black/70 text-white text-xs rounded">
-                    {screen.category?.name || 'Pantalla'}
+                  <span className={`px-1.5 py-0.5 text-white text-xs rounded ${
+                    screen.environment === 'outdoor' ? 'bg-green-600' : 'bg-blue-600'
+                  }`}>
+                    {screen.environment === 'outdoor' ? 'Exterior' : 'Interior'}
                   </span>
                 </div>
+                {/* Favorite button */}
+                <button
+                  onClick={(e) => handleFavoriteClick(e, screen.id)}
+                  className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+                  aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                >
+                  <Heart 
+                    className={`w-3 h-3 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-white'}`} 
+                  />
+                </button>
               </div>
               
               {/* Screen Info */}
@@ -137,7 +170,7 @@ export const ScreenList = React.memo<ScreenListProps>(({
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm font-medium text-gray-700">
-                      {screen.rating}
+                      {screen.rating.toFixed(1)}
                     </span>
                     <span className="text-xs text-gray-500">({screen.reviews})</span>
                   </div>
@@ -148,70 +181,65 @@ export const ScreenList = React.memo<ScreenListProps>(({
                   <span className="truncate">{screen.location}</span>
                 </div>
                 
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    <span>{(screen.views?.daily / 1000 || 0).toFixed(0)}K/día</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    {/* Category */}
+                    <div className="flex items-center gap-1">
+                      <span className="text-lg">{screen.category?.icon || '🏢'}</span>
+                      <span>{screen.category?.name || 'General'}</span>
+                    </div>
+                    
+                    {/* Views */}
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      <span>{formatViews(screen.views.daily)}/día</span>
+                    </div>
+                    
+                    {/* Specs */}
+                    <div className="flex items-center gap-1">
+                      <Monitor className="w-3 h-3" />
+                      <span>{screen.specs.resolution}</span>
+                    </div>
                   </div>
                   
-                  {screen.pricing?.allowMoments && (
-                    <div className="flex items-center gap-1 text-purple-600">
-                      <Sparkles className="w-3 h-3" />
-                      <span className="text-xs font-medium">Momentos</span>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900">
+                      {formatPrice(minPrice)}
                     </div>
-                  )}
-                  
-                  {screen.operatingHours && (
+                    <div className="text-xs text-gray-500">
+                      desde
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Additional info row */}
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    {/* Availability */}
+                    <div className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-full ${
+                        screen.availability ? 'bg-green-400' : 'bg-red-400'
+                      }`}></div>
+                      <span>{screen.availability ? 'Disponible' : 'No disponible'}</span>
+                    </div>
+                    
+                    {/* Operating hours */}
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      <span className="text-xs">
-                        {screen.operatingHours.start}-{screen.operatingHours.end}
-                      </span>
+                      <span>{screen.operatingHours?.start || '06:00'} - {screen.operatingHours?.end || '22:00'}</span>
                     </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Price and Actions */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                {/* Favorite Button */}
-                <button
-                  onClick={(e) => handleFavoriteClick(e, screen.id)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                  aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                >
-                  <Heart 
-                    className={`w-4 h-4 transition-colors ${
-                      isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-400'
-                    }`} 
-                  />
-                </button>
-                
-                {/* Price */}
-                <div className="text-right">
-                  <div className="font-bold text-lg text-gray-900">
-                    {new Intl.NumberFormat('es-CO', {
-                      style: 'currency',
-                      currency: 'COP',
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                      notation: minPrice >= 1000000 ? 'compact' : 'standard'
-                    }).format(minPrice)}
+                    
+                    {/* Moments available */}
+                    {screen.pricing?.allowMoments && (
+                      <div className="flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-yellow-500" />
+                        <span>Momentos</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-gray-500">por hora</div>
+                  
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#353FEF] transition-colors" />
                 </div>
-                
-                {/* View Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleScreenSelect(screen);
-                  }}
-                  className="p-2 text-[#353FEF] hover:bg-[#353FEF]/10 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                  aria-label={`Ver detalles de ${screen.name}`}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
               </div>
             </div>
           </motion.div>

@@ -664,6 +664,69 @@ export class MarketplaceApiService {
   }
 
   /**
+   * Get all screens from the specific endpoint api/Screens/all
+   */
+  public async getAllScreens(): Promise<Screen[]> {
+    const cacheKey = 'all_screens';
+    
+    return this.requestDeduplicator.deduplicate(cacheKey, async () => {
+      // Check cache first
+      const cached = await this.cacheManager.get<Screen[]>(cacheKey);
+      if (cached) {
+        console.log('📋 Using cached screens data');
+        return cached;
+      }
+
+      // Use the main API endpoint as specified by user
+      const baseApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const url = `${baseApiUrl}/api/Screens/all`;
+
+      try {
+        console.log('🔍 Fetching screens from:', url);
+        
+        const response = await this.makeRequest<ApiScreenResponse[]>(url);
+        
+        console.log('✅ API response received:', {
+          screensCount: response.length,
+          sampleScreen: response[0] ? {
+            id: response[0].id,
+            name: response[0].name,
+            location: response[0].location,
+            coordinates: response[0].coordinates
+          } : null
+        });
+
+        // Convert API response to Screen format
+        const screens = response.map(this.convertApiScreenToScreen);
+
+        // Cache the result
+        await this.cacheManager.set(cacheKey, screens, 300000); // 5 minutes TTL
+
+        console.log(`🎯 Successfully loaded ${screens.length} screens from real API`);
+        return screens;
+      } catch (error) {
+        console.error('❌ API Error fetching all screens:', error);
+        
+        // Log the actual error details
+        console.error('🚨 API Error Details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          url,
+          endpoint: 'api/Screens/all'
+        });
+
+        // In development, provide helpful error info but don't use mock fallback
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 API call failed - check if backend is running and endpoint exists');
+          console.log('💡 Expected endpoint: GET /api/Screens/all');
+          console.log('💡 Make sure backend is accessible at:', baseApiUrl);
+        }
+        
+        throw error; // Don't use fallback, let the error bubble up
+      }
+    });
+  }
+
+  /**
    * Clear all caches
    */
   public async clearCache(): Promise<void> {

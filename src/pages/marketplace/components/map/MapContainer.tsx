@@ -67,7 +67,7 @@ export function MapContainer({
     if (screens.length > 0) {
       setScreenDataReady(true);
       if (process.env.NODE_ENV === 'development') {
-        console.log('📊 Screen data ready:', screens.length, 'screens received');
+        // console.log('📊 Screen data ready:', screens.length, 'screens received');
       }
     } else {
       setScreenDataReady(false);
@@ -87,39 +87,6 @@ export function MapContainer({
       Math.abs(screen.coordinates.lng) <= 180
     );
     
-    // Debug logging for screens
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🎯 MapContainer processing:', {
-        totalScreens: screens.length,
-        validScreens: filtered.length,
-        firstFewScreens: screens.slice(0, 5).map((s: Screen) => ({ 
-          id: s.id, 
-          name: s.name?.slice(0, 30) + '...', 
-          coordinates: s.coordinates,
-          hasCoords: !!(s.coordinates?.lat && s.coordinates?.lng)
-        })),
-        firstFewValid: filtered.slice(0, 5).map((s: Screen) => ({ 
-          id: s.id, 
-          name: s.name?.slice(0, 30) + '...', 
-          coordinates: s.coordinates 
-        }))
-      });
-
-      // Detailed analysis
-      console.log('🔍 Real data analysis:', {
-        totalRealScreens: screens.length,
-        screensWithCoordinates: screens.filter((s: Screen) => s.coordinates?.lat && s.coordinates?.lng).length,
-        screensWithoutCoordinates: screens.filter((s: Screen) => !s.coordinates?.lat || !s.coordinates?.lng).length,
-        sampleScreensWithoutCoords: screens
-          .filter((s: Screen) => !s.coordinates?.lat || !s.coordinates?.lng)
-          .slice(0, 3)
-          .map((s: Screen) => ({
-            id: s.id,
-            name: s.name?.slice(0, 30) + '...',
-            coordinates: s.coordinates
-          }))
-      });
-    }
     
     return filtered;
   }, [screens]);
@@ -131,7 +98,7 @@ export function MapContainer({
       const timer = setTimeout(() => {
         setMarkersLoaded(true);
         if (process.env.NODE_ENV === 'development') {
-          console.log('✅ Markers loaded:', validScreens.length, 'valid screens');
+          // console.log('✅ Markers loaded:', validScreens.length, 'valid screens');
         }
       }, 500);
       
@@ -274,13 +241,13 @@ export function MapContainer({
         {/* Render screen markers only when ready */}
         {markersLoaded && validScreens.map(screen => {
           // Debug log for each marker
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🎯 Rendering marker for:', {
-              id: screen.id,
-              name: screen.name,
-              coordinates: screen.coordinates
-            });
-          }
+          // if (process.env.NODE_ENV === 'development') {
+          //   console.log('🎯 Rendering marker for:', {
+          //     id: screen.id,
+          //     name: screen.name,
+          //     coordinates: screen.coordinates
+          //   });
+          // }
           
           return (
             <ScreenMarker

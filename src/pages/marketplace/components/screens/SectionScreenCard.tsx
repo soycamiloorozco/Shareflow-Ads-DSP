@@ -117,13 +117,17 @@ export const SectionScreenCard = React.memo<SectionScreenCardProps>(({
       }
     };
 
+    // Safe location handling for API real data
+    const locationString = screen.location || '';
+    const locationParts = locationString.split(',');
+    
     return {
-      location: screen.location.split(',')[0],
-      city: screen.location.split(',')[1]?.trim() || '',
+      location: locationParts[0] || 'Ubicación no disponible',
+      city: locationParts[1]?.trim() || '',
       allowedTypes: allowedTypes.slice(0, 2),
       moreTypes: Math.max(0, allowedTypes.length - 2),
       dailyViews: screen.views?.daily || 0,
-      engagement: screen.engagementMetrics?.engagementScore || screen.metrics?.averageEngagement || 85,
+      engagement: (screen.engagementMetrics as any)?.engagementScore || screen.metrics?.averageEngagement || 85,
       isPopular: screen.rating > 4.7,
       priceDisplay: `${(getScreenMinPrice(screen) / 1000).toFixed(0)}K`,
       sectionIndicator: getSectionIndicator(),

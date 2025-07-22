@@ -27,9 +27,14 @@ import {
   Navigation
 } from 'lucide-react';
 import { screens as mockScreens } from '../data/mockData';
+import { demoScreens as marketplaceDemoScreens } from '../data/demoScreens';
+import { constants } from '../config/constants';
 import { Button } from '../components/Button';
 import { ScreenNotFound } from '../components/ScreenNotFound';
 import { Screen } from '../types';
+
+// Import MarketplaceApiService for better API integration
+import { MarketplaceApiService } from './marketplace/services/api/MarketplaceApiService';
 
 // Demo screens from marketplace (should match MarketplaceRefactored.tsx)
 const demoScreens = [
@@ -88,8 +93,161 @@ const demoScreens = [
   }
 ];
 
-// Combine all screens to match marketplace data
-const allScreens = [...mockScreens, ...demoScreens] as Screen[];
+// Convert demo screens to match marketplace format
+  const convertApiScreenToScreen = (apiScreen: any): Screen => {
+    // Convert API real data to Screen format expected by ScreenDetail
+    return {
+      id: apiScreen.id.toString(),
+      name: apiScreen.publicName || apiScreen.referenceName || `Pantalla ${apiScreen.id}`,
+      location: apiScreen.address || 'Ubicación no especificada',
+      latitude: apiScreen.latitude || 0,
+      longitude: apiScreen.longitude || 0,
+      width: apiScreen.width || 1920,
+      height: apiScreen.height || 1080,
+      resolution: apiScreen.resolution || 'Full HD (1920x1080)',
+      brightness: apiScreen.brightness?.toString() || '5000',
+      orientation: apiScreen.orientation || 'landscape',
+      displayType: apiScreen.displayType || 'LED',
+      venueType: apiScreen.venueType || 'n/a',
+      businessDensity: apiScreen.businessDensity || 0,
+      estimatedDailyImpressions: apiScreen.estimatedDailyImpressions || 0,
+      averageDwellTime: apiScreen.averageDwellTime || 1,
+      peakHours: apiScreen.peakHours || 'n/a',
+      operationStartTime: apiScreen.operationStartTime || '06:00:00',
+      operationEndTime: apiScreen.operationEndTime || '22:00:00',
+      standardAdDuration: apiScreen.standardAdDuration || 15,
+      loopDuration: apiScreen.loopDuration || 300,
+      transitionTime: apiScreen.transitionTime || 1,
+      price: apiScreen.minimumPrice || 15000,
+      category: {
+        id: apiScreen.category || 'other',
+        name: getCategoryDisplayName(apiScreen.category) || 'Otros',
+        emoji: '📺',
+        description: 'Pantalla digital',
+        count: 1
+      },
+      images: apiScreen.images?.map((img: any) => `https://api.shareflow.me${img.filePath}`) || [],
+      image: apiScreen.images?.[0] ? `https://api.shareflow.me${apiScreen.images[0].filePath}` : 'https://via.placeholder.com/400x300/4F46E5/FFFFFF?text=Pantalla+Digital',
+      // Convert screenPackages to pricing structure
+      pricing: {
+        allowMoments: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'moments' && pkg.enabled) || false,
+        bundles: {
+          hourly: {
+            enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'hourly' && pkg.enabled) || false,
+            price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'hourly' && pkg.enabled)?.price || apiScreen.minimumPrice || 15000,
+            spots: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'hourly' && pkg.enabled)?.spots || 216
+          },
+          daily: {
+            enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'daily' && pkg.enabled) || false,
+            price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'daily' && pkg.enabled)?.price || (apiScreen.minimumPrice || 15000) * 24,
+            spots: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'daily' && pkg.enabled)?.spots || 3456
+          },
+          weekly: {
+            enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'weekly' && pkg.enabled) || false,
+            price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'weekly' && pkg.enabled)?.price || (apiScreen.minimumPrice || 15000) * 24 * 7,
+            spots: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'weekly' && pkg.enabled)?.spots || 24192
+          },
+          monthly: {
+            enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'monthly' && pkg.enabled) || false,
+            price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'monthly' && pkg.enabled)?.price || (apiScreen.minimumPrice || 15000) * 24 * 30,
+            spots: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'monthly' && pkg.enabled)?.spots || 104751
+          }
+        }
+      },
+      // Add other required fields with defaults
+      metrics: {
+        averageEngagement: 85,
+        dailyTraffic: apiScreen.estimatedDailyImpressions || 1000,
+        monthlyTraffic: (apiScreen.estimatedDailyImpressions || 1000) * 30
+      },
+      views: {
+        daily: apiScreen.estimatedDailyImpressions || 1000,
+        weekly: (apiScreen.estimatedDailyImpressions || 1000) * 7,
+        monthly: (apiScreen.estimatedDailyImpressions || 1000) * 30
+      },
+      specs: {
+        width: apiScreen.width || 1920,
+        height: apiScreen.height || 1080,
+        resolution: apiScreen.resolution || 'Full HD (1920x1080)',
+        brightness: apiScreen.brightness?.toString() || '5000',
+        technology: apiScreen.displayType || 'LED'
+      },
+      operatingHours: {
+        start: apiScreen.operationStartTime || '06:00:00',
+        end: apiScreen.operationEndTime || '22:00:00',
+        daysActive: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      },
+      coordinates: {
+        lat: apiScreen.latitude || 0,
+        lng: apiScreen.longitude || 0
+      },
+      rating: 4.5,
+      reviews: 12,
+      audienceTypes: ['general'],
+      environment: 'indoor',
+      dwellTime: 'medium',
+      connectivity: apiScreen.connectivity?.map((conn: any) => conn.name) || ['WiFi'],
+      insights: apiScreen.insightsIA || 'Información no disponible',
+      createdAt: apiScreen.createdAt,
+      updatedAt: apiScreen.updatedAt
+    };
+  };
+
+  const getCategoryDisplayName = (category: string): string => {
+    const categoryMap: Record<string, string> = {
+      'transit_buses': 'Transporte Público',
+      'retail_mall': 'Centro Comercial',
+      'airport': 'Aeropuerto',
+      'hospital': 'Hospital',
+      'university': 'Universidad',
+      'stadium': 'Estadio',
+      'highway': 'Carretera',
+      'street': 'Calle',
+      'plaza': 'Plaza',
+      'park': 'Parque',
+      'other': 'Otros'
+    };
+    return categoryMap[category] || category;
+  };
+
+  const convertDemoScreensToScreens = (demoScreens: any[]): Screen[] => {
+  return demoScreens.map(screen => {
+    return {
+      ...screen,
+      // Ensure we have locationDetails for the Screen interface
+      locationDetails: {
+        address: screen.location || '',
+        city: screen.location?.split(',').pop()?.trim() || 'Colombia',
+        region: 'Colombia',
+        country: 'Colombia',
+        coordinates: screen.coordinates || { lat: 4.7110, lng: -74.0721 },
+        timezone: 'America/Bogota',
+        landmarks: []
+      },
+      // Ensure specs are complete
+      specs: {
+        width: screen.specs?.width || 1920,
+        height: screen.specs?.height || 1080,
+        resolution: screen.specs?.resolution || 'HD',
+        brightness: screen.specs?.brightness || '5000 nits',
+        aspectRatio: '16:9',
+        orientation: 'landscape' as const,
+        pixelDensity: 72,
+        colorDepth: 24,
+        refreshRate: 60
+      },
+      // Ensure metrics exist
+      metrics: {
+        dailyTraffic: screen.views?.daily || 10000,
+        monthlyTraffic: screen.views?.monthly || 300000,
+        averageEngagement: 85
+      }
+    };
+  }) as Screen[];
+};
+
+// Combine all screens to match marketplace data - using same conversion as marketplace
+const allScreens = [...mockScreens, ...convertDemoScreensToScreens(marketplaceDemoScreens)] as Screen[];
 import {
   OpenRTBBidRequest,
   OpenRTBBidResponse,
@@ -626,47 +784,64 @@ function ScreenDetailComponent() {
   const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Simulate API call to get screen data
-    const fetchScreen = () => {
-      setIsLoading(true);
-      
-      // Debug: Log available screen IDs and requested ID
-      if (process.env.NODE_ENV === 'development') {
-        console.debug('Available screen IDs:', allScreens.map(s => s.id));
-        console.debug('Requested screen ID:', id);
+    // Fetch screen data from real API
+    const fetchScreen = async () => {
+      if (!id) {
+        toast.error('ID de pantalla no proporcionado. Redirigiendo al marketplace...');
+        navigate('/marketplace');
+        return;
       }
 
-        console.log({allCombinedScreens})
+      setIsLoading(true);
       
-      const foundScreen = allCombinedScreens.find(s => s.id === id);
-
-    
-      if (foundScreen) {
-        setScreen(foundScreen);
-        setNotFound(false);
-      } else {
-        // More detailed error handling
-        console.error('Screen not found:', { 
-          requestedId: id, 
-          availableIds: allScreens.map(s => s.id),
-          totalScreens: allScreens.length 
-        });
+      try {
+        // Try to fetch from real API first
+        const response = await fetch(`${constants.api_url}/Screens/all`);
         
-        setNotFound(true);
-        setScreen(null);
+        if (response.ok) {
+          const realScreens = await response.json();
+          
+          // Convert string ID to number for API comparison, or keep as string for fallback
+          const numericId = parseInt(id);
+          const foundScreen = realScreens.find((s: any) => s.id === numericId || s.id.toString() === id);
+          
+          if (foundScreen) {
+            // Convert API real data to Screen format expected by ScreenDetail
+            const convertedScreen = convertApiScreenToScreen(foundScreen);
+            setScreen(convertedScreen);
+            setNotFound(false);
+          } else {
+            // Try fallback to combined screens (SSP + local)
+            const fallbackScreen = allCombinedScreens.find(s => s.id === id);
+            if (fallbackScreen) {
+              setScreen(fallbackScreen);
+              setNotFound(false);
+            } else {
+              setNotFound(true);
+              setScreen(null);
+            }
+          }
+        } else {
+          throw new Error(`API responded with status: ${response.status}`);
+        }
+      } catch (apiError) {
+        // Fallback to combined screens (SSP + local data)
+        const foundScreen = allCombinedScreens.find(s => s.id === id);
+        
+        if (foundScreen) {
+          setScreen(foundScreen);
+          setNotFound(false);
+        } else {
+          setNotFound(true);
+          setScreen(null);
+        }
       }
 
       setIsLoading(false);
     };
 
-    if (id) {
-      fetchScreen();
-    } else {
-      // Handle case where no ID is provided
-      toast.error('ID de pantalla no proporcionado. Redirigiendo al marketplace...');
-      navigate('/marketplace');
-    }
-  }, [id, navigate]);
+    fetchScreen();
+  }, [id, navigate]); // Remove allCombinedScreens dependency to avoid multiple API calls
 
   useEffect(() => {
     const handleScroll = () => {
@@ -796,7 +971,18 @@ function ScreenDetailComponent() {
     const frequencyOption = getFrequencyOptions().find(opt => opt.value === partnerFrequency);
     const frequencyLabel = frequencyOption?.label || 'Se muestra cada 15 minutos';
 
-    if (screen.pricing.allowMoments) {
+    // Ensure screen has proper pricing structure for API real data
+    const safePricing = screen.pricing || {
+      allowMoments: false,
+      bundles: {
+        hourly: { enabled: false, price: 0 },
+        daily: { enabled: false, price: 0 },
+        weekly: { enabled: false, price: 0 },
+        monthly: { enabled: false, price: 0 }
+      }
+    };
+
+    if (safePricing.allowMoments) {
       result.momentos = [
         {
           id: 'moment_basic',
@@ -829,14 +1015,14 @@ function ScreenDetailComponent() {
       ];
     }
 
-    if (screen.pricing.bundles.hourly?.enabled) {
+    if (safePricing.bundles.hourly?.enabled) {
       result.hourly = [
         {
           id: 'hourly_standard',
           name: 'Hora Estándar',
           description: 'Tu anuncio durante una hora en rotación',
           duration: '1 hora',
-          price: screen.pricing.bundles.hourly.price,
+          price: safePricing.bundles.hourly.price,
           frequency: {
             type: partnerFrequency,
             displayText: frequencyLabel,
@@ -850,7 +1036,7 @@ function ScreenDetailComponent() {
           name: 'Hora Intensiva',
           description: 'Tu anuncio con mayor frecuencia durante una hora',
           duration: '1 hora',
-          price: screen.pricing.bundles.hourly.price * 1.4,
+          price: safePricing.bundles.hourly.price * 1.4,
           frequency: {
             type: '10min',
             displayText: '1 vez cada 10 minutos',

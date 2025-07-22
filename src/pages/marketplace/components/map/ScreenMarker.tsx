@@ -81,11 +81,6 @@ export function ScreenMarker({
     return null;
   }
 
-  // Debug log for successful marker render
-  if (process.env.NODE_ENV === 'development') {
-    console.log('✅ ScreenMarker rendering for:', screen.name, 'at:', screen.coordinates);
-  }
-
   return (
     <>
       <Marker

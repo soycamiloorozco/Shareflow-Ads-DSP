@@ -17,17 +17,26 @@ import { VenueParentCategory, EnvironmentType, DwellTime } from '../types/filter
 export const getScreenMinPrice = (screen: Screen): number => {
   const prices: number[] = [];
   
-  if (screen.pricing.bundles.hourly?.enabled) {
+  // Check if screen has pricing structure from API real
+  if (screen.pricing?.bundles?.hourly?.enabled) {
     prices.push(screen.pricing.bundles.hourly.price);
   }
-  if (screen.pricing.bundles.daily?.enabled) {
+  if (screen.pricing?.bundles?.daily?.enabled) {
     prices.push(screen.pricing.bundles.daily.price);
   }
-  if (screen.pricing.bundles.weekly?.enabled) {
+  if (screen.pricing?.bundles?.weekly?.enabled) {
     prices.push(screen.pricing.bundles.weekly.price);
   }
-  if (screen.pricing.bundles.monthly?.enabled) {
+  if (screen.pricing?.bundles?.monthly?.enabled) {
     prices.push(screen.pricing.bundles.monthly.price);
+  }
+  
+  // For API real data, use minimumPrice or maximumPrice if available
+  if ((screen as any).minimumPrice) {
+    prices.push((screen as any).minimumPrice);
+  }
+  if ((screen as any).maximumPrice) {
+    prices.push((screen as any).maximumPrice);
   }
   
   return prices.length > 0 ? Math.min(...prices) : screen.price || 0;
@@ -39,17 +48,26 @@ export const getScreenMinPrice = (screen: Screen): number => {
 export const getScreenMaxPrice = (screen: Screen): number => {
   const prices: number[] = [];
   
-  if (screen.pricing.bundles.hourly?.enabled) {
+  // Check if screen has pricing structure from API real
+  if (screen.pricing?.bundles?.hourly?.enabled) {
     prices.push(screen.pricing.bundles.hourly.price);
   }
-  if (screen.pricing.bundles.daily?.enabled) {
+  if (screen.pricing?.bundles?.daily?.enabled) {
     prices.push(screen.pricing.bundles.daily.price);
   }
-  if (screen.pricing.bundles.weekly?.enabled) {
+  if (screen.pricing?.bundles?.weekly?.enabled) {
     prices.push(screen.pricing.bundles.weekly.price);
   }
-  if (screen.pricing.bundles.monthly?.enabled) {
+  if (screen.pricing?.bundles?.monthly?.enabled) {
     prices.push(screen.pricing.bundles.monthly.price);
+  }
+  
+  // For API real data, use minimumPrice or maximumPrice if available
+  if ((screen as any).minimumPrice) {
+    prices.push((screen as any).minimumPrice);
+  }
+  if ((screen as any).maximumPrice) {
+    prices.push((screen as any).maximumPrice);
   }
   
   return prices.length > 0 ? Math.max(...prices) : screen.price || 0;

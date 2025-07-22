@@ -38,7 +38,7 @@ const allScreens = [...mockScreens, ...demoScreens] as Screen[];
 // Generate filter options from available screens
 const generateFilterOptions = (screens: Screen[]): FilterOptions => {
   const cities = [...new Set(screens.map(screen => {
-    const parts = screen.location.split(',');
+    const parts = (screen.location || '').split(',');
     return parts[parts.length - 1]?.trim() || '';
   }).filter(Boolean))].map(city => ({
     id: city.toLowerCase().replace(/\s+/g, '-'),

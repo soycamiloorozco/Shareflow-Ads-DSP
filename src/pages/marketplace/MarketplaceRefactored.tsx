@@ -35,6 +35,9 @@ import { initializeApiServices } from './services/api/ApiInitializer';
 // Demo data - temporary until API is fully implemented
 import { demoScreens } from '../../data/demoScreens';
 
+// API Services  
+import { MarketplaceApiService } from './services/api/MarketplaceApiService';
+
 // Helper function to convert demo screens to Screen format
 const convertDemoScreensToScreens = (demoScreens: any[]): Screen[] => {
   const converted = demoScreens.map(screen => {
@@ -43,9 +46,9 @@ const convertDemoScreensToScreens = (demoScreens: any[]): Screen[] => {
       // Ensure we have locationDetails for the Screen interface
       locationDetails: {
         address: screen.location || '',
-        city: screen.location?.split(',').pop()?.trim() || 'Colombia',
+        city: (screen.location || '').split(',').pop()?.trim() || 'Colombia',
         region: 'Colombia',
-        country: 'Colombia', 
+        country: 'Colombia',
         coordinates: screen.coordinates || { lat: 4.7110, lng: -74.0721 },
         timezone: 'America/Bogota',
         landmarks: []
@@ -69,29 +72,27 @@ const convertDemoScreensToScreens = (demoScreens: any[]): Screen[] => {
         averageEngagement: 85
       }
     };
-    
+
     // Debug log each conversion
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 Converting screen:', {
-        id: screen.id,
-        name: screen.name?.slice(0, 30) + '...',
-        originalCoords: screen.coordinates,
-        convertedCoords: converted.coordinates,
-        hasValidCoords: !!(converted.coordinates?.lat && converted.coordinates?.lng)
-      });
-    }
-    
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log('🔄 Converting screen:', {
+    //     id: screen.id,
+    //     name: screen.name?.slice(0, 30) + '...',
+    //     originalCoords: screen.coordinates,
+    //     convertedCoords: converted.coordinates,
+    //     hasValidCoords: !!(converted.coordinates?.lat && converted.coordinates?.lng)
+    //   });
+    // }
     return converted;
   });
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log('✅ Conversion complete:', {
-      total: converted.length,
-      withCoords: converted.filter(s => s.coordinates?.lat && s.coordinates?.lng).length,
-      withoutCoords: converted.filter(s => !s.coordinates?.lat || !s.coordinates?.lng).length
-    });
-  }
-  
+
+  // if (process.env.NODE_ENV === 'development') {
+  //   console.log('✅ Conversion complete:', {
+  //     total: converted.length,
+  //     withCoords: converted.filter(s => s.coordinates?.lat && s.coordinates?.lng).length,
+  //     withoutCoords: converted.filter(s => !s.coordinates?.lat || !s.coordinates?.lng).length
+  //   });
+  // }
   return converted as Screen[];
 };
 
@@ -106,7 +107,7 @@ if (process.env.NODE_ENV === 'development') {
 // Generate filter options from available screens
 const generateFilterOptions = (screens: Screen[]): FilterOptions => {
   const cities = [...new Set(screens.map(screen => {
-    const parts = screen.location.split(',');
+    const parts = (screen.location || '').split(',');
     return parts[parts.length - 1]?.trim() || '';
   }).filter(Boolean))].map(city => ({
     id: city.toLowerCase().replace(/\s+/g, '-'),
@@ -166,6 +167,25 @@ export function MarketplaceRefactored() {
   // SSP Inventory Hook
   const { sspScreens, loading: sspLoading, totalSSPScreens, inventoryStats } = useSSPInventory();
   
+  // Convert converted demo screens for debugging
+  const convertedInitialScreens = useMemo(() => {
+    const converted = convertDemoScreensToScreens(demoScreens);
+    
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log('🔍 Initial screens being passed to useMarketplaceData:', {
+    //     totalScreens: converted.length,
+    //     screenIds: converted.map(s => s.id),
+    //     sampleScreen: converted[0] ? {
+    //       id: converted[0].id,
+    //       name: converted[0].name,
+    //       location: converted[0].location
+    //     } : null
+    //   });
+    // }
+    
+    return converted;
+  }, []);
+
   // State management with custom hook - will fetch from API
   const {
     screens,
@@ -187,18 +207,74 @@ export function MarketplaceRefactored() {
     loadSections,
     refreshSections: hookRefreshSections
   } = useMarketplaceData({
-    // Load demo screens as initial data
-    initialScreens: convertDemoScreensToScreens(demoScreens)
+    // Let the hook fetch from real API instead of using mock data
+    // initialScreens: convertedInitialScreens // Commented out to use real API
   });
+
+  // Load real screens from API on mount
+  useEffect(() => {
+    // console.log('🚀 Loading screens from real API endpoint: api/Screens/all on component mount');
+    
+    // Test the endpoint directly first
+    const testEndpoint = async () => {
+      try {
+        // console.log('🧪 Testing endpoint directly: /api/Screens/all');
+        const response = await fetch('/api/Screens/all');
+        // console.log('📡 Direct endpoint test:', {
+        //   status: response.status,
+        //   statusText: response.statusText,
+        //   ok: response.ok
+        // });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // console.log('✅ Direct endpoint data:', {
+          //   dataType: typeof data,
+          //   isArray: Array.isArray(data),
+          //   length: Array.isArray(data) ? data.length : 'N/A',
+          //   sampleIds: Array.isArray(data) ? data.slice(0, 3).map((item: any) => item.id) : 'N/A'
+          // });
+        } else {
+          const errorText = await response.text();
+          // console.error('❌ Direct endpoint error:', errorText);
+        }
+      } catch (error) {
+        // console.error('❌ Direct endpoint fetch failed:', error);
+      }
+    };
+
+    testEndpoint();
+    
+    // Always fetch from real API since we're not using initial screens
+    // console.log('🔄 Fetching screens from real API...');
+    fetchScreens().catch(error => {
+      // console.error('❌ Failed to load real screens from API:', error);
+      // console.log('💡 Check if backend is running and https://api.shareflow.me/api/Screens/all endpoint exists');
+    });
+  }, []); // Only run once on mount
 
   // Combine API screens with SSP inventory
   const allCombinedScreens = useMemo(() => {
     return [...screens, ...sspScreens];
   }, [screens, sspScreens]);
 
+  // Additional debugging for screens loading
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === 'development') {
+  //     console.log('📊 Marketplace Data Debug:', {
+  //       screensFromAPI: screens.length,
+  //       sspScreens: sspScreens.length,
+  //       combinedTotal: allCombinedScreens.length,
+  //       sampleScreenIds: screens.slice(0, 3).map(s => s.id),
+  //       loading,
+  //       error: error?.message
+  //     });
+  //   }
+  // }, [screens.length, sspScreens.length, allCombinedScreens.length, loading, error]);
+
   // UI State - Default to sectioned view for better performance
   const [viewMode, setViewMode] = useState<ViewMode>('sectioned');
-  const [showCircuits, setShowCircuits] = useState(true);
+  const [showCircuits, setShowCircuits] = useState(false); // Changed to false so API screens are shown by default
 
   // Get search query from filters state
   const searchQuery = filters.search.query;
@@ -269,6 +345,36 @@ export function MarketplaceRefactored() {
 
   const finalScreens = showCircuits ? individualScreens : combinedFilteredScreens;
 
+  // Debug logging for list view
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === 'development') {
+  //     console.log('🔍 List View Debug:', {
+  //       viewMode,
+  //       showCircuits,
+  //       combinedFilteredScreensCount: combinedFilteredScreens.length,
+  //       individualScreensCount: individualScreens.length,
+  //       finalScreensCount: finalScreens.length,
+  //       firstFewScreens: finalScreens.slice(0, 3).map(s => ({
+  //       id: s.id,
+  //       name: s.name?.slice(0, 30) + '...',
+  //       location: s.location?.slice(0, 30) + '...'
+  //     })),
+  //       allCombinedScreensCount: allCombinedScreens.length,
+  //       screensFromApiCount: screens.length,
+  //       sspScreensCount: sspScreens.length
+  //     });
+  //   }
+  // }, [
+  //   viewMode, 
+  //   showCircuits, 
+  //   combinedFilteredScreens.length, 
+  //   individualScreens.length, 
+  //   finalScreens.length,
+  //   allCombinedScreens.length,
+  //   screens.length,
+  //   sspScreens.length
+  // ]);
+
   // Load sections when in sectioned view mode
   useEffect(() => {
     if (viewMode === 'sectioned') {
@@ -291,34 +397,34 @@ export function MarketplaceRefactored() {
   }, [hookRefreshSections]);
 
   // Debug log when switching to map view
-  useEffect(() => {
-    if (viewMode === 'map' && process.env.NODE_ENV === 'development') {
-      console.log('🗺️ Switching to map view with screens:', {
-        combinedScreens: combinedFilteredScreens.length,
-        screensFromHook: screens.length,
-        sspScreens: sspScreens.length,
-        allCombinedScreens: allCombinedScreens.length,
-        screensWithCoords: combinedFilteredScreens.filter(s => s.coordinates?.lat && s.coordinates?.lng).length,
-        screensWithoutCoords: combinedFilteredScreens.filter(s => !s.coordinates?.lat || !s.coordinates?.lng).length,
-        firstFewWithCoords: combinedFilteredScreens
-          .filter(s => s.coordinates?.lat && s.coordinates?.lng)
-          .slice(0, 3)
-          .map(s => ({
-            id: s.id,
-            name: s.name?.slice(0, 30) + '...',
-            coordinates: s.coordinates
-          })),
-        firstFewWithoutCoords: combinedFilteredScreens
-          .filter(s => !s.coordinates?.lat || !s.coordinates?.lng)
-          .slice(0, 3)
-          .map(s => ({
-            id: s.id,
-            name: s.name?.slice(0, 30) + '...',
-            coordinates: s.coordinates
-          }))
-      });
-    }
-  }, [viewMode, combinedFilteredScreens, screens, sspScreens, allCombinedScreens]);
+  // useEffect(() => {
+  //   if (viewMode === 'map' && process.env.NODE_ENV === 'development') {
+  //     console.log('🗺️ Switching to map view with screens:', {
+  //       combinedScreens: combinedFilteredScreens.length,
+  //       screensFromHook: screens.length,
+  //       sspScreens: sspScreens.length,
+  //       allCombinedScreens: allCombinedScreens.length,
+  //       screensWithCoords: combinedFilteredScreens.filter(s => s.coordinates?.lat && s.coordinates?.lng).length,
+  //       screensWithoutCoords: combinedFilteredScreens.filter(s => !s.coordinates?.lat || !s.coordinates?.lng).length,
+  //       firstFewWithCoords: combinedFilteredScreens
+  //         .filter(s => s.coordinates?.lat && s.coordinates?.lng)
+  //         .slice(0, 3)
+  //         .map(s => ({
+  //           id: s.id,
+  //       name: s.name?.slice(0, 30) + '...',
+  //       coordinates: s.coordinates
+  //     })),
+  //       firstFewWithoutCoords: combinedFilteredScreens
+  //         .filter(s => !s.coordinates?.lat || !s.coordinates?.lng)
+  //         .slice(0, 3)
+  //         .map(s => ({
+  //           id: s.id,
+  //       name: s.name?.slice(0, 30) + '...',
+  //       coordinates: s.coordinates
+  //     }))
+  //     });
+  //   }
+  // }, [viewMode, combinedFilteredScreens, screens, sspScreens, allCombinedScreens]);
 
   // Event handlers
   const handleSearchChange = useCallback((query: string) => {
@@ -332,18 +438,28 @@ export function MarketplaceRefactored() {
     const targetPath = `/screens/${screen.id}`;
     
     // Development-only logging
-    if (process.env.NODE_ENV === 'development') {
-      console.debug('Screen selection:', { screenId: screen.id, targetPath });
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log('🎯 Screen clicked:', {
+    //     screenId: screen.id,
+    //     screenName: screen.name,
+    //     targetPath,
+    //     fullScreen: {
+    //       id: screen.id,
+    //       name: screen.name,
+    //       location: screen.location,
+    //       coordinates: screen.coordinates
+    //     }
+    //   });
+    // }
     
     try {
       navigate(targetPath);
     } catch (error) {
-      console.error('Navigation error:', { 
-        error: error instanceof Error ? error.message : 'Unknown error',
-        screenId: screen.id,
-        targetPath 
-      });
+      // console.error('Navigation error:', { 
+      //   error: error instanceof Error ? error.message : 'Unknown error',
+      //   screenId: screen.id,
+      //   targetPath 
+      // });
       
       // Robust fallback
       window.location.assign(targetPath);
@@ -357,7 +473,7 @@ export function MarketplaceRefactored() {
 
   const handleInfoClick = useCallback(() => {
     // Show info modal - placeholder for future implementation
-    console.log('Info clicked');
+    // console.log('Info clicked');
   }, []);
 
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
@@ -538,6 +654,27 @@ export function MarketplaceRefactored() {
               loading={loading || sspLoading}
             />
           )}
+          
+          {/* Debug info for list view */}
+          {/* {process.env.NODE_ENV === 'development' && viewMode === 'compact' && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-semibold text-yellow-800 mb-2">Debug: List View Data</h4>
+              <p className="text-sm text-yellow-700 mb-2">
+                Showing {finalScreens.length} screens to ScreenList component:
+              </p>
+              <div className="text-xs text-yellow-600 space-y-1 max-h-32 overflow-y-auto">
+                {finalScreens.slice(0, 5).map((screen, idx) => (
+                  <div key={idx}>
+                    {idx + 1}. ID: <span className="font-mono bg-yellow-100 px-1 rounded">{screen.id}</span> 
+                    - Name: {screen.name?.slice(0, 40)}...
+                  </div>
+                ))}
+                {finalScreens.length > 5 && (
+                  <div>... and {finalScreens.length - 5} more</div>
+                )}
+              </div>
+            </div>
+          )} */}
           </div>
         </div>
       </div>

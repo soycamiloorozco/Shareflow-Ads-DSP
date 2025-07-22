@@ -4,6 +4,36 @@ import { MarketplaceSection } from '../types/intelligent-grouping.types';
 import { getActiveFilterCount } from '../types/filter.types';
 import { groupingEngine } from '../services/GroupingEngine';
 import MarketplaceApiService, { ScreenFilters } from '../services/api/MarketplaceApiService';
+import { constants } from '../../../config/constants';
+
+// Helper function to convert API category names to display names
+const getCategoryDisplayName = (category: string): string => {
+  const categoryMap: Record<string, string> = {
+    'transit_buses': 'Transporte Público',
+    'retail_mall': 'Centro Comercial',
+    'airport': 'Aeropuerto',
+    'stadium': 'Estadios',
+    'highway': 'Vías Principales',
+    'downtown': 'Centro de Ciudad',
+    'shopping_center': 'Centro Comercial',
+    'bus_station': 'Terminal de Buses',
+    'train_station': 'Estación de Tren',
+    'subway': 'Metro',
+    'gas_station': 'Gasolinera',
+    'hospital': 'Hospital',
+    'university': 'Universidad',
+    'school': 'Colegio',
+    'office_building': 'Edificio de Oficinas',
+    'residential': 'Residencial',
+    'park': 'Parque',
+    'beach': 'Playa',
+    'tourist_area': 'Zona Turística',
+    'industrial': 'Zona Industrial',
+    'other': 'Otros'
+  };
+  
+  return categoryMap[category] || category;
+};
 
 interface UseMarketplaceDataProps {
   initialScreens?: Screen[];
@@ -190,12 +220,132 @@ export const useMarketplaceData = ({
     };
   }, []);
 
-  // Fetch screens from API
+  // Fetch screens from API - Enhanced to use api/Screens/all endpoint
   const fetchScreens = useCallback(async (filters?: FilterState, page = 1, limit = 20) => {
     setLoading(true);
     setError(null);
 
     try {
+      // Try to use the new api/Screens/all endpoint first
+      try {
+        const response = await fetch(`${constants.api_url}/Screens/all`);
+        
+        if (response.ok) {
+          const apiScreens = await response.json();
+          
+          // Convert API format to Screen interface
+          const convertedScreens = apiScreens.map((apiScreen: any) => {
+
+            return {
+              id: apiScreen.id.toString(), // Keep as string for consistency
+              name: apiScreen.publicName || apiScreen.referenceName || `Pantalla ${apiScreen.id}`,
+              location: apiScreen.address || 'Ubicación no especificada',
+              coordinates: {
+                lat: apiScreen.latitude || 0,
+                lng: apiScreen.longitude || 0
+              },
+              category: {
+                id: apiScreen.category || 'other',
+                name: getCategoryDisplayName(apiScreen.category) || 'Otros'
+              },
+              specs: {
+                width: apiScreen.width || 1920,
+                height: apiScreen.height || 1080,
+                resolution: apiScreen.resolution || 'HD',
+                brightness: `${apiScreen.brightness || 5000} nits`,
+                aspectRatio: '16:9',
+                orientation: apiScreen.orientation || 'landscape',
+                pixelDensity: 72,
+                colorDepth: 24,
+                refreshRate: 60
+              },
+              pricing: {
+                minimumPrice: apiScreen.minimumPrice || 15000,
+                maximumPrice: apiScreen.maximumPrice || 80000,
+                allowMoments: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'moments' && pkg.enabled) || false,
+                bundles: {
+                  hourly: {
+                    enabled: true,
+                    price: apiScreen.minimumPrice || 15000
+                  },
+                  daily: {
+                    enabled: true,
+                    price: (apiScreen.minimumPrice || 15000) * 24
+                  },
+                  weekly: {
+                    enabled: true,
+                    price: (apiScreen.minimumPrice || 15000) * 24 * 7
+                  },
+                  monthly: {
+                    enabled: true,
+                    price: (apiScreen.minimumPrice || 15000) * 24 * 30
+                  }
+                }
+              },
+              price: apiScreen.minimumPrice || 15000, // Add price field for compatibility
+              rating: 4.5, // Default rating
+              views: {
+                daily: apiScreen.estimatedDailyImpressions || 1000,
+                monthly: (apiScreen.estimatedDailyImpressions || 1000) * 30
+              },
+              images: apiScreen.images?.map((img: any) => ({
+                id: img.id,
+                url: `https://api.shareflow.me${img.filePath}`,
+                alt: img.fileName
+              })) || [],
+              image: apiScreen.images?.[0] ? `https://api.shareflow.me${apiScreen.images[0].filePath}` : 'https://via.placeholder.com/400x300/4F46E5/FFFFFF?text=Pantalla+Digital', // Add fallback image
+              locationDetails: {
+                address: apiScreen.address || '',
+                city: apiScreen.address?.split(',').pop()?.trim() || 'Colombia',
+                region: 'Colombia',
+                country: 'Colombia',
+                coordinates: {
+                  lat: apiScreen.latitude || 0,
+                  lng: apiScreen.longitude || 0
+                },
+                timezone: apiScreen.timeZone || 'America/Bogota',
+                landmarks: []
+              },
+              metrics: {
+                dailyTraffic: apiScreen.estimatedDailyImpressions || 1000,
+                monthlyTraffic: (apiScreen.estimatedDailyImpressions || 1000) * 30,
+                averageEngagement: 85
+              }
+            };
+          });
+          
+
+          
+          setState(prev => ({
+            ...prev,
+            screens: convertedScreens,
+            loading: false,
+            error: null,
+          }));
+
+          return {
+            data: convertedScreens,
+            meta: {
+              total: convertedScreens.length,
+              page: 1,
+              limit: convertedScreens.length,
+              hasMore: false,
+              timestamp: new Date().toISOString(),
+              requestId: `req_${Date.now()}`,
+            },
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              pageSize: convertedScreens.length,
+              totalItems: convertedScreens.length,
+            },
+          };
+        }
+      } catch (apiError) {
+        // Fallback to marketplace API
+      }
+
+      // Fallback to existing marketplace API
       const apiFilters = convertFiltersToApiFormat(filters || state.filters);
       const response = await MarketplaceApiService.getScreens({
         ...apiFilters,
@@ -278,30 +428,21 @@ export const useMarketplaceData = ({
     return () => clearTimeout(timeoutId);
   }, [state.filters, fetchScreens, initialScreens.length, state.screens.length, state.loading]);
 
-  // Initial fetch on mount
+  // Initial fetch on mount - only if no initial screens provided
   useEffect(() => {
     if (initialScreens.length === 0 && state.screens.length === 0 && !state.loading) {
       console.log('Initial fetch of screens from API...');
       fetchScreens().catch(error => {
         console.error('Initial fetch screens failed:', error);
       });
+    } else if (initialScreens.length > 0) {
+      // Using initial screens, skipping API fetch
     }
-  }, []); // Only run once on mount
+  }, [initialScreens.length]); // Include initialScreens.length in dependencies
 
-  // Debug logging for state changes
+  // State monitoring (removed debug logs)
   useEffect(() => {
-    console.log('📊 Marketplace Data State:', {
-      screensCount: state.screens.length,
-      filteredScreensCount: state.filteredScreens.length,
-      loading: state.loading,
-      error: state.error?.message,
-      hasFilters: Object.keys(state.filters).length > 0
-    });
-
-    // Show success message when screens are loaded
-    if (state.screens.length > 0 && !state.loading) {
-      console.log('✅ Marketplace successfully loaded', state.screens.length, 'screens');
-    }
+    // Monitor state changes without logging
   }, [state.screens.length, state.filteredScreens.length, state.loading, state.error]);
 
   // Computed values (needed before sectioned data methods)
@@ -336,9 +477,9 @@ export const useMarketplaceData = ({
     
     // Check if we need to refresh based on cache key or force refresh
     if (!options.forceRefresh && state.sectionsCacheKey === cacheKey && state.sections.length > 0) {
-      // Check if cache is still valid (within 30 minutes)
+      // Check if cache is still valid (within 5 minutes for faster updates)
       const cacheAge = state.lastSectionRefresh ? Date.now() - state.lastSectionRefresh.getTime() : Infinity;
-      if (cacheAge < 30 * 60 * 1000) { // 30 minutes
+      if (cacheAge < 5 * 60 * 1000) { // 5 minutes
         return; // Use cached sections
       }
     }
@@ -350,6 +491,9 @@ export const useMarketplaceData = ({
       const targetLocation = options.location || 
         (state.filters.location.cities.length > 0 ? state.filters.location.cities[0] : undefined);
 
+      // Set available screens in grouping engine to avoid double API calls
+      groupingEngine.setAvailableScreens(state.screens);
+      
       // Generate sections using the grouping engine
       const result = await groupingEngine.generateSections({
         userId: options.userId,
@@ -359,10 +503,10 @@ export const useMarketplaceData = ({
         includeAnalytics: true
       });
 
-      // Apply current filters to sections if any are active
+      // Apply current filters to sections if any are active (optimized)
       let processedSections = result.sections;
       if (hasActiveFilters) {
-        processedSections = await applyFiltersToSections(result.sections, state.filters);
+        processedSections = applyFiltersToSections(result.sections, state.filters);
       }
 
       setState(prev => ({
@@ -392,8 +536,8 @@ export const useMarketplaceData = ({
     }
   }, [state.filters, state.sectionsCacheKey, state.sections.length, state.lastSectionRefresh, hasActiveFilters, generateSectionsCacheKey]);
 
-  // Apply filters to sections while maintaining section structure
-  const applyFiltersToSections = useCallback(async (sections: MarketplaceSection[], filters: FilterState): Promise<MarketplaceSection[]> => {
+  // Apply filters to sections while maintaining section structure (optimized)
+  const applyFiltersToSections = useCallback((sections: MarketplaceSection[], filters: FilterState): MarketplaceSection[] => {
     return sections.map(section => {
       let filteredScreens = [...section.screens];
       

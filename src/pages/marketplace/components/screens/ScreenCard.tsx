@@ -61,9 +61,13 @@ export const ScreenCard = React.memo<ScreenCardProps>(({
     if (screen.pricing?.bundles?.daily?.enabled) allowedTypes.push('Día');
     if (screen.pricing?.bundles?.weekly?.enabled) allowedTypes.push('Semana');
 
+    // Safe location handling for API real data
+    const locationString = screen.location || (screen as any).address || '';
+    const locationParts = locationString.split(',');
+    
     return {
-      location: screen.location.split(',')[0],
-      city: screen.location.split(',')[1]?.trim() || '',
+      location: locationParts[0] || 'Ubicación no disponible',
+      city: locationParts[1]?.trim() || '',
       allowedTypes: allowedTypes.slice(0, 2),
       moreTypes: Math.max(0, allowedTypes.length - 2),
       dailyViews: screen.views?.daily || 0,

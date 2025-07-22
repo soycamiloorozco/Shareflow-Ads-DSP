@@ -6,6 +6,14 @@ export default defineConfig({
   server: {
     hmr: {
       overlay: true
+    },
+    proxy: {
+      '/api': {
+        target: 'https://api.shareflow.me',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
     }
   },
   build: {

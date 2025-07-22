@@ -268,36 +268,38 @@ export const SectionedScreenGrid = React.memo<SectionedScreenGridProps>(({
 
       {/* Sections container */}
       <div className="space-y-8 sm:space-y-12">
-        <AnimatePresence mode="wait">
-          {lazyLoadedSections.map((item, index) => (
-            <div
-              key={item.section.id}
-              ref={(el) => setSectionRef(item.section.id, el)}
-              data-section-id={item.section.id}
-              className={`transition-opacity duration-300 ${
-                item.isVisible ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              {item.hasLoaded ? (
-                <MarketplaceSection
-                  section={item.section}
-                  onScreenSelect={onScreenSelect}
-                  onFavoriteChange={onFavoriteChange}
-                  loading={loading && index === 0} // Only show loading for first section
-                  aria-label={`Section ${index + 1}: ${item.section.title}`}
-                />
-              ) : (
-                // Placeholder for lazy loading
-                <div className="h-96 flex items-center justify-center">
-                  <div className="flex items-center gap-3 text-gray-500">
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    <span>Cargando sección...</span>
-                  </div>
+        {lazyLoadedSections.map((item, index) => (
+          <motion.div
+            key={item.section.id}
+            ref={(el) => setSectionRef(item.section.id, el)}
+            data-section-id={item.section.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            className={`transition-opacity duration-300 ${
+              item.isVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {item.hasLoaded ? (
+              <MarketplaceSection
+                section={item.section}
+                onScreenSelect={onScreenSelect}
+                onFavoriteChange={onFavoriteChange}
+                loading={loading && index === 0} // Only show loading for first section
+                aria-label={`Section ${index + 1}: ${item.section.title}`}
+              />
+            ) : (
+              // Placeholder for lazy loading
+              <div className="h-96 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-gray-500">
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <span>Cargando sección...</span>
                 </div>
-              )}
-            </div>
-          ))}
-        </AnimatePresence>
+              </div>
+            )}
+          </motion.div>
+        ))}
       </div>
 
       {/* Scroll to top button */}
