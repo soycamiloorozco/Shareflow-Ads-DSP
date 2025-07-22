@@ -64,7 +64,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
     title: 'Plataforma',
     items: [
       //{ path: '/dashboard', icon: Home, label: 'Inicio' },
-      //{ path: '/marketplace', icon: Store, label: 'Marketplace' },
+      { path: '/marketplace', icon: Store, label: 'Marketplace', description: 'Pantallas digitales disponibles' },
       { path: '/sports-events', icon: Trophy, label: 'Eventos Deportivos' },
       // { 
       //   path: '/create', 
@@ -271,74 +271,73 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
         )}
       </button>
 
-      {/* Mobile Navigation Overlay */}
-      <AnimatePresence>
+      {/* Mobile Navigation */}
+      <AnimatePresence mode="popLayout">
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Navigation Drawer */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed inset-y-0 left-0 w-[280px] z-40 bg-white md:hidden"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex flex-col h-full">
-              <div className="flex items-center h-16 px-4 border-b border-neutral-200">
-                <img 
-                  src={Logo}
-                  alt="Shareflow" 
-                  className="h-8"
-                  style={{width: 100}}
-                />
-              </div>
-
-              <div className="flex-1 overflow-y-auto px-2 py-4">
-                <div className="space-y-6">
-                  <NavGroup group={generalNavItems} />
-                  {hasRole(['Admin']) && (
-                    adminNavItems.map((group) => (
-                      <NavGroup key={group.title} group={group} />
-                    ))
-                  )}
-                  {/* <NavGroup group={accountNavItems} /> */}
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.3 }}
+              className="fixed inset-y-0 left-0 w-[280px] z-40 bg-white md:hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex flex-col h-full">
+                <div className="flex items-center h-16 px-4 border-b border-neutral-200">
+                  <img 
+                    src={Logo}
+                    alt="Shareflow" 
+                    className="h-8"
+                    style={{width: 100}}
+                  />
                 </div>
-              </div>
 
-              <div className="border-t border-neutral-200 p-4">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-                  >
-                    {isDarkMode ? (
-                      <Sun className="w-5 h-5" />
-                    ) : (
-                      <Moon className="w-5 h-5" />
+                <div className="flex-1 overflow-y-auto px-2 py-4">
+                  <div className="space-y-6">
+                    <NavGroup group={generalNavItems} />
+                    {hasRole(['Admin']) && (
+                      adminNavItems.map((group) => (
+                        <NavGroup key={group.title} group={group} />
+                      ))
                     )}
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-error-600"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
+                    {/* <NavGroup group={accountNavItems} /> */}
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-200 p-4">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setIsDarkMode(!isDarkMode)}
+                      className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                    >
+                      {isDarkMode ? (
+                        <Sun className="w-5 h-5" />
+                      ) : (
+                        <Moon className="w-5 h-5" />
+                      )}
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-error-600"
+                    >
+                      <LogOut className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

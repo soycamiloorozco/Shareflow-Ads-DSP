@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Filter, Plus, Monitor, MapPin, Users, Star,
   Eye, Edit, Trash2, Calendar, ChevronRight, Settings,
-  ArrowUpRight, TrendingUp, CheckCircle, XCircle
+  ArrowUpRight, TrendingUp, CheckCircle, XCircle, LayoutGrid, LayoutList
 } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -28,7 +28,7 @@ export function ScreensPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0 md:ml-64">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -140,7 +140,7 @@ export function ScreensPage() {
           <Button
             variant="outline"
             size="lg"
-            icon={viewMode === 'grid' ? Monitor : List}
+            icon={viewMode === 'grid' ? LayoutList : LayoutGrid}
             onClick={() => setViewMode(prev => prev === 'grid' ? 'list' : 'grid')}
           >
             Vista {viewMode === 'grid' ? 'Lista' : 'Grid'}
