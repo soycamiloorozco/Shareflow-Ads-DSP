@@ -249,7 +249,7 @@ export function MarketplaceRefactored() {
       <div className="min-h-screen bg-gray-50">
         {/* SEO */}
         <Helmet>
-          <title>{title}</title>
+          <title>{title}</title>x
           <meta name="description" content={description} />
           <meta name="keywords" content="pantallas digitales Colombia, vallas publicitarias LED, publicidad exterior DOOH, digital out of home" />
           <link rel="canonical" href="https://shareflow.me/marketplace" />

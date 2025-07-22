@@ -9,15 +9,19 @@ export interface Screen {
   image: string;
   category: ScreenCategory;
   environment: 'indoor' | 'outdoor';
+  description?: string; // Agregado para soportar descripción del API
   specs: {
     width: number;
     height: number;
     resolution: string;
     brightness?: string;
+    orientation?: string; // <-- Agregado para soportar orientación del API
+    technology?: string; // <-- Agregado para soportar tecnología del API
   };
   views: {
     daily: number;
     monthly: number;
+    weekly?: number; // <-- Agregado para soportar vistas semanales
   };
   rating: number;
   reviews: number;
@@ -42,6 +46,12 @@ export interface Screen {
     start: string;
     end: string;
     daysActive: string[];
+  };
+  sspMetadata?: { // <-- Agregado para soportar metadatos SSP
+    isSSPInventory: boolean;
+    sspName: string;
+    sspId: string;
+    lastUpdated: string;
   };
 }
 
