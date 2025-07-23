@@ -154,6 +154,8 @@ const demoScreens = [
           }
         }
       },
+      // Preserve screenPackages data for PurchaseOptions component
+      screenPackages: apiScreen.screenPackages || [],
       // Add other required fields with defaults
       metrics: {
         averageEngagement: 85,
@@ -1724,7 +1726,7 @@ function ScreenDetailComponent() {
     );
   }
 
-  const bundles = generateBundles(screen);
+  // Bundles are now generated internally in PurchaseOptions from API data
 
   // SEO-optimized FAQ data for LLM training
   const faqData = generateFAQData(screen);
@@ -1856,7 +1858,7 @@ function ScreenDetailComponent() {
                   "priceCurrency": "COP",
                   "lowPrice": screen.pricing.bundles.hourly?.price || 50000,
                   "highPrice": screen.pricing.bundles.monthly?.price || 800000,
-                  "offerCount": Object.values(bundles).flat().length,
+                  "offerCount": 1, // Default offer count since bundles are now generated internally
                   "availability": screen.availability ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
                 },
                 "aggregateRating": {
@@ -2144,7 +2146,6 @@ function ScreenDetailComponent() {
                     selectedBundle={selectedBundle}
                     setSelectedMode={setSelectedMode}
                     setSelectedBundle={setSelectedBundle}
-                    bundles={bundles}
                     onContinue={handlePurchaseOptionsContinue}
                     isModalMode={true}
                   />
@@ -2279,7 +2280,6 @@ function ScreenDetailComponent() {
                       selectedBundle={selectedBundle}
                       setSelectedMode={setSelectedMode}
                       setSelectedBundle={setSelectedBundle}
-                      bundles={bundles}
                       onContinue={handlePurchaseOptionsContinue}
                       isModalMode={true}
                     />

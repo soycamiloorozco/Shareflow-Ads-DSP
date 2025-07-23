@@ -53,6 +53,29 @@ export interface Screen {
     sspId: string;
     lastUpdated: string;
   };
+  // API screen packages data for PurchaseOptions component
+  screenPackages?: Array<{
+    id: number;
+    screenId: number;
+    packageType: 'moments' | 'hourly' | 'daily' | 'weekly' | 'monthly';
+    enabled: boolean;
+    price: number;
+    spots: number;
+    duration: string;
+    reach: number;
+    variants: Array<{
+      id: number;
+      variantId: string;
+      name: string;
+      frequency: string;
+      spotsPerHour?: number;
+      spotsPerDay?: number;
+      spotsPerWeek?: number;
+      spotsPerMonth?: number;
+      price: number;
+      enabled: boolean;
+    }>;
+  }>;
 }
 
 export interface CircuitScreen {
