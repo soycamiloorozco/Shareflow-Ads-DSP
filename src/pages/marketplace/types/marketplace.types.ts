@@ -110,6 +110,29 @@ export interface Screen {
   readonly accessibility?: AccessibilityInfo;
   readonly venue?: VenueInfo;
   readonly media?: MediaInfo;
+  // API screen packages data for price calculations
+  readonly screenPackages?: Array<{
+    readonly id: number;
+    readonly screenId: number;
+    readonly packageType: 'moments' | 'hourly' | 'daily' | 'weekly' | 'monthly';
+    readonly enabled: boolean;
+    readonly price: number;
+    readonly spots: number;
+    readonly duration: string;
+    readonly reach: number;
+    readonly variants: Array<{
+      readonly id: number;
+      readonly variantId: string;
+      readonly name: string;
+      readonly frequency: string;
+      readonly spotsPerHour?: number;
+      readonly spotsPerDay?: number;
+      readonly spotsPerWeek?: number;
+      readonly spotsPerMonth?: number;
+      readonly price: number;
+      readonly enabled: boolean;
+    }>;
+  }>;
 }
 
 export interface AccessibilityInfo {

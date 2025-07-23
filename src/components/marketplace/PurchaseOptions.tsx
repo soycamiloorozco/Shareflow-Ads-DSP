@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, DollarSign, Calendar, TrendingUp, Clock, Users, Star, Wallet, Zap, ArrowRight, CheckCircle, Timer, Target, Award, AlertTriangle, Info, Brain, Sparkles, TrendingDown } from 'lucide-react';
+import { Check, DollarSign, Calendar, TrendingUp, Clock, Users, Star, Wallet, Zap, ArrowRight, CheckCircle, Timer, Target, Award, AlertTriangle, Info, Brain, Sparkles, TrendingDown, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Screen } from '../../types';
 import { Button } from '../Button';
@@ -38,6 +38,9 @@ interface Bundle {
   originalPrice?: number;
   demandMultiplier?: number;
   peakHourMultiplier?: number;
+  reach?: number; // Added for variants
+  isVariant?: boolean; // Added for variants
+  originalPackageId?: string; // Added for variants
 }
 
 type AdMode = 'momentos' | 'hourly' | 'daily' | 'weekly' | 'monthly';
@@ -48,7 +51,7 @@ interface PurchaseOptionsProps {
   selectedBundle: Bundle | null;
   setSelectedMode: (mode: AdMode) => void;
   setSelectedBundle: (bundle: Bundle) => void;
-  bundles: Record<AdMode, Bundle[]>;
+  bundles?: Record<AdMode, Bundle[]>; // Made optional since bundles are now generated internally
   onContinue: () => void;
   onSaveAsDraft?: () => void; // Nueva función para guardar como borrador
   isModalMode?: boolean; // Nueva prop para modo modal
@@ -176,41 +179,439 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
     console.warn('Wallet no disponible en PurchaseOptions:', error);
   }
 
-  // Apply margin to bundle prices and ML pricing
-  const applyMarginToBundles = (originalBundles: Record<AdMode, Bundle[]>): Record<AdMode, Bundle[]> => {
-    // Get partner margin - in real app this would come from screen.partnerId or similar
-    const partnerId = screen.id.split('-')[0] + '-partner'; // Mock partner ID derivation
-    const partnerMargin = getPartnerMargin(partnerId);
+  // Generate bundles from real API data (screenPackages)
+  const generateBundlesFromAPI = useMemo(() => {
+    const result: Record<AdMode, Bundle[]> = {
+      momentos: [],
+      hourly: [],
+      daily: [],
+      weekly: [],
+      monthly: []
+    };
 
+    // Helper functions for package display - MOVED HERE TO AVOID HOISTING ISSUES
+    const getPackageDisplayName = (packageType: string): string => {
+      switch (packageType) {
+        case 'moments':
+          return 'Momento Básico';
+        case 'hourly':
+          return 'Hora Estándar';
+        case 'daily':
+          return 'Día Completo';
+        case 'weekly':
+          return 'Semana Estándar';
+        case 'monthly':
+          return 'Mes Completo';
+        default:
+          return 'Paquete';
+      }
+    };
+
+    const getPackageDescription = (packageType: string): string => {
+      switch (packageType) {
+        case 'moments':
+          return 'Aparece una vez en un momento específico';
+        case 'hourly':
+          return 'Tu anuncio durante una hora en rotación';
+        case 'daily':
+          return 'Tu anuncio durante todo el día';
+        case 'weekly':
+          return 'Tu anuncio durante una semana completa';
+        case 'monthly':
+          return 'Tu anuncio durante un mes (30 días)';
+        default:
+          return 'Paquete de publicidad';
+      }
+    };
+
+    const getFrequencyDisplayText = (packageType: string, frequency: string): string => {
+      switch (packageType) {
+        case 'moments':
+          return 'Se muestra una vez en momento específico';
+        case 'hourly':
+          return `Se muestra cada ${frequency}`;
+        case 'daily':
+          return `Se muestra cada ${frequency} durante todo el día`;
+        case 'weekly':
+          return `Se muestra cada ${frequency} durante toda la semana`;
+        case 'monthly':
+          return `Se muestra cada ${frequency} durante todo el mes`;
+        default:
+          return `Se muestra cada ${frequency}`;
+      }
+    };
+
+    // Get screenPackages from API data
+    const screenPackages = (screen as any).screenPackages || [];
+    
+    // DEBUG: Log the screen data to see what we're working with
+    console.log('🔍 DEBUG: Screen data:', {
+      screenId: screen.id,
+      screenPackages: screenPackages,
+      totalPackages: screenPackages.length
+    });
+    
+    // TEMPORARY: Add test variants if no real data exists
+    let testScreenPackages = screenPackages;
+    if (screenPackages.length === 0) {
+      testScreenPackages = [
+        {
+          id: 1,
+          screenId: parseInt(screen.id),
+          packageType: 'hourly',
+          enabled: true,
+          price: 25000,
+          spots: 4,
+          duration: '1 hora',
+          reach: 1800,
+          variants: [
+            {
+              id: 1,
+              variantId: 'hourly-1min',
+              name: '1 vez por minuto',
+              frequency: '1/min',
+              spotsPerHour: 60,
+              price: 45000,
+              enabled: true
+            },
+            {
+              id: 2,
+              variantId: 'hourly-2min',
+              name: '1 vez cada 2 minutos',
+              frequency: '1/2min',
+              spotsPerHour: 30,
+              price: 35000,
+              enabled: true
+            }
+          ]
+        },
+        {
+          id: 2,
+          screenId: parseInt(screen.id),
+          packageType: 'daily',
+          enabled: true,
+          price: 150000,
+          spots: 96,
+          duration: '24 horas',
+          reach: 5000,
+          variants: [
+            {
+              id: 3,
+              variantId: 'daily-premium',
+              name: 'Día Premium',
+              frequency: '1/5min',
+              spotsPerDay: 288,
+              price: 200000,
+              enabled: true
+            }
+          ]
+        }
+      ];
+      console.log('🧪 DEBUG: Using test data with variants:', testScreenPackages);
+    }
+    
+    // Helper function to get frequency options
+    const getFrequencyOptions = () => [
+      { value: '1min', label: '1 vez por minuto', spotsPerHour: 60 },
+      { value: '2min', label: '1 vez cada 2 minutos', spotsPerHour: 30 },
+      { value: '5min', label: '1 vez cada 5 minutos', spotsPerHour: 12 },
+      { value: '10min', label: '1 vez cada 10 minutos', spotsPerHour: 6 },
+      { value: '15min', label: '1 vez cada 15 minutos', spotsPerHour: 4 },
+      { value: '30min', label: '1 vez cada 30 minutos', spotsPerHour: 2 },
+      { value: '1hour', label: '1 vez por hora', spotsPerHour: 1 }
+    ];
+
+    // Helper function to calculate spots based on frequency and package type
+    const calculateSpotCount = (frequencyType: string, packageType: string) => {
+      const option = getFrequencyOptions().find(opt => opt.value === frequencyType);
+      if (!option) return 0;
+
+      const spotsPerHour = option.spotsPerHour;
+
+      switch (packageType) {
+        case 'hourly':
+          return spotsPerHour;
+        case 'daily':
+          return spotsPerHour * 16; // 16 horas operativas
+        case 'weekly':
+          return spotsPerHour * 16 * 7;
+        case 'monthly':
+          return spotsPerHour * 16 * 30;
+        default:
+          return spotsPerHour;
+      }
+    };
+
+    // Get partner's configured frequency (default to 15min if not configured)
+    const partnerFrequency = '15min'; // This should come from partner configuration in the future
+    const frequencyOption = getFrequencyOptions().find(opt => opt.value === partnerFrequency);
+    const frequencyLabel = frequencyOption?.label || 'Se muestra cada 15 minutos';
+
+    // Process each screen package from API
+    testScreenPackages.forEach((pkg: any, index: number) => {
+      if (!pkg.enabled) return;
+
+      const packageType = pkg.packageType;
+      const basePrice = pkg.price || 0;
+      const spots = pkg.spots || 0;
+      const duration = pkg.duration || '';
+      const reach = pkg.reach || 0;
+      const variants = pkg.variants || [];
+
+      // DEBUG: Log each package being processed
+      console.log(`🔍 DEBUG: Processing package ${index + 1}:`, {
+        packageType,
+        basePrice,
+        spots,
+        duration,
+        reach,
+        variantsCount: variants.length,
+        variants: variants
+      });
+
+      // Create main bundle for this package type
+      const mainBundle = {
+        id: `${packageType}_${pkg.id}`,
+        name: getPackageDisplayName(packageType),
+        description: getPackageDescription(packageType),
+        duration: duration,
+        price: basePrice,
+        frequency: {
+          type: partnerFrequency,
+          displayText: getFrequencyDisplayText(packageType, partnerFrequency),
+          spotsPerHour: frequencyOption?.spotsPerHour || 4,
+          totalSpots: spots
+        },
+        isHighlighted: index === 0, // First enabled package is highlighted
+        reach: reach
+      };
+
+      // Add main bundle to result
+      switch (packageType) {
+        case 'moments':
+          result.momentos.push(mainBundle);
+          break;
+        case 'hourly':
+          result.hourly.push(mainBundle);
+          break;
+        case 'daily':
+          result.daily.push(mainBundle);
+          break;
+        case 'weekly':
+          result.weekly.push(mainBundle);
+          break;
+        case 'monthly':
+          result.monthly.push(mainBundle);
+          break;
+      }
+
+      // Process variants for this package
+      variants.forEach((variant: any, variantIndex: number) => {
+        if (!variant.enabled) return;
+
+        // DEBUG: Log each variant being processed
+        console.log(`🔍 DEBUG: Processing variant ${variantIndex + 1} for package ${packageType}:`, {
+          variantId: variant.id,
+          variantName: variant.name,
+          variantPrice: variant.price,
+          variantFrequency: variant.frequency,
+          variantEnabled: variant.enabled
+        });
+
+        const variantBundle = {
+          id: `${packageType}_variant_${variant.id}`,
+          name: variant.name || `Variante - ${variant.frequency}`,
+          description: `Opción especial con ${variant.frequency} - ${variant.spotsPerHour || variant.spotsPerDay || 'spots personalizados'}`,
+          duration: duration,
+          price: variant.price || basePrice,
+          frequency: {
+            type: variant.frequency || partnerFrequency,
+            displayText: `Frecuencia: ${variant.frequency}`,
+            spotsPerHour: variant.spotsPerHour || frequencyOption?.spotsPerHour || 4,
+            totalSpots: variant.spotsPerDay || variant.spotsPerHour || spots
+          },
+          isHighlighted: false, // Variants are not highlighted by default
+          reach: reach,
+          isVariant: true,
+          originalPackageId: pkg.id
+        };
+
+        // Add variant bundle to result
+        switch (packageType) {
+          case 'moments':
+            result.momentos.push(variantBundle);
+            break;
+          case 'hourly':
+            result.hourly.push(variantBundle);
+            break;
+          case 'daily':
+            result.daily.push(variantBundle);
+            break;
+          case 'weekly':
+            result.weekly.push(variantBundle);
+            break;
+          case 'monthly':
+            result.monthly.push(variantBundle);
+            break;
+        }
+      });
+    });
+
+    // DEBUG: Log final result
+    console.log('🔍 DEBUG: Final bundles generated:', {
+      momentos: result.momentos.length,
+      hourly: result.hourly.length,
+      daily: result.daily.length,
+      weekly: result.weekly.length,
+      monthly: result.monthly.length,
+      totalBundles: Object.values(result).flat().length
+    });
+
+    // If no packages from API, fallback to legacy pricing structure
+    if (screenPackages.length === 0) {
+      const safePricing = screen.pricing || {
+        allowMoments: false,
+        bundles: {
+          hourly: { enabled: false, price: 0 },
+          daily: { enabled: false, price: 0 },
+          weekly: { enabled: false, price: 0 },
+          monthly: { enabled: false, price: 0 }
+        }
+      };
+
+      if (safePricing.allowMoments) {
+        result.momentos = [
+          {
+            id: 'moment_basic',
+            name: 'Momento Básico',
+            description: 'Aparece una vez en un momento específico',
+            duration: '15 segundos',
+            price: 9500,
+            frequency: {
+              type: '15min',
+              displayText: 'Se muestra una vez en momento específico',
+              spotsPerHour: 1,
+              totalSpots: 1
+            },
+            isHighlighted: false
+          },
+          {
+            id: 'moment_premium',
+            name: 'Momento Premium',
+            description: 'Aparece 3 veces en momentos específicos',
+            duration: '15 segundos x 3',
+            price: 25000,
+            frequency: {
+              type: '15min',
+              displayText: 'Se muestra 3 veces en momentos específicos',
+              spotsPerHour: 3,
+              totalSpots: 3
+            },
+            isHighlighted: true
+          }
+        ];
+      }
+
+      if (safePricing.bundles.hourly?.enabled) {
+        result.hourly = [
+          {
+            id: 'hourly_standard',
+            name: 'Hora Estándar',
+            description: 'Tu anuncio durante una hora en rotación',
+            duration: '1 hora',
+            price: safePricing.bundles.hourly.price,
+            frequency: {
+              type: partnerFrequency,
+              displayText: frequencyLabel,
+              spotsPerHour: frequencyOption?.spotsPerHour || 4,
+              totalSpots: calculateSpotCount(partnerFrequency, 'hourly')
+            },
+            isHighlighted: true
+          }
+        ];
+      }
+
+      if (safePricing.bundles.daily?.enabled) {
+        result.daily = [
+          {
+            id: 'daily_standard',
+            name: 'Día Completo',
+            description: 'Tu anuncio durante todo el día',
+            duration: '24 horas',
+            price: safePricing.bundles.daily.price,
+            frequency: {
+              type: partnerFrequency,
+              displayText: frequencyLabel,
+              spotsPerHour: frequencyOption?.spotsPerHour || 4,
+              totalSpots: calculateSpotCount(partnerFrequency, 'daily')
+            },
+            isHighlighted: true
+          }
+        ];
+      }
+
+      if (safePricing.bundles.weekly?.enabled) {
+        result.weekly = [
+          {
+            id: 'weekly_standard',
+            name: 'Semana Estándar',
+            description: 'Tu anuncio durante una semana completa',
+            duration: '7 días',
+            price: safePricing.bundles.weekly.price,
+            frequency: {
+              type: partnerFrequency,
+              displayText: `${frequencyLabel} durante toda la semana`,
+              spotsPerHour: frequencyOption?.spotsPerHour || 4,
+              totalSpots: calculateSpotCount(partnerFrequency, 'weekly')
+            },
+            isHighlighted: true
+          }
+        ];
+      }
+
+      if (safePricing.bundles.monthly?.enabled) {
+        result.monthly = [
+          {
+            id: 'monthly_standard',
+            name: 'Mes Completo',
+            description: 'Tu anuncio durante un mes (30 días)',
+            duration: '30 días',
+            price: safePricing.bundles.monthly.price,
+            frequency: {
+              type: partnerFrequency,
+              displayText: `${frequencyLabel} durante todo el mes`,
+              spotsPerHour: frequencyOption?.spotsPerHour || 4,
+              totalSpots: calculateSpotCount(partnerFrequency, 'monthly')
+            },
+            isHighlighted: true
+          }
+        ];
+      }
+    }
+
+    return result;
+  }, [screen]);
+
+  // Apply margin to bundle prices - SHOW EXACT API PRICES
+  const applyMarginToBundles = (originalBundles: Record<AdMode, Bundle[]>): Record<AdMode, Bundle[]> => {
+    // Return bundles with exact API prices - no ML pricing applied
     const processedBundles: Record<AdMode, Bundle[]> = {} as Record<AdMode, Bundle[]>;
 
     Object.entries(originalBundles).forEach(([mode, bundleList]) => {
       processedBundles[mode as AdMode] = bundleList.map(bundle => {
-        // First apply partner margin
-        const priceWithMargin = Math.round(calculatePriceWithMargin(bundle.price, partnerMargin));
-        
-        // Then apply ML pricing based on demand and peak hours
-        const mlPricing = mlPricingService.getMLPrice(
-          priceWithMargin,
-          screen.id,
-          mode as any,
-          new Date().getHours()
-        );
-
         return {
           ...bundle,
-          price: mlPricing.finalPrice,
-          // Add ML insights to bundle
-          mlInsights: mlPricing.mlInsights,
-          demandLevel: mlPricing.demandLevel,
-          peakHourLevel: mlPricing.peakHourLevel,
-          priceIncrease: mlPricing.priceIncrease,
-          // Convert savings number to string format or keep original string - only if savings > 10K
-          savings: mlPricing.savings && mlPricing.savings > 10000 ? `$${Math.round(mlPricing.savings / 1000)}K ahorro` : 
-                   bundle.savings && bundle.savings !== '$0K ahorro' ? bundle.savings : undefined,
-          originalPrice: priceWithMargin,
-          demandMultiplier: mlPricing.demandMultiplier,
-          peakHourMultiplier: mlPricing.peakHourMultiplier
+          // Use exact API price without any modifications
+          price: bundle.price,
+          // No ML insights or multipliers
+          mlInsights: undefined,
+          demandLevel: undefined,
+          peakHourLevel: undefined,
+          priceIncrease: undefined,
+          savings: undefined,
+          originalPrice: bundle.price,
+          demandMultiplier: 1.0,
+          peakHourMultiplier: 1.0
         };
       });
     });
@@ -218,8 +619,8 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
     return processedBundles;
   };
 
-  // Apply margin to bundles
-  const bundlesWithMargin = applyMarginToBundles(bundles);
+  // Apply margin to bundles - use API-generated bundles instead of props
+  const bundlesWithMargin = applyMarginToBundles(generateBundlesFromAPI);
 
   useEffect(() => {
     const handleResize = () => {
@@ -602,191 +1003,172 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
 
                 </motion.div>
               ) : (
-                bundlesWithMargin[selectedMode].map((bundle, index) => {
-                  // Permitir seleccionar cualquier paquete independientemente del saldo
-                  const canSelect = true;
-                  
-                  return (
-                <motion.div
-                  key={bundle.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={isMobile ? {} : { y: -3, shadow: "0 10px 25px rgba(0,0,0,0.1)" }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedBundle(bundle)}
-                     className={`group relative cursor-pointer transition-all duration-300 ${
-                       isMobile ? 'p-3 min-h-[110px] flex flex-col' : isModalMode ? 'p-4 min-h-[180px] flex flex-col' : 'p-8 min-h-[320px] flex flex-col'
-                     } rounded-xl border-2 ${
-                       selectedBundle?.id === bundle.id 
-                         ? 'border-[#353FEF] shadow-lg bg-gradient-to-br from-[#353FEF]/8 to-white' + (isMobile || isModalMode ? '' : ' transform scale-[1.02] ring-4 ring-[#353FEF]/10')
-                         : 'border-gray-200 hover:border-[#353FEF]/50 ' + (isMobile ? 'shadow-sm' : isModalMode ? 'hover:shadow-lg' : 'hover:shadow-xl hover:scale-[1.01]')
-                     } ${bundle.isHighlighted ? 'bg-gradient-to-br from-amber-50 via-orange-50 to-white border-amber-300' : 'bg-white'}`}
-                  >
-                                         {/* Enhanced Badges - Only show one main badge */}
-                    {bundle.isHighlighted ? (
-                       <motion.div 
-                         className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-full shadow-lg`}
-                         initial={{ scale: 0, rotate: -10 }}
-                         animate={{ scale: 1, rotate: 0 }}
-                         transition={{ delay: 0.3, type: "spring", stiffness: 400, damping: 10 }}
-                       >
-                         {isMobile ? '⭐ POPULAR' : '⭐ MÁS POPULAR'}
-                       </motion.div>
-                     ) : bundle.savings && bundle.savings.trim() !== '' ? (
-                       <motion.div 
-                         className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-green-400 to-emerald-500 text-white font-bold rounded-full shadow-lg`}
-                         initial={{ scale: 0, rotate: 10 }}
-                         animate={{ scale: 1, rotate: 0 }}
-                         transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 10 }}
-                       >
-                         {bundle.savings}
-                       </motion.div>
-                     ) : bundle.priceIncrease && bundle.priceIncrease > 0 && bundle.originalPrice && ((bundle.priceIncrease / bundle.originalPrice) * 100) >= 5 ? (
-                       <motion.div 
-                         className={`absolute ${isMobile ? '-top-2 left-3 px-2 py-1 text-xs' : '-top-3 left-4 px-3 py-1 text-xs'} bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold rounded-full shadow-lg flex items-center gap-1`}
-                         initial={{ scale: 0, x: -20 }}
-                         animate={{ scale: 1, x: 0 }}
-                         transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 10 }}
-                       >
-                         <TrendingUp className="w-3 h-3" />
-                         {isMobile ? '+' : 'Demanda +'}{Math.round((bundle.priceIncrease / bundle.originalPrice) * 100)}%
-                       </motion.div>
-                     ) : null}
-                     
-                     {/* Header */}
-                     <div className={`flex items-start justify-between ${isMobile ? 'mb-2' : isModalMode ? 'mb-3' : 'mb-6'}`}>
-                       <div className="flex-1 pr-4">
-                         <h3 className={`${isMobile ? 'text-base' : isModalMode ? 'text-lg' : 'text-xl'} font-bold text-gray-900 ${isMobile ? 'mb-0.5' : isModalMode ? 'mb-1' : 'mb-3'}`}>{bundle.name}</h3>
-                         <p className={`${isMobile ? 'text-xs' : isModalMode ? 'text-sm' : 'text-base'} text-gray-600 ${isMobile ? 'leading-snug' : isModalMode ? 'leading-snug' : 'leading-relaxed'}`}>{bundle.description}</p>
-                       </div>
+                // Enhanced scrollable container for bundles
+                <div className={`${isMobile ? 'max-h-[400px]' : isModalMode ? 'max-h-[500px]' : 'max-h-[600px]'} overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-2`}>
+                  <div className={`${isMobile ? 'space-y-2' : isModalMode ? 'space-y-3' : 'space-y-4'}`}>
+                    {bundlesWithMargin[selectedMode].map((bundle, index) => {
+                      // Permitir seleccionar cualquier paquete independientemente del saldo
+                      const canSelect = true;
                       
-                      {/* Enhanced Selection Indicator */}
-                      <motion.div 
-                        className={`${isMobile ? 'w-7 h-7' : 'w-8 h-8'} rounded-full border-2 transition-all duration-300 flex items-center justify-center flex-shrink-0 ${
-                          selectedBundle?.id === bundle.id 
-                            ? 'border-[#353FEF] bg-[#353FEF] shadow-lg' 
-                            : 'border-gray-300 group-hover:border-[#353FEF]/50'
-                        }`}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                      return (
+                    <motion.div
+                      key={bundle.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={isMobile ? {} : { y: -3, shadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setSelectedBundle(bundle)}
+                         className={`group relative cursor-pointer transition-all duration-300 ${
+                           isMobile ? 'p-3 min-h-[110px] flex flex-col' : isModalMode ? 'p-4 min-h-[180px] flex flex-col' : 'p-8 min-h-[320px] flex flex-col'
+                         } rounded-xl border-2 ${
+                           selectedBundle?.id === bundle.id 
+                             ? 'border-[#353FEF] shadow-lg bg-gradient-to-br from-[#353FEF]/8 to-white' + (isMobile || isModalMode ? '' : ' transform scale-[1.02] ring-4 ring-[#353FEF]/10')
+                             : 'border-gray-200 hover:border-[#353FEF]/50 ' + (isMobile ? 'shadow-sm' : isModalMode ? 'hover:shadow-lg' : 'hover:shadow-xl hover:scale-[1.01]')
+                         } ${bundle.isHighlighted ? 'bg-gradient-to-br from-amber-50 via-orange-50 to-white border-amber-300' : bundle.isVariant ? 'bg-gradient-to-br from-purple-50 via-indigo-50 to-white border-purple-300' : 'bg-white'}`}
                       >
-                        {selectedBundle?.id === bundle.id && (
-                        <motion.div 
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                         {/* Enhanced Badges - Show different badges for variants and main packages */}
+                        {bundle.isVariant ? (
+                           <motion.div 
+                             className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-bold rounded-full shadow-lg flex items-center gap-1`}
+                             initial={{ scale: 0, rotate: 10 }}
+                             animate={{ scale: 1, rotate: 0 }}
+                             transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 10 }}
+                           >
+                             <Sparkles className="w-3 h-3" />
+                             {isMobile ? 'VARIANTE' : 'VARIANTE ESPECIAL'}
+                           </motion.div>
+                         ) : bundle.isHighlighted ? (
+                           <motion.div 
+                             className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-full shadow-lg`}
+                             initial={{ scale: 0, rotate: -10 }}
+                             animate={{ scale: 1, rotate: 0 }}
+                             transition={{ delay: 0.3, type: "spring", stiffness: 400, damping: 10 }}
+                           >
+                             {isMobile ? '⭐ POPULAR' : '⭐ MÁS POPULAR'}
+                           </motion.div>
+                         ) : null}
+                         
+                         {/* Header */}
+                         <div className={`flex items-start justify-between ${isMobile ? 'mb-2' : isModalMode ? 'mb-3' : 'mb-6'}`}>
+                           <div className="flex-1 pr-4">
+                             <h3 className={`${isMobile ? 'text-base' : isModalMode ? 'text-lg' : 'text-xl'} font-bold text-gray-900 ${isMobile ? 'mb-0.5' : isModalMode ? 'mb-1' : 'mb-3'}`}>{bundle.name}</h3>
+                             <p className={`${isMobile ? 'text-xs' : isModalMode ? 'text-sm' : 'text-base'} text-gray-600 ${isMobile ? 'leading-snug' : isModalMode ? 'leading-snug' : 'leading-relaxed'}`}>{bundle.description}</p>
+                           </div>
+                          
+                          {/* Enhanced Selection Indicator */}
+                          <motion.div 
+                            className={`${isMobile ? 'w-7 h-7' : 'w-8 h-8'} rounded-full border-2 transition-all duration-300 flex items-center justify-center flex-shrink-0 ${
+                              selectedBundle?.id === bundle.id 
+                                ? 'border-[#353FEF] bg-[#353FEF] shadow-lg' 
+                                : 'border-gray-300 group-hover:border-[#353FEF]/50'
+                            }`}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
                           >
-                            <Check className="w-4 h-4 text-white" />
-                        </motion.div>
-                        )}
-                      </motion.div>
-                    </div>
-                      
+                            {selectedBundle?.id === bundle.id && (
+                            <motion.div 
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                              >
+                                <Check className="w-4 h-4 text-white" />
+                            </motion.div>
+                            )}
+                          </motion.div>
+                        </div>
+                          
                                          {/* Enhanced Bundle Details */}
-                     <div className={`${isMobile ? 'space-y-1.5 mb-2' : isModalMode ? 'space-y-1.5 mb-2 flex-1' : 'space-y-3 mb-4 flex-1'}`}>
-                      <motion.div 
-                         className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
-                         whileHover={isMobile || isModalMode ? {} : { x: 3 }}
-                         transition={{ duration: 0.2 }}
-                       >
-                         <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-[#353FEF]/10 to-[#4F46E5]/10 rounded-xl flex items-center justify-center`}>
-                           <Clock className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-[#353FEF]`} />
-                         </div>
-                         <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Duración: <span className="font-bold text-gray-900">{bundle.duration}</span></span>
-                      </motion.div>
-                      
-                        <motion.div 
-                         className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
-                         whileHover={isMobile || isModalMode ? {} : { x: 3 }}
-                         transition={{ duration: 0.2 }}
-                       >
-                         <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center`}>
-                           <Users className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-blue-600`} />
-                         </div>
-                         <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Total spots: <span className="font-bold text-gray-900">{bundle.frequency.totalSpots}</span></span>
-                      </motion.div>
+                         <div className={`${isMobile ? 'space-y-1.5 mb-2' : isModalMode ? 'space-y-1.5 mb-2 flex-1' : 'space-y-3 mb-4 flex-1'}`}>
+                          <motion.div 
+                             className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
+                             whileHover={isMobile || isModalMode ? {} : { x: 3 }}
+                             transition={{ duration: 0.2 }}
+                           >
+                             <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-[#353FEF]/10 to-[#4F46E5]/10 rounded-xl flex items-center justify-center`}>
+                               <Clock className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-[#353FEF]`} />
+                             </div>
+                             <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Duración: <span className="font-bold text-gray-900">{bundle.duration}</span></span>
+                          </motion.div>
+                          
+                            <motion.div 
+                             className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
+                             whileHover={isMobile || isModalMode ? {} : { x: 3 }}
+                             transition={{ duration: 0.2 }}
+                           >
+                             <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center`}>
+                               <Users className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-blue-600`} />
+                             </div>
+                             <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Total spots: <span className="font-bold text-gray-900">{bundle.frequency.totalSpots}</span></span>
+                          </motion.div>
 
-                      {/* ML Insights Section - Hidden for user, only for internal use */}
-                      {false && bundle.mlInsights && !isMobile && (
-                        <motion.div 
-                          className={`flex items-center gap-3 text-sm text-gray-700 ${isModalMode ? 'gap-2' : 'gap-4'}`}
-                          whileHover={isModalMode ? {} : { x: 3 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <div className={`${isModalMode ? 'w-8 h-8' : 'w-12 h-12'} bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center`}>
-                            <Sparkles className={`${isModalMode ? 'w-4 h-4' : 'w-6 h-6'} text-purple-600`} />
-                          </div>
-                          <div className="flex-1">
-                            <div className={`${isModalMode ? 'text-xs' : 'text-base'} font-medium`}>
-                              IA: <span className="font-bold text-purple-600">{bundle.mlInsights?.totalPurchases || 0} compras</span>
+                          {/* Reach Information - Show if available */}
+                          {bundle.reach && bundle.reach > 0 && (
+                            <motion.div 
+                             className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
+                             whileHover={isMobile || isModalMode ? {} : { x: 3 }}
+                             transition={{ duration: 0.2 }}
+                           >
+                             <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center`}>
+                               <Eye className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-green-600`} />
+                             </div>
+                             <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Alcance estimado: <span className="font-bold text-gray-900">{bundle.reach.toLocaleString()}</span></span>
+                          </motion.div>
+                          )}
+
+                          {/* ML Insights Section - Hidden for user, only for internal use */}
+                          {false && bundle.mlInsights && !isMobile && (
+                            <motion.div 
+                              className={`flex items-center gap-3 text-sm text-gray-700 ${isModalMode ? 'gap-2' : 'gap-4'}`}
+                              whileHover={isModalMode ? {} : { x: 3 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <div className={`${isModalMode ? 'w-8 h-8' : 'w-12 h-12'} bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center`}>
+                                <Sparkles className={`${isModalMode ? 'w-4 h-4' : 'w-6 h-6'} text-purple-600`} />
+                              </div>
+                              <div className="flex-1">
+                                <div className={`${isModalMode ? 'text-xs' : 'text-base'} font-medium`}>
+                                  IA: <span className="font-bold text-purple-600">{bundle.mlInsights?.totalPurchases || 0} compras</span>
+                                </div>
+                                <div className={`${isModalMode ? 'text-xs' : 'text-sm'} text-gray-500 font-light`}>
+                                  {bundle.mlInsights?.recommendation || 'Datos no disponibles'}
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                        
+                                          {/* Enhanced Price Section */}
+                          <div className={`flex items-end justify-between mt-auto ${isModalMode ? 'pt-2 border-t border-gray-100' : 'pt-4 border-t border-gray-100'}`}>
+                            <div className="flex-1">
+                              <div className={`${isMobile ? 'text-2xl' : isModalMode ? 'text-xl' : 'text-3xl'} font-bold bg-gradient-to-r from-[#353FEF] to-[#4F46E5] bg-clip-text text-transparent ${isModalMode ? 'mb-1' : 'mb-2'} break-words`}>
+                                ${bundle.price.toLocaleString()}
+                              </div>
+                             
+                              {/* Price is now exact from API - no ML modifications */}
+                              {!isMobile && !isModalMode && (
+                                <div className="text-xs text-gray-500 flex items-center gap-1">
+                                  <span>Precio directo de la API</span>
+                                </div>
+                              )}
                             </div>
-                            <div className={`${isModalMode ? 'text-xs' : 'text-sm'} text-gray-500 font-light`}>
-                              {bundle.mlInsights?.recommendation || 'Datos no disponibles'}
-                            </div>
+                           
+                            {selectedBundle?.id === bundle.id && (
+                              <motion.div 
+                                className={`bg-gradient-to-r from-[#353FEF] to-[#4F46E5] text-white ${isMobile ? 'px-3 py-1' : 'px-4 py-2'} rounded-full text-xs font-semibold shadow-lg`}
+                                initial={{ scale: 0, x: 20 }}
+                                animate={{ scale: 1, x: 0 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                              >
+                                ✓ {isMobile ? 'OK' : 'Seleccionado'}
+                              </motion.div>
+                            )}
                           </div>
                         </motion.div>
-                      )}
-                    </div>
-                    
-                                         {/* Enhanced Price Section */}
-                     <div className={`flex items-end justify-between mt-auto ${isModalMode ? 'pt-2 border-t border-gray-100' : 'pt-4 border-t border-gray-100'}`}>
-                       <div className="flex-1">
-                         <div className={`${isMobile ? 'text-2xl' : isModalMode ? 'text-xl' : 'text-3xl'} font-bold bg-gradient-to-r from-[#353FEF] to-[#4F46E5] bg-clip-text text-transparent ${isModalMode ? 'mb-1' : 'mb-2'} break-words`}>
-                           ${bundle.price.toLocaleString()}
-                         </div>
-                        
-                         {/* ML Price Information - Only show if increase is >= 5% */}
-                         {bundle.originalPrice && bundle.originalPrice !== bundle.price && !isMobile && bundle.priceIncrease && ((bundle.priceIncrease / bundle.originalPrice) * 100) >= 5 && (
-                           <div className="flex items-center gap-2 mb-1">
-                             <span className="text-xs text-gray-400 line-through">
-                               ${bundle.originalPrice.toLocaleString()}
-                             </span>
-                             <span className="text-xs text-red-600 font-semibold flex items-center gap-1">
-                               <TrendingUp className="w-3 h-3" />
-                               +{Math.round((bundle.priceIncrease / bundle.originalPrice) * 100)}%
-                             </span>
-                           </div>
-                         )}
-                        
-                         {!isMobile && !isModalMode && (
-                           <div className="text-xs text-gray-500 flex items-center gap-1">
-                             {bundle.mlInsights && bundle.mlInsights.totalPurchases ? (
-                               <>
-                                 <Brain className="w-3 h-3" />
-                                 <span>Precio optimizado por IA</span>
-                               </>
-                             ) : (
-                               <span>Precio final</span>
-                             )}
-                           </div>
-                         )}
-
-                         {/* Peak Hour Indicator */}
-                         {bundle.peakHourLevel && bundle.peakHourLevel !== 'low' && !isMobile && (
-                           <div className={`text-xs font-medium mt-1 px-2 py-1 rounded-full inline-flex items-center gap-1 ${getPeakHourBadgeColor(bundle.peakHourLevel)}`}>
-                             <Clock className="w-3 h-3" />
-                             Hora {bundle.peakHourLevel === 'peak' ? 'pico' : 'demandada'}
-                           </div>
-                         )}
-                       </div>
-                      
-                       {selectedBundle?.id === bundle.id && (
-                        <motion.div 
-                           className={`bg-gradient-to-r from-[#353FEF] to-[#4F46E5] text-white ${isMobile ? 'px-3 py-1' : 'px-4 py-2'} rounded-full text-xs font-semibold shadow-lg`}
-                           initial={{ scale: 0, x: 20 }}
-                           animate={{ scale: 1, x: 0 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                        >
-                           ✓ {isMobile ? 'OK' : 'Seleccionado'}
-                        </motion.div>
-                      )}
-
-
+                      );
+                    })}
                   </div>
-                </motion.div>
-                )
-                })
+                </div>
               )}
             </motion.div>
           </AnimatePresence>

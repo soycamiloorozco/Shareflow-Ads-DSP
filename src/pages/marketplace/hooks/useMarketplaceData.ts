@@ -260,33 +260,36 @@ export const useMarketplaceData = ({
                 refreshRate: 60
               },
               pricing: {
-                minimumPrice: apiScreen.minimumPrice || 15000,
-                maximumPrice: apiScreen.maximumPrice || 80000,
+                minimumPrice: apiScreen.minimumPrice || 0,
+                maximumPrice: apiScreen.maximumPrice || 0,
                 allowMoments: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'moments' && pkg.enabled) || false,
                 bundles: {
                   hourly: {
-                    enabled: true,
-                    price: apiScreen.minimumPrice || 15000
+                    enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'hourly' && pkg.enabled) || false,
+                    price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'hourly' && pkg.enabled)?.price || 0
                   },
                   daily: {
-                    enabled: true,
-                    price: (apiScreen.minimumPrice || 15000) * 24
+                    enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'daily' && pkg.enabled) || false,
+                    price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'daily' && pkg.enabled)?.price || 0
                   },
                   weekly: {
-                    enabled: true,
-                    price: (apiScreen.minimumPrice || 15000) * 24 * 7
+                    enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'weekly' && pkg.enabled) || false,
+                    price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'weekly' && pkg.enabled)?.price || 0
                   },
                   monthly: {
-                    enabled: true,
-                    price: (apiScreen.minimumPrice || 15000) * 24 * 30
+                    enabled: apiScreen.screenPackages?.some((pkg: any) => pkg.packageType === 'monthly' && pkg.enabled) || false,
+                    price: apiScreen.screenPackages?.find((pkg: any) => pkg.packageType === 'monthly' && pkg.enabled)?.price || 0
                   }
                 }
               },
-              price: apiScreen.minimumPrice || 15000, // Add price field for compatibility
-              rating: 4.5, // Default rating
+              price: apiScreen.minimumPrice || 0, // Add price field for compatibility
+              rating: apiScreen.rating || 0, // Use API rating or default to 0
+              reviews: apiScreen.reviews || 0, // Use API reviews or default
+              availability: apiScreen.availability !== undefined ? apiScreen.availability : false, // Use API availability or default to false
+              environment: apiScreen.environment || 'indoor', // Use API environment or default
               views: {
-                daily: apiScreen.estimatedDailyImpressions || 1000,
-                monthly: (apiScreen.estimatedDailyImpressions || 1000) * 30
+                daily: apiScreen.estimatedDailyImpressions || 0,
+                monthly: (apiScreen.estimatedDailyImpressions || 0) * 30
               },
               images: apiScreen.images?.map((img: any) => ({
                 id: img.id,
@@ -307,10 +310,18 @@ export const useMarketplaceData = ({
                 landmarks: []
               },
               metrics: {
-                dailyTraffic: apiScreen.estimatedDailyImpressions || 1000,
-                monthlyTraffic: (apiScreen.estimatedDailyImpressions || 1000) * 30,
-                averageEngagement: 85
-              }
+                dailyTraffic: apiScreen.estimatedDailyImpressions || 0,
+                monthlyTraffic: (apiScreen.estimatedDailyImpressions || 0) * 30,
+                averageEngagement: apiScreen.averageEngagement || 0
+              },
+              // Operating hours from API
+              operatingHours: {
+                start: apiScreen.operationStartTime || '06:00',
+                end: apiScreen.operationEndTime || '22:00',
+                daysActive: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+              },
+              // Preserve screenPackages data for price calculations
+              screenPackages: apiScreen.screenPackages || []
             };
           });
           

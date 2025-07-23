@@ -12,12 +12,54 @@ import { VenueParentCategory, EnvironmentType, DwellTime } from '../types/filter
 // =============================================================================
 
 /**
- * Calculate minimum price for a screen across all available bundles
+ * Calculate minimum price for a screen across all available bundles and variants
  */
 export const getScreenMinPrice = (screen: Screen): number => {
   const prices: number[] = [];
   
-  // Check if screen has pricing structure from API real
+  // Debug logging for price calculation
+  if (process.env.NODE_ENV === 'development') {
+    console.log('💰 Price calculation for screen:', {
+      id: screen.id,
+      name: screen.name,
+      hasScreenPackages: !!(screen as any).screenPackages,
+      screenPackagesCount: (screen as any).screenPackages?.length || 0
+    });
+  }
+  
+  // First, check if we have real API data with screenPackages
+  if ((screen as any).screenPackages && Array.isArray((screen as any).screenPackages)) {
+    const screenPackages = (screen as any).screenPackages;
+    
+    // Process each package and its variants
+    screenPackages.forEach((pkg: any) => {
+      if (pkg.enabled) {
+        // Add main package price
+        prices.push(pkg.price || 0);
+        
+        // Add variant prices if they exist and are enabled
+        if (pkg.variants && Array.isArray(pkg.variants)) {
+          pkg.variants.forEach((variant: any) => {
+            if (variant.enabled) {
+              prices.push(variant.price || 0);
+            }
+          });
+        }
+      }
+    });
+    
+    // Debug logging for API prices
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📦 API Package prices found:', {
+        screenId: screen.id,
+        totalPrices: prices.length,
+        prices: prices,
+        minPrice: prices.length > 0 ? Math.min(...prices) : 0
+      });
+    }
+  }
+  
+  // Fallback to legacy pricing structure
   if (screen.pricing?.bundles?.hourly?.enabled) {
     prices.push(screen.pricing.bundles.hourly.price);
   }
@@ -39,16 +81,53 @@ export const getScreenMinPrice = (screen: Screen): number => {
     prices.push((screen as any).maximumPrice);
   }
   
-  return prices.length > 0 ? Math.min(...prices) : screen.price || 0;
+  // Filter out zero prices and return the minimum
+  const validPrices = prices.filter(price => price > 0);
+  const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : screen.price || 0;
+  
+  // Debug logging for final result
+  if (process.env.NODE_ENV === 'development') {
+    console.log('✅ Final min price for screen:', {
+      screenId: screen.id,
+      screenName: screen.name,
+      minPrice,
+      validPricesCount: validPrices.length,
+      allPrices: prices
+    });
+  }
+  
+  return minPrice;
 };
 
 /**
- * Calculate maximum price for a screen across all available bundles
+ * Calculate maximum price for a screen across all available bundles and variants
  */
 export const getScreenMaxPrice = (screen: Screen): number => {
   const prices: number[] = [];
   
-  // Check if screen has pricing structure from API real
+  // First, check if we have real API data with screenPackages
+  if ((screen as any).screenPackages && Array.isArray((screen as any).screenPackages)) {
+    const screenPackages = (screen as any).screenPackages;
+    
+    // Process each package and its variants
+    screenPackages.forEach((pkg: any) => {
+      if (pkg.enabled) {
+        // Add main package price
+        prices.push(pkg.price || 0);
+        
+        // Add variant prices if they exist and are enabled
+        if (pkg.variants && Array.isArray(pkg.variants)) {
+          pkg.variants.forEach((variant: any) => {
+            if (variant.enabled) {
+              prices.push(variant.price || 0);
+            }
+          });
+        }
+      }
+    });
+  }
+  
+  // Fallback to legacy pricing structure
   if (screen.pricing?.bundles?.hourly?.enabled) {
     prices.push(screen.pricing.bundles.hourly.price);
   }
@@ -70,7 +149,9 @@ export const getScreenMaxPrice = (screen: Screen): number => {
     prices.push((screen as any).maximumPrice);
   }
   
-  return prices.length > 0 ? Math.max(...prices) : screen.price || 0;
+  // Filter out zero prices and return the maximum
+  const validPrices = prices.filter(price => price > 0);
+  return validPrices.length > 0 ? Math.max(...validPrices) : screen.price || 0;
 };
 
 /**
