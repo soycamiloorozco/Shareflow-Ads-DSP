@@ -17,36 +17,6 @@ interface SectionScreenCardProps {
   'aria-label'?: string;
 }
 
-// Optimized pricing simulation hook
-const useOptimizedPricing = (screenId: string) => {
-  const [priceData, setPriceData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
-  const loadPricing = useCallback(async () => {
-    if (priceData || loading) return;
-    
-    setLoading(true);
-    
-    // Simulate AI pricing API call
-    setTimeout(() => {
-      const demandLevel = Math.random() * 2; // 0-2 demand multiplier
-      const basePrice = 1000000; // Default base price
-      const demandMultiplier = 1 + (demandLevel - 1) * 0.3;
-      const timeOfDayMultiplier = new Date().getHours() > 18 ? 1.15 : 1;
-      
-      setPriceData({
-        originalPrice: basePrice,
-        optimizedPrice: Math.round(basePrice * demandMultiplier * timeOfDayMultiplier),
-        savings: demandLevel < 1 ? Math.round(basePrice * 0.1) : 0,
-        demandLevel: demandLevel > 1.2 ? 'high' : demandLevel > 0.8 ? 'medium' : 'low'
-      });
-      setLoading(false);
-    }, 800);
-  }, [screenId, priceData, loading]);
-
-  return { priceData, loading, loadPricing };
-};
-
 export const SectionScreenCard = React.memo<SectionScreenCardProps>(({ 
   screen, 
   sectionType,
@@ -60,7 +30,6 @@ export const SectionScreenCard = React.memo<SectionScreenCardProps>(({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(() => favoritesService.isFavorite(screen.id));
-  const { priceData, loading: pricingLoading, loadPricing } = useOptimizedPricing(screen.id);
 
   // Update favorite state when screen changes
   useEffect(() => {
@@ -156,8 +125,7 @@ export const SectionScreenCard = React.memo<SectionScreenCardProps>(({
 
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
-    loadPricing();
-  }, [loadPricing]);
+  }, []);
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
@@ -418,54 +386,15 @@ export const SectionScreenCard = React.memo<SectionScreenCardProps>(({
           {/* Enhanced price and CTA */}
           <div className="flex items-center justify-between">
             <div>
-              {priceData ? (
-                <div>
-                  <div className="flex items-baseline gap-1">
-                    <span className={`font-bold text-gray-900 ${
-                      isCompact ? 'text-base' : 'text-lg'
-                    }`}>
-                      ${(priceData.optimizedPrice / 1000).toFixed(0)}K
-                    </span>
-                    <span className="text-sm text-gray-600">COP</span>
-                    {priceData.savings > 0 && (
-                      <span className="text-xs text-green-600 font-medium ml-1">
-                        -{(priceData.savings / 1000).toFixed(0)}K
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1">
-                    desde / hora
-                    <span className={`px-1 py-0.5 rounded text-xs font-medium ${
-                      priceData.demandLevel === 'high' ? 'bg-red-100 text-red-700' :
-                      priceData.demandLevel === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-green-100 text-green-700'
-                    }`}>
-                      {priceData.demandLevel === 'high' ? '🔥' : 
-                       priceData.demandLevel === 'medium' ? '📈' : '💚'}
-                    </span>
-                  </div>
-                </div>
-              ) : pricingLoading ? (
-                <div>
-                  <div className="flex items-baseline gap-1">
-                    <div className="w-12 h-5 bg-gray-200 rounded animate-pulse"></div>
-                    <span className="text-sm text-gray-600">COP</span>
-                  </div>
-                  <div className="text-xs text-gray-500">Cargando precio...</div>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-baseline gap-1">
-                    <span className={`font-bold text-gray-900 ${
-                      isCompact ? 'text-base' : 'text-lg'
-                    }`}>
-                      {enhancedData.priceDisplay}
-                    </span>
-                    <span className="text-sm text-gray-600">COP</span>
-                  </div>
-                  <div className="text-xs text-gray-500">desde / hora</div>
-                </div>
-              )}
+              <div className="flex items-baseline gap-1">
+                <span className={`font-bold text-gray-900 ${
+                  isCompact ? 'text-base' : 'text-lg'
+                }`}>
+                  {enhancedData.priceDisplay}
+                </span>
+                <span className="text-sm text-gray-600">COP</span>
+              </div>
+              <div className="text-xs text-gray-500">desde / hora</div>
             </div>
 
             {/* Enhanced CTA Button */}
