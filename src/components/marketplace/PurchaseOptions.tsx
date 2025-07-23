@@ -366,43 +366,51 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
         duration,
         reach,
         variantsCount: variants.length,
+        hasVariants: variants.length > 0 && variants.some((v: any) => v.enabled),
         variants: variants
       });
 
-      // Create main bundle for this package type
-      const mainBundle = {
-        id: `${packageType}_${pkg.id}`,
-        name: getPackageDisplayName(packageType),
-        description: getPackageDescription(packageType),
-        duration: duration,
-        price: basePrice,
-        frequency: {
-          type: partnerFrequency,
-          displayText: getFrequencyDisplayText(packageType, partnerFrequency),
-          spotsPerHour: frequencyOption?.spotsPerHour || 4,
-          totalSpots: spots
-        },
-        isHighlighted: index === 0, // First enabled package is highlighted
-        reach: reach
-      };
+      // Check if this package has variants
+      const hasVariants = variants.length > 0 && variants.some((v: any) => v.enabled);
+      
+      // Only create main bundle if there are NO variants
+      if (!hasVariants) {
+        const mainBundle = {
+          id: `${packageType}_${pkg.id}`,
+          name: getPackageDisplayName(packageType),
+          description: getPackageDescription(packageType),
+          duration: duration,
+          price: basePrice,
+          frequency: {
+            type: partnerFrequency,
+            displayText: getFrequencyDisplayText(packageType, partnerFrequency),
+            spotsPerHour: frequencyOption?.spotsPerHour || 4,
+            totalSpots: spots
+          },
+          isHighlighted: index === 0, // First enabled package is highlighted
+          reach: reach
+        };
 
-      // Add main bundle to result
-      switch (packageType) {
-        case 'moments':
-          result.momentos.push(mainBundle);
-          break;
-        case 'hourly':
-          result.hourly.push(mainBundle);
-          break;
-        case 'daily':
-          result.daily.push(mainBundle);
-          break;
-        case 'weekly':
-          result.weekly.push(mainBundle);
-          break;
-        case 'monthly':
-          result.monthly.push(mainBundle);
-          break;
+        // Add main bundle to result only if no variants exist
+        switch (packageType) {
+          case 'moments':
+            result.momentos.push(mainBundle);
+            break;
+          case 'hourly':
+            result.hourly.push(mainBundle);
+            break;
+          case 'daily':
+            result.daily.push(mainBundle);
+            break;
+          case 'weekly':
+            result.weekly.push(mainBundle);
+            break;
+          case 'monthly':
+            result.monthly.push(mainBundle);
+            break;
+        }
+        
+        console.log(`✅ DEBUG: Added main bundle: ${mainBundle.name} for ${packageType} (no variants found)`);
       }
 
       // Process variants for this package
@@ -454,6 +462,8 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
             result.monthly.push(variantBundle);
             break;
         }
+        
+        console.log(`✅ DEBUG: Added variant bundle: ${variantBundle.name} for ${packageType}`);
       });
     });
 
@@ -1004,103 +1014,103 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
                 </motion.div>
               ) : (
                 // Enhanced scrollable container for bundles
-                <div className={`${isMobile ? 'max-h-[400px]' : isModalMode ? 'max-h-[500px]' : 'max-h-[600px]'} overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-2`}>
+                <div className={`${isMobile ? 'max-h-[400px]' : isModalMode ? 'max-h-[500px]' : 'max-h-[600px]'} overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-2 pt-4`}>
                   <div className={`${isMobile ? 'space-y-2' : isModalMode ? 'space-y-3' : 'space-y-4'}`}>
                     {bundlesWithMargin[selectedMode].map((bundle, index) => {
-                      // Permitir seleccionar cualquier paquete independientemente del saldo
-                      const canSelect = true;
-                      
-                      return (
-                    <motion.div
-                      key={bundle.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={isMobile ? {} : { y: -3, shadow: "0 10px 25px rgba(0,0,0,0.1)" }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedBundle(bundle)}
-                         className={`group relative cursor-pointer transition-all duration-300 ${
-                           isMobile ? 'p-3 min-h-[110px] flex flex-col' : isModalMode ? 'p-4 min-h-[180px] flex flex-col' : 'p-8 min-h-[320px] flex flex-col'
-                         } rounded-xl border-2 ${
-                           selectedBundle?.id === bundle.id 
-                             ? 'border-[#353FEF] shadow-lg bg-gradient-to-br from-[#353FEF]/8 to-white' + (isMobile || isModalMode ? '' : ' transform scale-[1.02] ring-4 ring-[#353FEF]/10')
-                             : 'border-gray-200 hover:border-[#353FEF]/50 ' + (isMobile ? 'shadow-sm' : isModalMode ? 'hover:shadow-lg' : 'hover:shadow-xl hover:scale-[1.01]')
+                  // Permitir seleccionar cualquier paquete independientemente del saldo
+                  const canSelect = true;
+                  
+                  return (
+                <motion.div
+                  key={bundle.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={isMobile ? {} : { y: -3, shadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedBundle(bundle)}
+                     className={`group relative cursor-pointer transition-all duration-300 ${
+                       isMobile ? 'p-3 min-h-[110px] flex flex-col' : isModalMode ? 'p-4 min-h-[180px] flex flex-col' : 'p-8 min-h-[320px] flex flex-col'
+                     } rounded-xl border-2 ${
+                       selectedBundle?.id === bundle.id 
+                         ? 'border-[#353FEF] shadow-lg bg-gradient-to-br from-[#353FEF]/8 to-white' + (isMobile || isModalMode ? '' : ' transform scale-[1.02] ring-4 ring-[#353FEF]/10')
+                         : 'border-gray-200 hover:border-[#353FEF]/50 ' + (isMobile ? 'shadow-sm' : isModalMode ? 'hover:shadow-lg' : 'hover:shadow-xl hover:scale-[1.01]')
                          } ${bundle.isHighlighted ? 'bg-gradient-to-br from-amber-50 via-orange-50 to-white border-amber-300' : bundle.isVariant ? 'bg-gradient-to-br from-purple-50 via-indigo-50 to-white border-purple-300' : 'bg-white'}`}
-                      >
+                  >
                                          {/* Enhanced Badges - Show different badges for variants and main packages */}
                         {bundle.isVariant ? (
-                           <motion.div 
+                       <motion.div 
                              className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-bold rounded-full shadow-lg flex items-center gap-1`}
-                             initial={{ scale: 0, rotate: 10 }}
-                             animate={{ scale: 1, rotate: 0 }}
-                             transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 10 }}
-                           >
+                         initial={{ scale: 0, rotate: 10 }}
+                         animate={{ scale: 1, rotate: 0 }}
+                         transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 10 }}
+                       >
                              <Sparkles className="w-3 h-3" />
                              {isMobile ? 'VARIANTE' : 'VARIANTE ESPECIAL'}
-                           </motion.div>
+                       </motion.div>
                          ) : bundle.isHighlighted ? (
-                           <motion.div 
+                       <motion.div 
                              className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-full shadow-lg`}
                              initial={{ scale: 0, rotate: -10 }}
                              animate={{ scale: 1, rotate: 0 }}
                              transition={{ delay: 0.3, type: "spring", stiffness: 400, damping: 10 }}
                            >
                              {isMobile ? '⭐ POPULAR' : '⭐ MÁS POPULAR'}
-                           </motion.div>
-                         ) : null}
-                         
-                         {/* Header */}
-                         <div className={`flex items-start justify-between ${isMobile ? 'mb-2' : isModalMode ? 'mb-3' : 'mb-6'}`}>
-                           <div className="flex-1 pr-4">
-                             <h3 className={`${isMobile ? 'text-base' : isModalMode ? 'text-lg' : 'text-xl'} font-bold text-gray-900 ${isMobile ? 'mb-0.5' : isModalMode ? 'mb-1' : 'mb-3'}`}>{bundle.name}</h3>
-                             <p className={`${isMobile ? 'text-xs' : isModalMode ? 'text-sm' : 'text-base'} text-gray-600 ${isMobile ? 'leading-snug' : isModalMode ? 'leading-snug' : 'leading-relaxed'}`}>{bundle.description}</p>
-                           </div>
-                          
-                          {/* Enhanced Selection Indicator */}
-                          <motion.div 
-                            className={`${isMobile ? 'w-7 h-7' : 'w-8 h-8'} rounded-full border-2 transition-all duration-300 flex items-center justify-center flex-shrink-0 ${
-                              selectedBundle?.id === bundle.id 
-                                ? 'border-[#353FEF] bg-[#353FEF] shadow-lg' 
-                                : 'border-gray-300 group-hover:border-[#353FEF]/50'
-                            }`}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
+                       </motion.div>
+                     ) : null}
+                     
+                     {/* Header */}
+                     <div className={`flex items-start justify-between ${isMobile ? 'mb-2' : isModalMode ? 'mb-3' : 'mb-6'}`}>
+                       <div className="flex-1 pr-4">
+                         <h3 className={`${isMobile ? 'text-base' : isModalMode ? 'text-lg' : 'text-xl'} font-bold text-gray-900 ${isMobile ? 'mb-0.5' : isModalMode ? 'mb-1' : 'mb-3'}`}>{bundle.name}</h3>
+                         <p className={`${isMobile ? 'text-xs' : isModalMode ? 'text-sm' : 'text-base'} text-gray-600 ${isMobile ? 'leading-snug' : isModalMode ? 'leading-snug' : 'leading-relaxed'}`}>{bundle.description}</p>
+                       </div>
+                      
+                      {/* Enhanced Selection Indicator */}
+                      <motion.div 
+                        className={`${isMobile ? 'w-7 h-7' : 'w-8 h-8'} rounded-full border-2 transition-all duration-300 flex items-center justify-center flex-shrink-0 ${
+                          selectedBundle?.id === bundle.id 
+                            ? 'border-[#353FEF] bg-[#353FEF] shadow-lg' 
+                            : 'border-gray-300 group-hover:border-[#353FEF]/50'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {selectedBundle?.id === bundle.id && (
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
                           >
-                            {selectedBundle?.id === bundle.id && (
-                            <motion.div 
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                              >
-                                <Check className="w-4 h-4 text-white" />
-                            </motion.div>
-                            )}
-                          </motion.div>
-                        </div>
-                          
+                            <Check className="w-4 h-4 text-white" />
+                        </motion.div>
+                        )}
+                      </motion.div>
+                    </div>
+                      
                                          {/* Enhanced Bundle Details */}
-                         <div className={`${isMobile ? 'space-y-1.5 mb-2' : isModalMode ? 'space-y-1.5 mb-2 flex-1' : 'space-y-3 mb-4 flex-1'}`}>
-                          <motion.div 
-                             className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
-                             whileHover={isMobile || isModalMode ? {} : { x: 3 }}
-                             transition={{ duration: 0.2 }}
-                           >
-                             <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-[#353FEF]/10 to-[#4F46E5]/10 rounded-xl flex items-center justify-center`}>
-                               <Clock className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-[#353FEF]`} />
-                             </div>
-                             <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Duración: <span className="font-bold text-gray-900">{bundle.duration}</span></span>
-                          </motion.div>
-                          
-                            <motion.div 
-                             className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
-                             whileHover={isMobile || isModalMode ? {} : { x: 3 }}
-                             transition={{ duration: 0.2 }}
-                           >
-                             <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center`}>
-                               <Users className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-blue-600`} />
-                             </div>
-                             <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Total spots: <span className="font-bold text-gray-900">{bundle.frequency.totalSpots}</span></span>
-                          </motion.div>
+                     <div className={`${isMobile ? 'space-y-1.5 mb-2' : isModalMode ? 'space-y-1.5 mb-2 flex-1' : 'space-y-3 mb-4 flex-1'}`}>
+                      <motion.div 
+                         className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
+                         whileHover={isMobile || isModalMode ? {} : { x: 3 }}
+                         transition={{ duration: 0.2 }}
+                       >
+                         <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-[#353FEF]/10 to-[#4F46E5]/10 rounded-xl flex items-center justify-center`}>
+                           <Clock className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-[#353FEF]`} />
+                         </div>
+                         <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Duración: <span className="font-bold text-gray-900">{bundle.duration}</span></span>
+                      </motion.div>
+                      
+                        <motion.div 
+                         className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
+                         whileHover={isMobile || isModalMode ? {} : { x: 3 }}
+                         transition={{ duration: 0.2 }}
+                       >
+                         <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center`}>
+                           <Users className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-blue-600`} />
+                         </div>
+                         <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Total spots: <span className="font-bold text-gray-900">{bundle.frequency.totalSpots}</span></span>
+                      </motion.div>
 
                           {/* Reach Information - Show if available */}
                           {bundle.reach && bundle.reach > 0 && (
@@ -1116,55 +1126,55 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
                           </motion.div>
                           )}
 
-                          {/* ML Insights Section - Hidden for user, only for internal use */}
-                          {false && bundle.mlInsights && !isMobile && (
-                            <motion.div 
-                              className={`flex items-center gap-3 text-sm text-gray-700 ${isModalMode ? 'gap-2' : 'gap-4'}`}
-                              whileHover={isModalMode ? {} : { x: 3 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <div className={`${isModalMode ? 'w-8 h-8' : 'w-12 h-12'} bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center`}>
-                                <Sparkles className={`${isModalMode ? 'w-4 h-4' : 'w-6 h-6'} text-purple-600`} />
-                              </div>
-                              <div className="flex-1">
-                                <div className={`${isModalMode ? 'text-xs' : 'text-base'} font-medium`}>
-                                  IA: <span className="font-bold text-purple-600">{bundle.mlInsights?.totalPurchases || 0} compras</span>
-                                </div>
-                                <div className={`${isModalMode ? 'text-xs' : 'text-sm'} text-gray-500 font-light`}>
-                                  {bundle.mlInsights?.recommendation || 'Datos no disponibles'}
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </div>
-                        
-                                          {/* Enhanced Price Section */}
-                          <div className={`flex items-end justify-between mt-auto ${isModalMode ? 'pt-2 border-t border-gray-100' : 'pt-4 border-t border-gray-100'}`}>
-                            <div className="flex-1">
-                              <div className={`${isMobile ? 'text-2xl' : isModalMode ? 'text-xl' : 'text-3xl'} font-bold bg-gradient-to-r from-[#353FEF] to-[#4F46E5] bg-clip-text text-transparent ${isModalMode ? 'mb-1' : 'mb-2'} break-words`}>
-                                ${bundle.price.toLocaleString()}
-                              </div>
-                             
-                              {/* Price is now exact from API - no ML modifications */}
-                              {!isMobile && !isModalMode && (
-                                <div className="text-xs text-gray-500 flex items-center gap-1">
-                                  <span>Precio directo de la API</span>
-                                </div>
-                              )}
+                      {/* ML Insights Section - Hidden for user, only for internal use */}
+                      {false && bundle.mlInsights && !isMobile && (
+                        <motion.div 
+                          className={`flex items-center gap-3 text-sm text-gray-700 ${isModalMode ? 'gap-2' : 'gap-4'}`}
+                          whileHover={isModalMode ? {} : { x: 3 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className={`${isModalMode ? 'w-8 h-8' : 'w-12 h-12'} bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center`}>
+                            <Sparkles className={`${isModalMode ? 'w-4 h-4' : 'w-6 h-6'} text-purple-600`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className={`${isModalMode ? 'text-xs' : 'text-base'} font-medium`}>
+                              IA: <span className="font-bold text-purple-600">{bundle.mlInsights?.totalPurchases || 0} compras</span>
                             </div>
-                           
-                            {selectedBundle?.id === bundle.id && (
-                              <motion.div 
-                                className={`bg-gradient-to-r from-[#353FEF] to-[#4F46E5] text-white ${isMobile ? 'px-3 py-1' : 'px-4 py-2'} rounded-full text-xs font-semibold shadow-lg`}
-                                initial={{ scale: 0, x: 20 }}
-                                animate={{ scale: 1, x: 0 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                              >
-                                ✓ {isMobile ? 'OK' : 'Seleccionado'}
-                              </motion.div>
-                            )}
+                            <div className={`${isModalMode ? 'text-xs' : 'text-sm'} text-gray-500 font-light`}>
+                              {bundle.mlInsights?.recommendation || 'Datos no disponibles'}
+                            </div>
                           </div>
                         </motion.div>
+                      )}
+                    </div>
+                    
+                                         {/* Enhanced Price Section */}
+                     <div className={`flex items-end justify-between mt-auto ${isModalMode ? 'pt-2 border-t border-gray-100' : 'pt-4 border-t border-gray-100'}`}>
+                       <div className="flex-1">
+                         <div className={`${isMobile ? 'text-2xl' : isModalMode ? 'text-xl' : 'text-3xl'} font-bold bg-gradient-to-r from-[#353FEF] to-[#4F46E5] bg-clip-text text-transparent ${isModalMode ? 'mb-1' : 'mb-2'} break-words`}>
+                           ${bundle.price.toLocaleString()}
+                         </div>
+                        
+                              {/* Price is now exact from API - no ML modifications */}
+                         {!isMobile && !isModalMode && (
+                           <div className="text-xs text-gray-500 flex items-center gap-1">
+                                  <span>Precio directo de la API</span>
+                           </div>
+                         )}
+                       </div>
+                      
+                       {selectedBundle?.id === bundle.id && (
+                        <motion.div 
+                           className={`bg-gradient-to-r from-[#353FEF] to-[#4F46E5] text-white ${isMobile ? 'px-3 py-1' : 'px-4 py-2'} rounded-full text-xs font-semibold shadow-lg`}
+                           initial={{ scale: 0, x: 20 }}
+                           animate={{ scale: 1, x: 0 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        >
+                           ✓ {isMobile ? 'OK' : 'Seleccionado'}
+                        </motion.div>
+                      )}
+                  </div>
+                </motion.div>
                       );
                     })}
                   </div>
