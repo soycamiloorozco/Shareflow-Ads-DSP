@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DepositPayload, DepositResponse, UseWalletReturn, TransactionsResponse} from './types';
 import request  from '../../helpers/request';
 
 export const useWallet = (): UseWalletReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number>(0);
+
+  // Cargar el balance inicial
+  useEffect(() => {
+    getBalance().then((data) => {
+      console.log('🔍 useWallet: Balance cargado desde API:', data.balance);
+      setBalance(data.balance);
+    });
+  }, []);
 
   const deposit = async (payload: DepositPayload): Promise<DepositResponse> => {
     setIsLoading(true);
@@ -12,6 +21,12 @@ export const useWallet = (): UseWalletReturn => {
 
     try {
       const response = await request.post<DepositResponse>('/wallet/deposit', payload);
+      // Actualizar el balance después de un depósito exitoso
+      if (response.data.success) {
+        await getBalance().then((data) => {
+          setBalance(data.balance);
+        });
+      }
       return response.data;
     } catch (err) {
         console.log(err, "ERRR PAY")
@@ -56,6 +71,7 @@ export const useWallet = (): UseWalletReturn => {
 
         try {
         const response = await request.get<{balance: number}>('/wallet/balance');
+        setBalance(response.data.balance);
         return response.data;
         } catch (err) {
             console.log(err, "ERRR PAY")
@@ -73,6 +89,8 @@ export const useWallet = (): UseWalletReturn => {
     deposit,
     transactions,
     getBalance,
+    balance,
+    wallet: { balance },
     isLoading,
     error
   };

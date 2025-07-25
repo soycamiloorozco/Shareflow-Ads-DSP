@@ -8,7 +8,7 @@ import { Card } from '../Card';
 import { TimePurchaseModal } from './TimePurchaseModal';
 import { calculatePriceWithMargin, getPartnerMargin } from '../../lib/utils';
 import { mlPricingService, formatPriceChange, getDemandBadgeColor, getPeakHourBadgeColor } from '../../services/pricingMLService';
-import { useWallet } from '../../pages/WalletPageNew';
+import { useWallet } from '../../hooks/useWallet';
 
 // Bundle type definition
 interface Bundle {
@@ -58,6 +58,15 @@ interface PurchaseOptionsProps {
   isEditingDraft?: boolean; // Nueva prop para indicar si estamos editando un borrador
 }
 
+// Simple balance display function for main balance
+const formatBalance = (amount: number) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(amount);
+};
+
 // Enhanced Wallet Balance Component
 const WalletBalanceIndicator: React.FC<{ requiredAmount?: number; compact?: boolean }> = ({ 
   requiredAmount = 0, 
@@ -66,6 +75,7 @@ const WalletBalanceIndicator: React.FC<{ requiredAmount?: number; compact?: bool
   try {
     const { wallet } = useWallet();
     const balance = wallet.balance;
+    console.log('🔍 WalletBalanceIndicator: Balance obtenido:', balance);
   const hasEnoughBalance = balance >= requiredAmount;
 
   if (compact) {
@@ -78,7 +88,7 @@ const WalletBalanceIndicator: React.FC<{ requiredAmount?: number; compact?: bool
         <Wallet className="w-4 h-4 text-green-600" />
         <div className="flex flex-col">
           <span className="text-xs text-gray-500 font-medium">Tus créditos disponibles</span>
-          <span className="font-semibold text-gray-800">${balance.toLocaleString()}</span>
+          <span className="font-semibold text-gray-800">{formatBalance(balance)}</span>
         </div>
       </motion.div>
     );
@@ -172,6 +182,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
     const { wallet } = useWallet();
     walletBalance = wallet.balance;
     walletAvailable = true;
+    console.log('🔍 PurchaseOptions: Balance obtenido:', walletBalance);
   } catch (error) {
     // Wallet no disponible, usar valores por defecto
     walletBalance = 0;
@@ -674,7 +685,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
     // Verificar saldo antes de continuar
     if (walletAvailable && walletBalance < (selectedBundle.price || 0)) {
       // Redirigir a wallet para recargar si no hay suficiente saldo
-      navigate('/wallet-new');
+      navigate('/wallet');
       return;
     }
     

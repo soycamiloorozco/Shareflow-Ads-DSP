@@ -38,6 +38,8 @@ export interface UseWalletReturn {
     deposit: (payload: DepositPayload) => Promise<DepositResponse>;
     transactions: () => Promise<TransactionsResponse>;
     getBalance: () => Promise<{balance: number}>;
-  isLoading: boolean;
-  error: string | null;
+    balance: number;
+    wallet: { balance: number };
+    isLoading: boolean;
+    error: string | null;
 } 
