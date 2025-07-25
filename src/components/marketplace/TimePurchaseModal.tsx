@@ -1657,12 +1657,34 @@ export function TimePurchaseModal({
         }
       }
       
+      // Log the data being passed to onComplete
+      console.log('🔄 TimePurchaseModal - Data being passed to onComplete:', {
+        screen: screen?.id,
+        type: purchaseType,
+        dates: isMomentsPurchase() ? [] : selectedDates,
+        timeSlots: isMomentsPurchase() ? [] : selectedTimeSlots,
+        selectedBundle: selectedBundle ? {
+          id: selectedBundle.id,
+          name: selectedBundle.name,
+          price: selectedBundle.price,
+          duration: selectedBundle.duration
+        } : null,
+        price: totalPrice
+      });
+
       onComplete({
         screen,
         type: purchaseType,
         dates: isMomentsPurchase() ? [] : selectedDates,
         timeSlots: isMomentsPurchase() ? [] : selectedTimeSlots,
         moments: isMomentsPurchase() ? selectedMoments : undefined,
+        selectedBundle: selectedBundle ? {
+          id: selectedBundle.id,
+          name: selectedBundle.name,
+          description: selectedBundle.description,
+          duration: selectedBundle.duration,
+          multiplier: selectedBundle.demandMultiplier || 1.0 // Agregar multiplicador
+        } : undefined,
         file: finalFile,
         uploadLater: uploadLater,
         imageDimensions: imageDimensions,
