@@ -1539,7 +1539,23 @@ export function TimePurchaseModal({
     }
   });
 
-  const handleNext = () => {
+  // Helper function to convert file to base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleNext = async () => {
     if (step === 1) {
       // Validate based on purchase type
       if (purchaseType === 'hourly') {
@@ -1614,6 +1630,7 @@ export function TimePurchaseModal({
     } else {
       // Complete step 2 and go to BookingSummaryModal
       let finalFile = file;
+      let base64Data = '';
       
       // Use edited image if available
       if (editedImageBlob && isImageEdited) {
@@ -1629,6 +1646,17 @@ export function TimePurchaseModal({
         });
       }
       
+      // Convert file to base64 if it exists and not uploadLater
+      if (finalFile && !uploadLater) {
+        try {
+          base64Data = await convertFileToBase64(finalFile);
+        } catch (error) {
+          console.error('Error converting file to base64:', error);
+          setError('Error procesando el archivo. Inténtalo de nuevo.');
+          return;
+        }
+      }
+      
       onComplete({
         screen,
         type: purchaseType,
@@ -1638,7 +1666,13 @@ export function TimePurchaseModal({
         file: finalFile,
         uploadLater: uploadLater,
         imageDimensions: imageDimensions,
-        price: totalPrice
+        price: totalPrice,
+        creative: finalFile && !uploadLater ? {
+          base64: base64Data,
+          fileName: finalFile.name,
+          fileType: finalFile.type,
+          fileSize: finalFile.size
+        } : undefined
       });
     }
   };

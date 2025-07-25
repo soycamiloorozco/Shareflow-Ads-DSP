@@ -501,7 +501,7 @@ export function MarketplaceRefactored() {
         <div className="lg:hidden">
           <MobileMarketplaceInterface
             sections={hookSections}
-            screens={filteredScreens}
+            screens={combinedFilteredScreens}
             filters={filters}
             onFiltersChange={handleFiltersChange}
             onScreenSelect={handleScreenSelect}

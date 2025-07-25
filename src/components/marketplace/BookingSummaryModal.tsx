@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, memo, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useCallback, memo, lazy, Suspense, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Check, Calendar, Clock, DollarSign, Upload,
@@ -11,6 +11,17 @@ import { Card } from '../Card';
 import { Screen } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+
+/**
+ * BookingSummaryModal - Modal para confirmar compras de pantallas
+ * 
+ * VALIDACIÓN DE SALDO:
+ * - Intenta usar el contexto real de wallet (WalletPageNew)
+ * - Si no está disponible, usa datos mock como fallback
+ * - Valida si el usuario tiene saldo suficiente antes de permitir la compra
+ * - Muestra diferentes estados: wallet no disponible, saldo insuficiente, saldo suficiente
+ * - Incluye manejo de errores para casos donde la API no responde
+ */
 
 // Mobile-first responsive breakpoints hook
 const useIsMobile = () => {
@@ -56,6 +67,13 @@ interface BookingData {
     spots: number;
     reach: number;
   };
+  creative?: {
+    file: File;
+    base64: string;
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+  };
 }
 
 interface BookingSummaryModalProps {
@@ -88,25 +106,164 @@ const TYPE_LABELS = {
   monthly: 'Mensual'
 } as const;
 
-// Enhanced wallet hook for demo purposes - memoized
+// Enhanced wallet hook using real API endpoint
 const useWalletBalance = () => {
-  const [balance, setBalance] = useState(1000000);
+  const [balance, setBalance] = useState(0);
+  const [walletAvailable, setWalletAvailable] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch balance from real API
+  const fetchBalance = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('https://api.shareflow.me/api/wallet/balance', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add Authorization header if token is available
+          ...(localStorage.getItem('auth_token') && {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          })
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBalance(data.balance || 0);
+        setWalletAvailable(true);
+      } else {
+        console.warn('Failed to fetch balance:', response.status);
+        setBalance(0);
+        setWalletAvailable(false);
+      }
+    } catch (error) {
+      console.warn('Error fetching balance:', error);
+      setBalance(0);
+      setWalletAvailable(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch balance on mount
+  useEffect(() => {
+    fetchBalance();
+  }, [fetchBalance]);
   
-  const consumeCredits = useCallback(async (amount: number, description: string) => {
+  const consumeCredits = useCallback(async (amount: number, description: string, bookingData?: any) => {
     if (balance >= amount) {
-      setBalance(prev => prev - amount);
-      return {
-        id: `tx-${Date.now()}`,
-        amount: -amount,
-        description,
-        success: true
-      };
+      try {
+        // Extract screen ID - try to get numeric ID from screen object
+        let screenId = 1; // Default fallback
+        if (bookingData?.screen?.id) {
+          // Try to extract numeric ID from screen.id
+          const numericId = parseInt(bookingData.screen.id.toString());
+          if (!isNaN(numericId)) {
+            screenId = numericId;
+          }
+        }
+
+        // Prepare the request body for /api/PublicityPurchases
+        const requestBody: any = {
+          amount,
+          description,
+          screenId
+        };
+
+        // Debug: Log bookingData to see what's available
+        console.log('🔍 bookingData.creative available:', !!bookingData?.creative);
+        if (bookingData?.creative) {
+          console.log('🔍 Creative data structure:', {
+            hasBase64: !!bookingData.creative.base64,
+            fileName: bookingData.creative.fileName,
+            fileType: bookingData.creative.fileType,
+            fileSize: bookingData.creative.fileSize
+          });
+        }
+
+        // Add creative data if available - ensure it's always present
+        if (bookingData?.creative) {
+          requestBody.creative = {
+            base64: bookingData.creative.base64,
+            fileName: bookingData.creative.fileName,
+            fileType: bookingData.creative.fileType,
+            fileSize: bookingData.creative.fileSize
+          };
+        } else if (bookingData?.file && !bookingData?.uploadLater) {
+          // Convert file to base64 synchronously for this request
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              if (typeof reader.result === 'string') {
+                resolve(reader.result);
+              } else {
+                reject(new Error('Failed to convert file to base64'));
+              }
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(bookingData.file);
+          });
+          
+          requestBody.creative = {
+            base64: base64Data,
+            fileName: bookingData.file.name,
+            fileType: bookingData.file.type,
+            fileSize: bookingData.file.size
+          };
+        } else {
+          // If no creative data, send a placeholder to satisfy the required field
+          requestBody.creative = {
+            base64: "",
+            fileName: "placeholder.png",
+            fileType: "image/png",
+            fileSize: 0
+          };
+        }
+
+        // Log the request body for debugging
+        console.log('📤 Sending to /api/PublicityPurchases:', {
+          ...requestBody,
+          creative: {
+            ...requestBody.creative,
+            base64: requestBody.creative.base64 ? `${requestBody.creative.base64.substring(0, 50)}...` : 'empty'
+          }
+        });
+
+        // Call the new PublicityPurchases endpoint
+        const response = await fetch('/api/PublicityPurchases', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(localStorage.getItem('auth_token') && {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            })
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('PublicityPurchases API error:', response.status, errorText);
+          throw new Error('Error al procesar la compra publicitaria');
+        }
+        
+        const result = await response.json();
+        return {
+          id: result.transactionId || result.id || `tx-${Date.now()}`,
+          amount: -amount,
+          description,
+          success: true
+        };
+      } catch (apiError) {
+        console.error('PublicityPurchases API call failed:', apiError);
+        throw new Error('Error al procesar la compra publicitaria');
+      }
     } else {
       throw new Error('Saldo insuficiente');
     }
   }, [balance]);
 
-  return { balance, consumeCredits };
+  return { balance, consumeCredits, walletAvailable, isLoading, fetchBalance };
 };
 
 // Memoized status classes and icons
@@ -611,7 +768,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
 }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { balance, consumeCredits } = useWalletBalance();
+  const { balance, consumeCredits, walletAvailable, isLoading, fetchBalance } = useWalletBalance();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [animationState, setAnimationState] = useState<'idle' | 'processing' | 'success'>('idle');
@@ -623,8 +780,8 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
   if (!bookingData) return null;
 
   const { screen, type, price } = bookingData;
-  const hasEnoughBalance = balance >= price;
-  const newBalance = balance - price;
+  const hasEnoughBalance = walletAvailable && balance >= price;
+  const newBalance = walletAvailable ? balance - price : 0;
     const typeLabel = TYPE_LABELS[type as keyof typeof TYPE_LABELS] || type;
     
     return {
@@ -633,12 +790,18 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
       price,
       hasEnoughBalance,
       newBalance,
-      typeLabel
+      typeLabel,
+      walletAvailable
     };
-  }, [bookingData, balance]);
+  }, [bookingData, balance, walletAvailable]);
 
   // Memoized handlers
   const handleConfirmBooking = useCallback(async () => {
+    if (!calculations?.walletAvailable) {
+      setError('Wallet no disponible. Por favor recarga la página e intenta nuevamente.');
+      return;
+    }
+    
     if (!calculations?.hasEnoughBalance) {
       setError('Saldo insuficiente. Por favor recarga tu wallet para continuar.');
       return;
@@ -655,7 +818,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
       const campaignId = `camp-${Math.random().toString(36).substring(2, 10)}`;
       const description = `Compra: ${calculations.screen.location} (${calculations.typeLabel})`;
       
-      const transaction = await consumeCredits(calculations.price, description);
+      const transaction = await consumeCredits(calculations.price, description, bookingData);
       
       setAnimationState('success');
       toast.success('¡Compra realizada con éxito!');
@@ -686,7 +849,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
   }, [calculations, consumeCredits, onClose, balance]);
 
   const handleGoToWallet = useCallback(() => {
-    navigate('/wallet-new');
+    navigate('/wallet');
     onClose();
   }, [navigate, onClose]);
 
@@ -947,15 +1110,19 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                         transition={{ duration: 0.2 }}
                       >
                         <motion.div 
-                          className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} bg-gradient-to-br from-green-50 to-emerald-100 rounded-full flex items-center justify-center mx-auto ${isMobile ? 'mb-3' : 'mb-4'}`}
+                          className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} ${walletAvailable ? 'bg-gradient-to-br from-green-50 to-emerald-100' : 'bg-gradient-to-br from-gray-50 to-gray-100'} rounded-full flex items-center justify-center mx-auto ${isMobile ? 'mb-3' : 'mb-4'}`}
                           whileHover={{ rotate: isMobile ? 180 : 360 }}
                           transition={{ duration: isMobile ? 0.5 : 0.8 }}
                         >
-                          <Wallet className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} text-green-600`} />
+                          <Wallet className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} ${walletAvailable ? 'text-green-600' : 'text-gray-400'}`} />
                         </motion.div>
                         <div className="mb-2">
-                          <span className="text-sm text-gray-500 block">Saldo actual</span>
-                            <span className="text-3xl font-bold text-gray-900">{formatters.currency.format(balance)}</span>
+                          <span className="text-sm text-gray-500 block">
+                            {isLoading ? 'Cargando saldo...' : walletAvailable ? 'Saldo actual' : 'Saldo no disponible'}
+                          </span>
+                          <span className={`text-3xl font-bold ${isLoading ? 'text-gray-400' : walletAvailable ? 'text-gray-900' : 'text-gray-400'}`}>
+                            {isLoading ? '...' : walletAvailable ? formatters.currency.format(balance) : 'No disponible'}
+                          </span>
                         </div>
                       </motion.div>
 
@@ -975,11 +1142,13 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                             <span className="font-semibold text-gray-700">Nuevo saldo:</span>
                             <motion.span 
                               className={`text-xl font-bold ${
-                                hasEnoughBalance 
-                                  ? newBalance > 100000 
-                                    ? 'text-green-600' 
-                                    : 'text-yellow-600'
-                                  : 'text-red-600'
+                                !walletAvailable 
+                                  ? 'text-gray-400'
+                                  : hasEnoughBalance 
+                                    ? newBalance > 100000 
+                                      ? 'text-green-600' 
+                                      : 'text-yellow-600'
+                                    : 'text-red-600'
                               }`}
                               animate={{ 
                                 scale: animationState === 'processing' ? [1, 1.1, 1] : 1 
@@ -989,7 +1158,12 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                                 duration: 1.5 
                               }}
                             >
-                                {hasEnoughBalance ? formatters.currency.format(newBalance) : formatters.currency.format(balance)}
+                                {!walletAvailable 
+                                  ? 'No disponible' 
+                                  : hasEnoughBalance 
+                                    ? formatters.currency.format(newBalance) 
+                                    : formatters.currency.format(balance)
+                                }
                             </motion.span>
                           </div>
                         </div>
@@ -997,7 +1171,25 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
 
                       {/* Status Messages */}
                       <AnimatePresence>
-                        {!hasEnoughBalance && (
+                        {isLoading && (
+                          <StatusBadge status="info">
+                            <div>
+                              <div className="font-semibold mb-1">Verificando saldo...</div>
+                              <div className="text-sm">Consultando saldo disponible en el servidor</div>
+                            </div>
+                          </StatusBadge>
+                        )}
+
+                        {!isLoading && !walletAvailable && (
+                          <StatusBadge status="danger">
+                            <div>
+                              <div className="font-semibold mb-1">Wallet no disponible</div>
+                              <div className="text-sm">No se puede verificar el saldo. Intenta recargar la página.</div>
+                            </div>
+                          </StatusBadge>
+                        )}
+
+                        {!isLoading && walletAvailable && !hasEnoughBalance && (
                           <StatusBadge status="danger">
                             <div>
                               <div className="font-semibold mb-1">Saldo insuficiente</div>
@@ -1006,7 +1198,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                           </StatusBadge>
                         )}
 
-                        {hasEnoughBalance && newBalance <= 100000 && (
+                        {!isLoading && walletAvailable && hasEnoughBalance && newBalance <= 100000 && (
                           <StatusBadge status="warning">
                             <div>
                               <div className="font-semibold mb-1">Saldo bajo después de compra</div>
@@ -1015,7 +1207,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                           </StatusBadge>
                         )}
 
-                        {hasEnoughBalance && newBalance > 100000 && (
+                        {!isLoading && walletAvailable && hasEnoughBalance && newBalance > 100000 && (
                           <StatusBadge status="success">
                             <div>
                               <div className="font-semibold mb-1">¡Perfecto!</div>
@@ -1078,7 +1270,44 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                 </Button>
                 </motion.div>
                 
-                {hasEnoughBalance ? (
+                {isLoading ? (
+                  <motion.div
+                    whileHover={{ scale: isMobile ? 1.01 : 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1"
+                  >
+                  <Button
+                    variant="primary"
+                    size={isMobile ? "md" : "lg"}
+                    className={`w-full bg-gradient-to-r from-gray-400 to-gray-500 ${isMobile ? 'shadow-md py-3' : 'shadow-lg'}`}
+                    disabled
+                  >
+                      <div className="flex items-center gap-2">
+                        <Loader className="w-5 h-5 animate-spin" />
+                        Verificando saldo...
+                      </div>
+                  </Button>
+                  </motion.div>
+                ) : !walletAvailable ? (
+                  <motion.div
+                    whileHover={{ scale: isMobile ? 1.01 : 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1"
+                  >
+                  <Button
+                    variant="primary"
+                    size={isMobile ? "md" : "lg"}
+                    className={`w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 ${isMobile ? 'shadow-md hover:shadow-lg py-3' : 'shadow-lg hover:shadow-xl'}`}
+                    onClick={() => fetchBalance()}
+                  >
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="w-5 h-5" />
+                        Reintentar
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                  </Button>
+                  </motion.div>
+                ) : hasEnoughBalance ? (
                   <motion.div
                     whileHover={{ scale: isProcessing ? 1 : (isMobile ? 1.01 : 1.02) }}
                     whileTap={{ scale: isProcessing ? 1 : 0.98 }}
@@ -1087,7 +1316,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                   <Button
                     variant="primary"
                     size={isMobile ? "md" : "lg"}
-                    className={`w-full ${
+                    className={`w-full text-white ${
                       animationState === 'success' 
                         ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' 
                         : 'bg-gradient-to-r from-[#353FEF] to-[#4F46E5] hover:from-[#2D37E5] hover:to-[#4338CA]'
@@ -1127,7 +1356,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                   <Button
                     variant="primary"
                     size={isMobile ? "md" : "lg"}
-                    className={`w-full bg-gradient-to-r from-[#353FEF] to-[#4F46E5] hover:from-[#2D37E5] hover:to-[#4338CA] ${isMobile ? 'shadow-md hover:shadow-lg py-3' : 'shadow-lg hover:shadow-xl'}`}
+                    className={`w-full bg-gradient-to-r from-[#353FEF] to-[#4F46E5] hover:from-[#2D37E5] hover:to-[#4338CA] text-white ${isMobile ? 'shadow-md hover:shadow-lg py-3' : 'shadow-lg hover:shadow-xl'}`}
                     onClick={handleGoToWallet}
                   >
                       <div className="flex items-center gap-2">
@@ -1138,6 +1367,7 @@ export const BookingSummaryModal = memo<BookingSummaryModalProps>(({
                   </Button>
                   </motion.div>
                 )}
+
               </motion.div>
             </div>
           </motion.div>
