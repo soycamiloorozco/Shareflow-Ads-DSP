@@ -230,7 +230,7 @@ const useWalletBalance = () => {
         });
 
         // Call the new PublicityPurchases endpoint
-        const response = await fetch('/api/PublicityPurchases', {
+        const response = await fetch('https://api.shareflow.me/api/PublicityPurchases', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
