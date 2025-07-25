@@ -152,17 +152,36 @@ const useWalletBalance = () => {
   
   const consumeCredits = useCallback(async (amount: number, description: string, bookingData?: any) => {
     if (balance >= amount) {
-      // In a real implementation, this would call the API to consume credits
-      // For now, we'll simulate the API call
       try {
-        // Prepare the request body with image data if available
+        // Extract screen ID - try to get numeric ID from screen object
+        let screenId = 1; // Default fallback
+        if (bookingData?.screen?.id) {
+          // Try to extract numeric ID from screen.id
+          const numericId = parseInt(bookingData.screen.id.toString());
+          if (!isNaN(numericId)) {
+            screenId = numericId;
+          }
+        }
+
+        // Prepare the request body for /api/PublicityPurchases
         const requestBody: any = {
           amount,
           description,
-          screenId: description.includes('Pantalla') ? description.split('|')[0].trim() : 'Unknown'
+          screenId
         };
 
-        // Add creative data if available
+        // Debug: Log bookingData to see what's available
+        console.log('🔍 bookingData.creative available:', !!bookingData?.creative);
+        if (bookingData?.creative) {
+          console.log('🔍 Creative data structure:', {
+            hasBase64: !!bookingData.creative.base64,
+            fileName: bookingData.creative.fileName,
+            fileType: bookingData.creative.fileType,
+            fileSize: bookingData.creative.fileSize
+          });
+        }
+
+        // Add creative data if available - ensure it's always present
         if (bookingData?.creative) {
           requestBody.creative = {
             base64: bookingData.creative.base64,
@@ -170,37 +189,74 @@ const useWalletBalance = () => {
             fileType: bookingData.creative.fileType,
             fileSize: bookingData.creative.fileSize
           };
+        } else if (bookingData?.file && !bookingData?.uploadLater) {
+          // Convert file to base64 synchronously for this request
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              if (typeof reader.result === 'string') {
+                resolve(reader.result);
+              } else {
+                reject(new Error('Failed to convert file to base64'));
+              }
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(bookingData.file);
+          });
+          
+          requestBody.creative = {
+            base64: base64Data,
+            fileName: bookingData.file.name,
+            fileType: bookingData.file.type,
+            fileSize: bookingData.file.size
+          };
+        } else {
+          // If no creative data, send a placeholder to satisfy the required field
+          requestBody.creative = {
+            base64: "",
+            fileName: "placeholder.png",
+            fileType: "image/png",
+            fileSize: 0
+          };
         }
 
-        // Simulate API call to consume credits
-        const response = await fetch('/api/wallet/consume', {
+        // Log the request body for debugging
+        console.log('📤 Sending to /api/PublicityPurchases:', {
+          ...requestBody,
+          creative: {
+            ...requestBody.creative,
+            base64: requestBody.creative.base64 ? `${requestBody.creative.base64.substring(0, 50)}...` : 'empty'
+          }
+        });
+
+        // Call the new PublicityPurchases endpoint
+        const response = await fetch('/api/PublicityPurchases', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(localStorage.getItem('auth_token') && {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            })
           },
           body: JSON.stringify(requestBody)
         });
         
         if (!response.ok) {
-          throw new Error('Error al procesar el pago');
+          const errorText = await response.text();
+          console.error('PublicityPurchases API error:', response.status, errorText);
+          throw new Error('Error al procesar la compra publicitaria');
         }
         
         const result = await response.json();
         return {
-          id: result.transactionId || `tx-${Date.now()}`,
+          id: result.transactionId || result.id || `tx-${Date.now()}`,
           amount: -amount,
           description,
           success: true
         };
       } catch (apiError) {
-        // If API call fails, we'll still simulate success for demo purposes
-        console.warn('API call failed, simulating success:', apiError);
-        return {
-          id: `tx-${Date.now()}`,
-          amount: -amount,
-          description,
-          success: true
-        };
+        console.error('PublicityPurchases API call failed:', apiError);
+        throw new Error('Error al procesar la compra publicitaria');
       }
     } else {
       throw new Error('Saldo insuficiente');
