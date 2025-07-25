@@ -170,6 +170,26 @@ const useWalletBalance = () => {
           screenId
         };
 
+        // Add dates if available
+        if (bookingData?.dates && bookingData.dates.length > 0) {
+          requestBody.dates = bookingData.dates.map((date: Date) => date.toISOString());
+        }
+
+        // Add timeSlots if available - only for hourly purchases
+        if (bookingData?.timeSlots && bookingData.timeSlots.length > 0 && bookingData.type === 'hourly') {
+          requestBody.timeSlots = bookingData.timeSlots;
+        }
+
+        // Add selectedBundle if available
+        if (bookingData?.selectedBundle) {
+          requestBody.selectedBundle = bookingData.selectedBundle;
+        }
+
+        // Add purchase type for backend processing
+        if (bookingData?.type) {
+          requestBody.purchaseType = bookingData.type;
+        }
+
         // Debug: Log bookingData to see what's available
         console.log('🔍 bookingData.creative available:', !!bookingData?.creative);
         if (bookingData?.creative) {
@@ -228,6 +248,19 @@ const useWalletBalance = () => {
             base64: requestBody.creative.base64 ? `${requestBody.creative.base64.substring(0, 50)}...` : 'empty'
           }
         });
+        console.log('📅 Dates included:', requestBody.dates ? requestBody.dates.length : 0);
+        console.log('⏰ TimeSlots included:', requestBody.timeSlots ? requestBody.timeSlots.length : 0);
+        console.log('📦 SelectedBundle included:', !!requestBody.selectedBundle);
+        console.log('📦 SelectedBundle details:', requestBody.selectedBundle ? {
+          id: requestBody.selectedBundle.id,
+          name: requestBody.selectedBundle.name,
+          description: requestBody.selectedBundle.description,
+          duration: requestBody.selectedBundle.duration,
+          multiplier: requestBody.selectedBundle.multiplier
+        } : 'No bundle');
+        console.log('🎯 Purchase Type:', requestBody.purchaseType);
+        console.log('💰 Amount:', requestBody.amount);
+        console.log('📝 Description:', requestBody.description);
 
         // Call the new PublicityPurchases endpoint
         const response = await fetch('https://api.shareflow.me/api/PublicityPurchases', {
