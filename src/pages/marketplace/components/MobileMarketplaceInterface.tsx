@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Grid3X3, List, Heart, Eye, Settings } from 'lucide-react';
+import { Search, Grid3X3, List, Heart, Eye, Settings, Map } from 'lucide-react';
 import { CompactMobileFilter } from './filters/CompactMobileFilter';
 import { SectionedScreenGrid } from './sections/SectionedScreenGrid';
 import { ScreenGrid } from './screens/ScreenGrid';
+import { MapContainer } from './map/MapContainer';
 import { FilterState, FilterOptions } from '../types';
 import { MarketplaceSection } from '../types/intelligent-grouping.types';
 import { VenueUtils } from '../../../types/venue-categories';
@@ -20,7 +21,7 @@ interface MobileMarketplaceInterfaceProps {
   className?: string;
 }
 
-type ViewMode = 'sections' | 'grid' | 'list';
+type ViewMode = 'sections' | 'list' | 'map';
 
 export const MobileMarketplaceInterface = React.memo<MobileMarketplaceInterfaceProps>(({
   sections,
@@ -72,7 +73,11 @@ export const MobileMarketplaceInterface = React.memo<MobileMarketplaceInterfaceP
         { id: 'mid', label: 'Intermedio', emoji: '💳', count: 134, min: 500000, max: 1500000 },
         { id: 'premium', label: 'Premium', emoji: '💎', count: 67, min: 1500000, max: 5000000 },
         { id: 'luxury', label: 'Lujo', emoji: '👑', count: 23, min: 5000000, max: Number.MAX_SAFE_INTEGER }
-      ]
+      ],
+      venueTypes: [],
+      environments: [],
+      dwellTimes: [],
+      features: []
     };
   }, []);
 
@@ -134,17 +139,7 @@ export const MobileMarketplaceInterface = React.memo<MobileMarketplaceInterfaceP
                 <Eye className="w-3 h-3" />
                 <span>Secciones</span>
               </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Grid3X3 className="w-3 h-3" />
-                <span>Cuadrícula</span>
-              </button>
+
               <button
                 onClick={() => setViewMode('list')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
@@ -155,6 +150,17 @@ export const MobileMarketplaceInterface = React.memo<MobileMarketplaceInterfaceP
               >
                 <List className="w-3 h-3" />
                 <span>Lista</span>
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  viewMode === 'map'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Map className="w-3 h-3" />
+                <span>Mapa</span>
               </button>
             </div>
 
@@ -210,7 +216,7 @@ export const MobileMarketplaceInterface = React.memo<MobileMarketplaceInterfaceP
               />
             )}
 
-            {(viewMode === 'grid' || viewMode === 'list') && (
+            {viewMode === 'list' && (
               <div className="mt-4">
                 {/* Results Header */}
                 <div className="flex items-center justify-between mb-4">
@@ -226,12 +232,39 @@ export const MobileMarketplaceInterface = React.memo<MobileMarketplaceInterfaceP
 
                 <ScreenGrid
                   screens={screens.slice(0, resultCount)}
+                  circuits={[]}
                   onScreenSelect={onScreenSelect}
                   onFavoriteChange={onFavoriteChange}
                   loading={loading}
-                  viewMode={viewMode === 'grid' ? 'grid' : 'list'}
+                  viewMode="list"
                   className="space-y-4"
                 />
+              </div>
+            )}
+
+            {viewMode === 'map' && (
+              <div className="mt-4">
+                {/* Results Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Vista de mapa
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      {screens.length} {screens.length === 1 ? 'pantalla' : 'pantallas'} en el mapa
+                    </p>
+                  </div>
+                </div>
+
+                {/* Map Container */}
+                <div className="h-[400px] bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <MapContainer
+                    screens={screens}
+                    onScreenSelect={onScreenSelect}
+                    onMarkerClick={onScreenSelect}
+                    onFavoriteChange={onFavoriteChange}
+                  />
+                </div>
               </div>
             )}
           </motion.div>
