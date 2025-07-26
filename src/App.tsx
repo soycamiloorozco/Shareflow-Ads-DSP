@@ -37,12 +37,14 @@ import { WalletPage } from './pages/WalletPage';
 import { PartnerScreens } from './pages/partner/PartnerScreens';
 import { WalletCampaignManagement } from './pages/admin/BonusManagement';
 import PartnersRelations2 from './pages/admin/PartnersRelations2';
+import { CampaignProvider } from './contexts/CampaignContext';
 
 export default function App() {
   return (
     <Provider store={store}>
        <PersistGate loading={null} persistor={persistor}>
         <AuthProvider>
+           <CampaignProvider>
           <PermissionsProvider>
             <Router>
               <Routes>
@@ -62,6 +64,7 @@ export default function App() {
                   <Route path="/event/:id" element={<EventDetail />} />
                   <Route path="/screens/:id" element={<ScreenDetail />} />
                   <Route path="/payments" element={<Payments />} />
+                   <Route path="/my-campaigns" element={<MisCampanas />} />
                   
                   {/* Protected Routes */}
                   <Route 
@@ -277,7 +280,8 @@ export default function App() {
               {/* <AIAssistant /> */}
               <Toaster position="top-right" />
             </Router>
-          </PermissionsProvider>
+            </PermissionsProvider>
+            </CampaignProvider>
         </AuthProvider>
        </PersistGate>
     </Provider>

@@ -66,6 +66,8 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
       //{ path: '/dashboard', icon: Home, label: 'Inicio' },
       { path: '/marketplace', icon: Store, label: 'Marketplace', description: 'Pantallas digitales disponibles' },
       { path: '/sports-events', icon: Trophy, label: 'Eventos Deportivos' },
+      { path: '/my-campaigns', icon: Trophy, label: 'Mis Campañas' },
+
       // { 
       //   path: '/create', 
       //   icon: PlusSquare, 
