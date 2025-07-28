@@ -38,6 +38,7 @@ import { PartnerScreens } from './pages/partner/PartnerScreens';
 import { WalletCampaignManagement } from './pages/admin/BonusManagement';
 import PartnersRelations2 from './pages/admin/PartnersRelations2';
 import { CampaignProvider } from './contexts/CampaignContext';
+import { ProfilePage } from './pages/ProfilePage';
 
 export default function App() {
   return (
@@ -97,6 +98,15 @@ export default function App() {
                   />
                   
                    <Route path="/wallet" element={<WalletPage />} />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <RequireAuth>
+                        <ProfilePage />
+                      </RequireAuth>
+                    } 
+                  />
+                  
                   {/* Admin Routes */}
                   <Route 
                     path="/partner/screens" 

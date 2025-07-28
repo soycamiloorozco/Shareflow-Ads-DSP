@@ -1,302 +1,167 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X, Zap, 
-  ArrowRight, Check, 
-  CreditCard, Wallet, Flame,
-  Loader2
+import { 
+  X, Check, CreditCard, Gift, Crown, AlertTriangle, ChevronRight, 
+  ChevronLeft, Loader2, Sparkles, Zap, Star
 } from 'lucide-react';
-import { Button } from '../Button';
+import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { paymentApi } from '../../api/payment';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store/store';
-import { useWallet } from '../../hooks/useWallet';
 
 const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
 
-// Componente de formulario de pago
-const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: (id: any) => void, onError: (error: any) => void, amount: number }) => {
-  const { user } = useSelector((state: RootState) => state.auth);
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const data = {
-        amount,
-        currency: 'cop'
-      };
-      
-      const { clientSecret } = await paymentApi.createPaymentIntent(data);
-
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: elements.getElement(CardElement)!,
-            billing_details: {
-              name: user?.username,
-              email: user?.email, 
-            },
-          },
-        }
-      );
-
-      if (stripeError) {
-        onError(stripeError.message);
-      } else if (paymentIntent.status === 'succeeded') {
-        onSuccess(paymentIntent.id);
-      }
-    } catch (error) {
-      onError(error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="p-3 bg-white rounded-lg border border-[#B8B8C0]">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
-                },
-              },
-              invalid: {
-                color: '#9e2146',
-              },
-            },
-          }}
-        />
-      </div>
-
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        fullWidth
-        icon={ArrowRight}
-        disabled={!stripe || isProcessing}
-      >
-        {isProcessing ? 'Procesando...' : `Pagar ${amount.toLocaleString('es-CO')} COP`}
-      </Button>
-    </form>
-  );
-};
-
 interface RechargePackage {
-  id: string;
   amount: number;
-  bonus: number;
-  bonusPercentage: number;
+  label: string;
   title: string;
   description: string;
   icon: string;
-  gradient: string;
-  isPopular?: boolean;
-  isLimited?: boolean;
-  originalPrice?: number;
-  savings?: number;
-  features: string[];
+  popular?: boolean;
+}
+
+interface PaymentData {
+  cardNumber: string;
+  cardHolder: string;
+  cardExpiry: string;
+  cardCvv: string;
+  documentType: 'CC' | 'CE' | 'TI' | 'PAS';
+  documentNumber: string;
+  email: string;
+  phone: string;
 }
 
 interface Campaign {
-  id: string;
-  title: string;
-  subtitle: string;
-  bonusPercentage: number;
-  endDate: Date;
+  name: string;
+  description: string;
+  value: number;
   icon: string;
-  gradient: string;
-  urgency: 'low' | 'medium' | 'high';
-  isActive: boolean;
+  minAmount: number;
+  bonusPercentage: number;
+}
+
+interface UserLevel {
+  name: string;
+  bonusPercentage: number;
 }
 
 interface RechargeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRecharge: (amount: number, packageId: string, campaignId?: string) => Promise<void>;
+  onRecharge: (amount: number) => Promise<void>;
   currentBalance: number;
-  campaigns?: Campaign[];
+  currentCampaign?: Campaign | null;
+  currentLevel: UserLevel;
+  userType: string;
+  timeLeft: number;
+  calculateBonus: (amount: number) => number;
+  calculateLevelBonus: (amount: number) => number;
+  calculateCampaignBonus: (amount: number) => number;
+  calculateFinancialCommission: (amount: number, method: string) => number;
+  formatBalance: (amount: number) => string;
+  formatCurrency: (amount: number) => string;
+  formatCreditsText: (amount: number) => string;
+  deposit: any;
+  PaymentForm: React.ComponentType<any>;
 }
 
 const rechargePackages: RechargePackage[] = [
   {
-    id: 'starter',
     amount: 100000,
-    bonus: 5000,
-    bonusPercentage: 5,
-    title: 'Starter',
-    description: 'Perfecto para comenzar',
-    icon: '🚀',
-    gradient: 'from-blue-500 to-cyan-500',
-    features: ['5% bonus', 'Válido por 30 días', 'Soporte básico']
+    label: "100K",
+    title: "Explorando",
+    description: "Perfecto para comenzar",
+    icon: "🎯"
   },
   {
-    id: 'popular',
     amount: 500000,
-    bonus: 50000,
-    bonusPercentage: 10,
-    title: 'Popular',
-    description: 'La opción más elegida',
-    icon: '⭐',
-    gradient: 'from-purple-500 to-pink-500',
-    isPopular: true,
-    originalPrice: 550000,
-    savings: 50000,
-    features: ['10% bonus', 'Válido por 60 días', 'Soporte prioritario', 'Analytics básicos']
+    label: "500K", 
+    title: "Creciendo",
+    description: "El más popular",
+    icon: "⚡",
+    popular: true
   },
   {
-    id: 'premium',
-    amount: 1000000,
-    bonus: 150000,
-    bonusPercentage: 15,
-    title: 'Premium',
-    description: 'Máximo valor y beneficios',
-    icon: '👑',
-    gradient: 'from-amber-500 to-orange-500',
-    originalPrice: 1100000,
-    savings: 100000,
-    features: ['15% bonus', 'Válido por 90 días', 'Soporte VIP', 'Analytics avanzados', 'Descuentos exclusivos']
+    amount: 1500000,
+    label: "1.5M",
+    title: "Expandiendo", 
+    description: "Para marcas serias",
+    icon: "🔥"
   },
   {
-    id: 'enterprise',
-    amount: 2000000,
-    bonus: 400000,
-    bonusPercentage: 20,
-    title: 'Enterprise',
-    description: 'Para grandes campañas',
-    icon: '💎',
-    gradient: 'from-emerald-500 to-teal-500',
-    isLimited: true,
-    originalPrice: 2200000,
-    savings: 200000,
-    features: ['20% bonus', 'Sin vencimiento', 'Account Manager', 'API access', 'Reportes personalizados']
+    amount: 4000000,
+    label: "4M",
+    title: "Dominando",
+    description: "Presencia total",
+    icon: "👑"
   }
 ];
 
-const mockCampaigns: Campaign[] = [
-  {
-    id: 'black-friday',
-    title: 'BLACK FRIDAY',
-    subtitle: '+30% BONUS EXTRA',
-    bonusPercentage: 30,
-    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    icon: '🔥',
-    gradient: 'from-red-600 to-orange-600',
-    urgency: 'high',
-    isActive: true
-  },
-  {
-    id: 'weekend-boost',
-    title: 'WEEKEND BOOST',
-    subtitle: '+15% BONUS',
-    bonusPercentage: 15,
-    endDate: new Date(Date.now() + 18 * 60 * 60 * 1000),
-    icon: '⚡',
-    gradient: 'from-purple-600 to-pink-600',
-    urgency: 'medium',
-    isActive: true
-  }
-];
-
-const formatTimeRemaining = (endDate: Date) => {
-  const now = new Date();
-  const diff = endDate.getTime() - now.getTime();
-  
-  if (diff <= 0) return { expired: true };
-  
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (days > 0) return { days, hours, text: `${days}d ${hours}h` };
-  if (hours > 0) return { hours, minutes, text: `${hours}h ${minutes}m` };
-  return { minutes, text: `${minutes}m`, urgent: true };
-};
-
-export const RechargeModal: React.FC<RechargeModalProps> = ({
+const RechargeModal: React.FC<RechargeModalProps> = ({
   isOpen,
   onClose,
   onRecharge,
   currentBalance,
-  campaigns = mockCampaigns
+  currentCampaign,
+  currentLevel,
+  userType,
+  timeLeft,
+  calculateBonus,
+  calculateLevelBonus,
+  calculateCampaignBonus,
+  calculateFinancialCommission,
+  formatBalance,
+  formatCurrency,
+  formatCreditsText,
+  deposit,
+  PaymentForm
 }) => {
-  const [selectedPackage, setSelectedPackage] = useState<RechargePackage | null>(null);
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'packages' | 'payment'>('packages');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const { deposit, isLoading: isDepositLoading } = useWallet();
+  const [selectedAmount, setSelectedAmount] = useState<number>(0);
+  const [customAmount, setCustomAmount] = useState<string>('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'pse' | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentData, setPaymentData] = useState<PaymentData>({
+    cardNumber: '',
+    cardHolder: '',
+    cardExpiry: '',
+    cardCvv: '',
+    documentType: 'CC',
+    documentNumber: '',
+    email: '',
+    phone: ''
+  });
 
-  // Auto-select best campaign
-  useEffect(() => {
-    if (campaigns.length > 0) {
-      const bestCampaign = campaigns
-        .filter(c => c.isActive)
-        .sort((a, b) => b.bonusPercentage - a.bonusPercentage)[0];
-      setSelectedCampaign(bestCampaign);
+  const handleAmountSelect = (amount: number) => {
+    setSelectedAmount(amount);
+    setCustomAmount('');
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, '');
+    if (numericValue) {
+      const amount = parseInt(numericValue);
+      setCustomAmount(numericValue);
+      setSelectedAmount(amount);
+    } else {
+      setCustomAmount('');
+      setSelectedAmount(0);
     }
-  }, [campaigns]);
-
-  const calculateTotal = (pkg: RechargePackage) => {
-    const baseBonus = pkg.bonus;
-    const campaignBonus = selectedCampaign 
-      ? (pkg.amount * selectedCampaign.bonusPercentage) / 100 
-      : 0;
-    return {
-      amount: pkg.amount,
-      baseBonus,
-      campaignBonus,
-      totalBonus: baseBonus + campaignBonus,
-      totalCredits: pkg.amount + baseBonus + campaignBonus
-    };
   };
 
-  const handleRecharge = async () => {
-    if (!selectedPackage) return;
-    setShowPaymentModal(true);
+  const handleContinueToPayment = () => {
+    if (selectedAmount >= 100000) {
+      setSelectedPaymentMethod('card');
+      setStep('payment');
+    }
   };
 
-  const handlePaymentSuccess = async (paymentId: string) => {
-    if (!selectedPackage) return;
-    
-    setIsProcessing(true);
+  const handlePayment = async () => {
     try {
-      const depositResponse = await deposit({
-        amount: selectedPackage.amount,
-        paymentReference: paymentId,
-        description: `Recarga de ${selectedPackage.amount.toLocaleString()} COP - Paquete ${selectedPackage.title}`
-      });
-
-      if (depositResponse) {
-        await onRecharge(
-          selectedPackage.amount, 
-          selectedPackage.id, 
-          selectedCampaign?.id
-        );
-        setShowPaymentModal(false);
-        onClose();
-      } 
+      setIsProcessing(true);
+      await deposit(selectedAmount);
+      await onRecharge(selectedAmount);
+      handleCloseModal();
     } catch (error) {
-      console.error('Recharge failed:', error);
-      alert('Error al procesar la recarga. Por favor, intente nuevamente.');
+      console.error('Payment failed:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -304,399 +169,360 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
 
   const handlePaymentError = (error: any) => {
     console.error('Payment error:', error);
-    alert(`Error en el pago: ${error}`);
+    setIsProcessing(false);
   };
 
-  const activeCampaigns = campaigns.filter(c => c.isActive);
+  const handleCloseModal = () => {
+    setStep('packages');
+    setSelectedAmount(0);
+    setCustomAmount('');
+    setIsProcessing(false);
+    setPaymentData({
+      cardNumber: '',
+      cardHolder: '',
+      cardExpiry: '',
+      cardCvv: '',
+      documentType: 'CC',
+      documentNumber: '',
+      email: '',
+      phone: ''
+    });
+    setSelectedPaymentMethod(null);
+    onClose();
+  };
+
+  const finalAmount = selectedAmount || 0;
+  const bonus = calculateBonus(finalAmount);
+  const total = finalAmount + bonus;
+  const getTotalWithCommission = () => finalAmount + calculateFinancialCommission(finalAmount, 'card');
+
+  if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="w-full max-w-6xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-6">
-              <motion.div
-                animate={{ 
-                  background: [
-                    "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)",
-                    "radial-gradient(circle at 80% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)",
-                    "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)"
-                  ]
-                }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="absolute inset-0"
-              />
-              
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <motion.div
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center"
-                  >
-                    <Zap className="w-8 h-8 text-white" />
-                  </motion.div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-white">Recargar Créditos</h2>
-                    <p className="text-white/80 text-lg">
-                      Saldo actual: <span className="font-semibold">${currentBalance.toLocaleString()}</span>
-                    </p>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={onClose}
-                  className="p-3 hover:bg-white/20 rounded-full transition-colors"
-                  disabled={isProcessing}
-                >
-                  <X className="w-6 h-6 text-white" />
-                </button>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="bg-white backdrop-blur-xl w-full max-w-md sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      >
+        {/* HEADER FIJO */}
+        <div className="flex-shrink-0 bg-blue-50 border-b border-gray-200 p-4 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Recargar Wallet</h2>
+                <p className="text-xs sm:text-sm text-gray-600">Saldo actual: {formatBalance(currentBalance)}</p>
               </div>
             </div>
+            <button
+              onClick={handleCloseModal}
+              className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
 
-            {/* Active Campaigns Banner */}
-            {activeCampaigns.length > 0 && (
-              <div className="p-6 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-b border-orange-200 dark:border-orange-800">
-                <div className="flex items-center gap-4">
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center"
-                  >
-                    <Flame className="w-6 h-6 text-white" />
-                  </motion.div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-orange-800 dark:text-orange-200 text-lg">
-                      🔥 ¡Ofertas Activas! Aprovecha los bonos extra
-                    </h3>
-                    <div className="flex flex-wrap gap-3 mt-2">
-                      {activeCampaigns.map((campaign) => {
-                        const timeLeft = formatTimeRemaining(campaign.endDate);
-                        return (
-                          <motion.div
-                            key={campaign.id}
-                            whileHover={{ scale: 1.05 }}
-                            className={`px-4 py-2 rounded-lg border-2 cursor-pointer transition-all ${
-                              selectedCampaign?.id === campaign.id
-                                ? 'border-orange-500 bg-orange-100 dark:bg-orange-900/30'
-                                : 'border-orange-300 bg-white dark:bg-gray-800 hover:border-orange-400'
-                            }`}
-                            onClick={() => setSelectedCampaign(campaign)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{campaign.icon}</span>
-                              <div>
-                                <p className="font-semibold text-sm text-orange-800 dark:text-orange-200">
-                                  {campaign.title}
-                                </p>
-                                <p className="text-xs text-orange-600 dark:text-orange-300">
-                                  +{campaign.bonusPercentage}% • {timeLeft.text}
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
+          {/* Campaign Badge */}
+          {currentCampaign && step === 'packages' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-3"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">{currentCampaign.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-sm text-gray-900 truncate">{currentCampaign.name}</h3>
+                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold whitespace-nowrap">
+                      ¡{timeLeft} DÍAS!
+                    </span>
                   </div>
+                  <p className="text-xs text-gray-700 line-clamp-2">{currentCampaign.description}</p>
+                </div>
+                <div className="text-center flex-shrink-0">
+                  <p className="font-bold text-orange-600">+{currentCampaign.value}%</p>
+                  <p className="text-xs text-gray-500">{userType}</p>
                 </div>
               </div>
-            )}
+            </motion.div>
+          )}
+        </div>
 
-            {/* Packages Grid */}
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {rechargePackages.map((pkg, index) => {
-                  const totals = calculateTotal(pkg);
-                  const isSelected = selectedPackage?.id === pkg.id;
+        {/* CONTENIDO SCROLLEABLE */}
+        <div className="flex-1 overflow-y-auto">
+          <AnimatePresence mode="wait">
+            {step === 'packages' && (
+              <motion.div
+                key="packages"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-4 sm:p-6 space-y-6"
+              >
+                {/* Packages Grid */}
+                <div>
+                  <h3 className="text-md sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                    Elige tu paquete
+                  </h3>
                   
-                  return (
-                    <motion.div
-                      key={pkg.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ y: -8, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`relative cursor-pointer rounded-2xl border-2 p-6 transition-all duration-300 shadow-lg ${
-                        isSelected
-                          ? 'border-blue-500 shadow-xl shadow-blue-500/25 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30'
-                          : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 hover:shadow-xl bg-white dark:bg-gray-800'
-                      }`}
-                      onClick={() => setSelectedPackage(pkg)}
-                    >
-                      {/* Popular Badge */}
-                      {pkg.isPopular && (
-                        <motion.div
-                          initial={{ scale: 0, rotate: -12 }}
-                          animate={{ scale: 1, rotate: -12 }}
-                          transition={{ delay: 0.5, type: "spring" }}
-                          className="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10"
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                    {rechargePackages.map((pkg) => {
+                      const totalBonus = calculateBonus(pkg.amount);
+                      const finalTotal = pkg.amount + totalBonus;
+                      
+                      return (
+                        <motion.button
+                          key={pkg.amount}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleAmountSelect(pkg.amount)}
+                          className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left group ${
+                            selectedAmount === pkg.amount
+                              ? 'border-blue-500 bg-blue-50 shadow-lg'
+                              : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-blue-50/50'
+                          }`}
                         >
-                          MÁS POPULAR
-                        </motion.div>
-                      )}
-
-                      {/* Limited Badge */}
-                      {pkg.isLimited && (
-                        <motion.div
-                          animate={{ opacity: [1, 0.7, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="absolute -top-3 -left-3 bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10"
-                        >
-                          LIMITADO
-                        </motion.div>
-                      )}
-
-                      {/* Package Icon */}
-                      <div className={`w-20 h-20 bg-gradient-to-r ${pkg.gradient} rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-lg`}>
-                        <span className="text-3xl">{pkg.icon}</span>
-                      </div>
-
-                      {/* Package Info */}
-                      <div className="text-center mb-4">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                          {pkg.title}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">
-                          {pkg.description}
-                        </p>
-                      </div>
-
-                      {/* Pricing */}
-                      <div className="text-center mb-6">
-                        {pkg.originalPrice && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 line-through mb-1">
-                            ${pkg.originalPrice.toLocaleString()}
-                          </p>
-                        )}
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                          ${pkg.amount.toLocaleString()}
-                        </p>
-                        {pkg.savings && (
-                          <p className="text-green-600 dark:text-green-400 text-sm font-semibold">
-                            Ahorras ${pkg.savings.toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Bonus Calculation */}
-                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 mb-4 border border-gray-200 dark:border-gray-600">
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-700 dark:text-gray-300 font-medium">Créditos base:</span>
-                            <span className="font-bold text-gray-900 dark:text-white">${totals.amount.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-700 dark:text-gray-300 font-medium">Bonus paquete:</span>
-                            <span className="font-bold text-green-600 dark:text-green-400">+${totals.baseBonus.toLocaleString()}</span>
-                          </div>
-                          {totals.campaignBonus > 0 && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-700 dark:text-gray-300 font-medium">Bonus campaña:</span>
-                              <span className="font-bold text-orange-600 dark:text-orange-400">+${totals.campaignBonus.toLocaleString()}</span>
+                          {/* Popular Badge */}
+                          {pkg.popular && (
+                            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold z-10">
+                              POPULAR
                             </div>
                           )}
-                          <div className="border-t border-gray-300 dark:border-gray-500 pt-2 flex justify-between items-center">
-                            <span className="font-bold text-gray-900 dark:text-white text-base">Total:</span>
-                            <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">
-                              ${totals.totalCredits.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Features */}
-                      <div className="space-y-2">
-                        {pkg.features.map((feature, idx) => (
-                          <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 + idx * 0.1 }}
-                            className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
-                          >
-                            <div className="w-4 h-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                              <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                          
+                          {/* Selected Indicator */}
+                          {selectedAmount === pkg.amount && (
+                            <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" />
                             </div>
-                            <span className="font-medium">{feature}</span>
-                          </motion.div>
-                        ))}
+                          )}
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg sm:text-xl">{pkg.icon}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-bold text-gray-900 text-sm truncate">{pkg.label}</div>
+                                <div className="text-xs text-gray-600 truncate">{pkg.title}</div>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <div className="text-md sm:text-lg font-bold text-gray-800">
+                                {formatCurrency(pkg.amount)}
+                              </div>
+                              <p className="text-xs text-gray-600 leading-tight line-clamp-2">{pkg.description}</p>
+                            </div>
+                            
+                            {/* Simplified Bonus Display */}
+                            {totalBonus > 0 && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                                <div className="text-xs font-semibold text-blue-900 mb-1">
+                                  🎁 Compras {formatCurrency(pkg.amount)}
+                                </div>
+                                <div className="text-xs font-bold text-blue-700">
+                                  Recibes {formatCreditsText(finalTotal)}
+                                </div>
+                                <div className="text-xs text-blue-600 mt-1">
+                                  Bonus: +{formatCreditsText(totalBonus)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Amount */}
+                <div>
+                  <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span className="text-blue-500">✏️</span>
+                    Monto personalizado
+                  </h4>
+                  <div className="max-w-full sm:max-w-sm">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={customAmount}
+                        onChange={(e) => handleCustomAmountChange(e.target.value)}
+                        placeholder="Mínimo $100.000"
+                        className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-sm font-medium bg-gray-50 focus:bg-white transition-all"
+                      />
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
+                        COP
                       </div>
-
-                      {/* Selection Indicator */}
-                      {isSelected && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute top-4 right-4 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg z-10"
-                        >
-                          <Check className="w-5 h-5 text-white" />
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <CreditCard className="w-4 h-4" />
-                    <span>Pago seguro con SSL</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Wallet className="w-4 h-4" />
-                    <span>Créditos instantáneos</span>
+                    </div>
+                    {customAmount && parseInt(customAmount.replace(/\D/g, '')) < 100000 && (
+                      <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        El monto mínimo es $100.000
+                      </p>
+                    )}
                   </div>
                 </div>
-                
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={onClose}
-                    disabled={isProcessing}
-                  >
-                    Cancelar
-                  </Button>
-                  
+
+                {/* Summary */}
+                {finalAmount >= 100000 && (
                   <motion.div
-                    whileHover={{ scale: selectedPackage ? 1.05 : 1 }}
-                    whileTap={{ scale: selectedPackage ? 0.95 : 1 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-blue-50 border border-blue-200 rounded-xl p-4"
                   >
-                    <Button
-                      variant="primary"
-                      onClick={handleRecharge}
-                      disabled={!selectedPackage || isProcessing}
-                      className={`${selectedPackage ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' : ''}`}
-                    >
-                      {isProcessing ? (
-                        <div className="flex items-center gap-2">
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                          />
-                          Procesando...
+                    <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <span className="text-blue-500">📋</span>
+                      Resumen de tu recarga
+                    </h4>
+                    
+                    <div className="bg-white rounded-lg p-4 border border-blue-200">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-gray-900 mb-2">
+                          Compras {formatCurrency(finalAmount)}
                         </div>
-                      ) : selectedPackage ? (
-                        <div className="flex items-center gap-2">
-                          <Zap className="w-4 h-4" />
-                          Recargar ${calculateTotal(selectedPackage).totalCredits.toLocaleString()}
-                          <ArrowRight className="w-4 h-4" />
+                        <div className="text-2xl font-bold text-blue-600 mb-2">
+                          Recibes {formatCreditsText(total)}
                         </div>
-                      ) : (
-                        'Selecciona un paquete'
-                      )}
-                    </Button>
+                        {bonus > 0 && (
+                          <div className="text-sm text-green-600 font-medium">
+                            🎁 Bonus adicional: +{formatCreditsText(bonus)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </motion.div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
+                )}
+              </motion.div>
+            )}
 
-      {/* Payment Modal */}
-      <AnimatePresence>
-        {showPaymentModal && selectedPackage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
-            onClick={() => setShowPaymentModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Pago con Tarjeta</h2>
-                  <button
-                    onClick={() => setShowPaymentModal(false)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+            {step === 'payment' && (
+              <motion.div
+                key="payment"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="p-4 sm:p-6 space-y-6"
+              >
+                {/* Payment Summary */}
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span className="text-blue-500">💳</span>
+                    Resumen del pago
+                  </h4>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Monto:</span>
+                      <span className="font-bold">{formatCurrency(finalAmount)}</span>
+                    </div>
 
-              <div className="p-6">
-                <div className="mb-6">
-                  <h3 className="font-medium mb-2">Resumen del pago</h3>
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Paquete:</span>
-                      <span className="font-medium">{selectedPackage.title}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Monto base:</span>
-                      <span className="font-medium">${selectedPackage.amount.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Bonus paquete:</span>
-                      <span className="text-green-600 dark:text-green-400">+${selectedPackage.bonus.toLocaleString()}</span>
-                    </div>
-                    {selectedCampaign && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Bonus campaña:</span>
-                        <span className="text-orange-600 dark:text-orange-400">
-                          +${((selectedPackage.amount * selectedCampaign.bonusPercentage) / 100).toLocaleString()}
+                    {calculateLevelBonus(finalAmount) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-blue-600 flex items-center gap-1">
+                          <Crown className="w-3 h-3" />
+                          Bonus Nivel ({currentLevel.bonusPercentage}%):
+                        </span>
+                        <span className="font-bold text-blue-600">
+                          +{formatCreditsText(calculateLevelBonus(finalAmount))}
                         </span>
                       </div>
                     )}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Total a pagar:</span>
-                        <span className="font-bold text-lg">${calculateTotal(selectedPackage).amount.toLocaleString()}</span>
+                    
+                    {calculateCampaignBonus(finalAmount) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-green-600 flex items-center gap-1">
+                          <Gift className="w-3 h-3" />
+                          Bonus Campaña ({currentCampaign?.value}%):
+                        </span>
+                        <span className="font-bold text-green-600">
+                          +{formatCreditsText(calculateCampaignBonus(finalAmount))}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-600 flex items-center gap-1">
+                        <CreditCard className="w-3 h-3" />
+                        Comisión (5%):
+                      </span>
+                      <span className="font-bold text-orange-600">
+                        +{formatCurrency(calculateFinancialCommission(finalAmount, 'card'))}
+                      </span>
+                    </div>
+                    
+                    <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Total a pagar:</span>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">
+                          {formatCurrency(getTotalWithCommission())}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          = {formatCreditsText(total)}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {isProcessing ? (
-                  <div className="flex justify-center items-center py-8">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400 ml-3">
-                      Procesando pago... no cierre la página
-                    </p>
-                  </div>
-                ) : (
-                  <Elements stripe={stripePromise}>
-                    <PaymentForm
-                      onSuccess={handlePaymentSuccess}
-                      onError={handlePaymentError}
-                      amount={calculateTotal(selectedPackage).amount}
-                    />
-                  </Elements>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </AnimatePresence>
+                {/* Payment Form */}
+                <div>
+                  <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-4">Información de pago</h4>
+                  
+                  {isProcessing ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                      <p className="text-sm text-gray-600 ml-3">
+                        Procesando pago... no cierre la página
+                      </p>
+                    </div>
+                  ) : (
+                    <Elements stripe={stripePromise}>
+                      <PaymentForm
+                        onSuccess={handlePayment}
+                        onError={handlePaymentError}
+                        amount={getTotalWithCommission()}
+                      />
+                    </Elements>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* FOOTER FIJO CON BOTONES */}
+        <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4 sm:p-6">
+          {step === 'packages' ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleContinueToPayment}
+              disabled={!selectedAmount || selectedAmount < 100000}
+              className="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              Continuar al Pago
+              <ChevronRight className="w-4 h-4" />
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setStep('packages')}
+              className="w-full px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Volver a Paquetes
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
+    </div>
   );
-}; 
+};
+
+export default RechargeModal; 

@@ -21,6 +21,7 @@ import { Button } from '../components/Button';
 import { useWallet } from '../hooks/useWallet';
 import { Transaction } from '../hooks/useWallet/types';
 import { Bonus, useBonus } from '../hooks/useBonus';
+import RechargeModal from '../components/wallet/RechargeModal';
 
 const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
 
@@ -217,14 +218,14 @@ const CreditDisplay: React.FC<CreditDisplayProps> = memo(({
       
       {showConversion && (
         <CreditTooltip 
-          content="Equivalencia en créditos"
+          content="Equivalencia en dólares"
           subContent="Cada peso colombiano equivale a 1 Shareflow Credit. Es así de simple y transparente."
         >
           <div className="flex items-center gap-1 text-gray-500">
             <span className="text-xs">≈</span>
             <span className="text-xs">💰</span>
             <span className={`${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
-              {new Intl.NumberFormat('es-CO').format(amount)} Créditos
+              ${new Intl.NumberFormat('es-CO').format(amount)}
             </span>
           </div>
         </CreditTooltip>
@@ -534,7 +535,7 @@ const userLevels: UserLevel[] = [
       'Máxima prioridad de ocupación en fechas premium y eventos exclusivos',
       'Acceso a ubicaciones ultra-premium antes de su lanzamiento público',
       'Tarifas especiales negociadas individualmente',
-      'Créditos de cortesía anuales por lealtad',
+      'Bonos anuales por lealtad',
       'Acceso al "Nivel Secreto Legendario" - beneficios ocultos desbloqueables'
     ],
     merchandising: [
@@ -673,9 +674,9 @@ const formatCurrency = (amount: number) => {
 
 // TikTok-inspired simple credits text for when we need just text
 const formatCreditsText = (amount: number) => {
-  return new Intl.NumberFormat('es-CO', {
+  return '$' + new Intl.NumberFormat('es-CO', {
     minimumFractionDigits: 0
-  }).format(amount) + ' Créditos';
+  }).format(amount);
 };
 
 // Simple balance display function for main balance
@@ -687,670 +688,33 @@ const formatBalance = (amount: number) => {
   }).format(amount);
 };
 
-// Mobile-optimized Recharge Modal with Bottom Sheet Design
-interface RechargeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onRecharge: (amount: number) => Promise<void>;
-  currentBalance: number;
-  currentCampaign: Bonus | null;
-  isReturningUser: boolean;
-  userBonusPercentage: number;
-  userType: string;
-  timeLeft: number; // Added timeLeft prop
-  currentLevel: UserLevel; // Added currentLevel prop
-}
+// New elegant recharge modal component is imported from components/wallet/RechargeModal
 
-const RechargeModal: React.FC<RechargeModalProps> = memo(({
-  isOpen,
-  onClose,
-  onRecharge,
-  currentBalance,
-  currentCampaign,
-  userBonusPercentage,
-  userType,
-  timeLeft,
-  currentLevel
-}) => {
-  const { deposit } = useWallet();
-
-  const [customAmount, setCustomAmount] = useState<string>('');
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [step, setStep] = useState<'packages' | 'payment'>('packages');
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    cardExpiry: '',
-    cardCvv: '',
-    documentType: 'CC',
-    documentNumber: '',
-    email: '',
-    phone: ''
-  });
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'pse' | null>(null);
-
-  // Mobile-first package amounts with clean design
-  const quickAmounts = [
-    { 
-      amount: 100000, 
-      label: '100K', 
-      title: '✨ Explorando',
-      description: 'Perfecto para comenzar', 
-      icon: '🎯',
-      color: 'from-blue-500 to-cyan-500'
-    },
-    { 
-      amount: 500000, 
-      label: '500K', 
-      title: '🚀 Creciendo',
-      description: 'El más popular', 
-      icon: '💪',
-      color: 'from-green-500 to-emerald-500',
-      popular: true
-    },
-    { 
-      amount: 1500000, 
-      label: '1.5M', 
-      title: '⚡ Expandiendo',
-      description: 'Para marcas serias', 
-      icon: '🔥',
-      color: 'from-purple-500 to-pink-500'
-    },
-    { 
-      amount: 4000000, 
-      label: '4M', 
-      title: '👑 Dominando',
-      description: 'Presencia total', 
-      icon: '⭐',
-      color: 'from-yellow-500 to-orange-500'
-    }
-  ];
-
-  const calculateBonus = (amount: number) => {
+// Helper functions for the new RechargeModal component
+const calculateBonus = (amount: number, currentCampaign: any, currentLevel: any, userBonusPercentage: number) => {
     if (!currentCampaign || amount < currentCampaign.minRecharge) return 0;
     const levelBonus = Math.floor((amount * currentLevel.bonusPercentage) / 100);
     const campaignBonus = Math.floor((amount * userBonusPercentage) / 100);
     return levelBonus + campaignBonus;
   };
 
-  const calculateLevelBonus = (amount: number) => {
+const calculateLevelBonus = (amount: number, currentLevel: any) => {
     return Math.floor((amount * currentLevel.bonusPercentage) / 100);
   };
 
-  const calculateCampaignBonus = (amount: number) => {
+const calculateCampaignBonus = (amount: number, currentCampaign: any) => {
     if (!currentCampaign || amount < currentCampaign.minRecharge) return 0;
     return Math.floor((amount * currentCampaign.value) / 100);
   };
 
-  // Función para calcular la comisión financiera (5% solo para tarjeta de crédito)
-  const calculateFinancialCommission = (amount: number, paymentMethod: string | null) => {
+const calculateFinancialCommission = (amount: number, paymentMethod: string) => {
     if (paymentMethod === 'card') {
-      return Math.floor((amount * 5) / 100); // 5% de comisión para tarjeta
+    return Math.floor((amount * 5) / 100);
     }
-    return 0; // PSE no tiene comisión
+  return 0;
   };
 
-  // Calcular el total final incluyendo la comisión
-  const getTotalWithCommission = () => {
-    const commission = calculateFinancialCommission(finalAmount, selectedPaymentMethod);
-    return finalAmount + commission;
-  };
-
-  const handleAmountSelect = (amount: number) => {
-    setSelectedAmount(amount);
-    setCustomAmount(amount.toString());
-  };
-
-  const handleCustomAmountChange = (value: string) => {
-    const numValue = parseInt(value.replace(/\D/g, ''));
-    if (!isNaN(numValue) && numValue >= 100000) {
-      setCustomAmount(numValue.toString());
-      setSelectedAmount(numValue);
-    } else {
-      setCustomAmount(value.replace(/\D/g, ''));
-      setSelectedAmount(null);
-    }
-  };
-
-  const handleContinueToPayment = async () => {
-    if (!selectedAmount || selectedAmount < 100000) return;
-    setStep('payment');
-  };
-
-  const handlePayment = async (paymentId: string) => {
-    if (!selectedAmount || selectedAmount < 100000) return;
-    
-    setIsProcessing(true);
-    
-    try {
-      const depositResponse = await deposit({
-        amount: selectedAmount,
-        paymentReference: paymentId,
-        description: `Recarga de ${selectedAmount.toLocaleString()} COP`
-      });
-      
-      if (depositResponse) {
-        handleCloseModal();
-        setTimeout(async () => {
-          try {
-            await onRecharge(selectedAmount);
-          } catch (error) {
-            console.error('Error updating wallet:', error);
-          }
-      }, 100);
-      } 
-      
-    } catch (error) {
-      console.error('Error en recarga:', error);
-      setIsProcessing(false);
-    }
-  };
-
-  const handlePaymentError = (error: any) => {
-    console.error('Payment error:', error);
-    alert(`Error en el pago: ${error}`);
-  };
-
-  const handleCloseModal = () => {
-    setStep('packages');
-    setSelectedAmount(null);
-    setCustomAmount('');
-    setPaymentData({
-      cardNumber: '',
-      cardHolder: '',
-      cardExpiry: '',
-      cardCvv: '',
-      documentType: 'CC',
-      documentNumber: '',
-      email: '',
-      phone: ''
-    });
-    setSelectedPaymentMethod(null);
-    onClose();
-  };
-
-  const finalAmount = selectedAmount || 0;
-  const bonus = calculateBonus(finalAmount);
-  const total = finalAmount + bonus;
-
-  if (!isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-4xl sm:w-full h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl rounded-t-3xl flex flex-col overflow-hidden shadow-2xl">
-        
-        {/* Step 1: Package Selection */}
-        {step === 'packages' && (
-          <>
-            {/* Header */}
-            <div className="flex-shrink-0 p-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white sm:rounded-t-3xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">💳 Recargar Créditos</h2>
-                  <p className="text-blue-100 text-sm">
-                    Saldo actual: {formatBalance(currentBalance)}
-                  </p>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="p-3 hover:bg-white/20 rounded-xl transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-          </div>
-          
-              {/* Campaign Badge */}
-              {currentCampaign && (
-                <div className="mt-4 bg-white/10 rounded-xl p-4 border border-white/20">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{currentCampaign.icon}</span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold">{currentCampaign.name}</h3>
-                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                          ¡{timeLeft} DÍAS!
-                        </span>
-              </div>
-                      <p className="text-blue-100 text-sm">{currentCampaign.description}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">+{currentCampaign.value}%</p>
-                      <p className="text-blue-200 text-xs">Usuario {userType}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {/* Package Selection */}
-            <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  🎯 Elige tu paquete
-              </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                  {quickAmounts.map((pkg) => (
-                    <button
-                      key={pkg.amount}
-                      onClick={() => handleAmountSelect(pkg.amount)}
-                      className={`relative p-6 rounded-2xl border-2 transition-all duration-300 text-left h-64 group hover:scale-105 hover:shadow-2xl ${
-                        selectedAmount === pkg.amount
-                          ? 'border-blue-500 bg-blue-50 shadow-xl transform scale-105'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
-                    >
-                      {/* Popular Badge */}
-                      {pkg.popular && (
-                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">
-                          MÁS POPULAR
-                  </div>
-                      )}
-                      
-                      {/* Selected Indicator */}
-                      {selectedAmount === pkg.amount && (
-                        <div className="absolute top-4 right-4 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
-                  </div>
-                      )}
-                      
-                      {/* Content */}
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="text-3xl">{pkg.icon}</div>
-                      <div>
-                            <div className="text-xl font-bold text-gray-900">{pkg.label}</div>
-                            <div className="text-sm text-gray-600">{pkg.title}</div>
-                      </div>
-                    </div>
-                    
-                        <div className="flex-1">
-                          <div className="text-2xl font-bold text-gray-800 mb-2">
-                            {formatCurrency(pkg.amount)}
-                      </div>
-                          <div className="text-sm text-gray-600 mb-4">{pkg.description}</div>
-                          
-                          {/* Bonuses */}
-                          {calculateBonus(pkg.amount) > 0 && (
-                            <div className="space-y-1">
-                              {calculateLevelBonus(pkg.amount) > 0 && (
-                                <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-medium truncate">
-                                  👑 Nivel: +{new Intl.NumberFormat('es-CO').format(calculateLevelBonus(pkg.amount))}
-                      </div>
-                              )}
-                              {calculateCampaignBonus(pkg.amount) > 0 && (
-                                <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-md font-medium truncate">
-                                  🎁 Campaña: +{new Intl.NumberFormat('es-CO').format(calculateCampaignBonus(pkg.amount))}
-                      </div>
-                              )}
-                    </div>
-                          )}
-                  </div>
-                </div>
-                    </button>
-                  ))}
-              </div>
-            </div>
-
-              {/* Custom Amount */}
-              <div className="mb-8">
-                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  ✏️ Monto personalizado
-                </h4>
-                <div className="relative max-w-md">
-                  <input
-                    type="text"
-                    value={customAmount}
-                    onChange={(e) => handleCustomAmountChange(e.target.value)}
-                    placeholder="Ingresa el monto (mín. $100.000)"
-                    className="w-full px-4 py-4 pr-16 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-lg font-medium bg-gray-50 focus:bg-white transition-all"
-                  />
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                    COP
-              </div>
-                </div>
-                {customAmount && parseInt(customAmount.replace(/\D/g, '')) < 100000 && (
-                  <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
-                    <AlertTriangle className="w-4 h-4" />
-                    El monto mínimo es $100.000
-                  </p>
-                )}
-            </div>
-
-              {/* Summary */}
-              {finalAmount >= 100000 && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
-                  <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    📋 Resumen de Recarga
-                  </h4>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Monto a recargar:</span>
-                      <span className="text-xl font-bold">{formatCurrency(finalAmount)}</span>
-                </div>
-                    
-                    {calculateLevelBonus(finalAmount) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-blue-600 flex items-center gap-1">
-                          <Crown className="w-4 h-4" />
-                          Bonus Nivel {currentLevel.name}:
-                        </span>
-                        <span className="font-bold text-blue-600">
-                          +{formatCreditsText(calculateLevelBonus(finalAmount))}
-                        </span>
-          </div>
-                    )}
-                    
-                    {calculateCampaignBonus(finalAmount) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-green-600 flex items-center gap-1">
-                          <Gift className="w-4 h-4" />
-                          Bonus {currentCampaign?.name}:
-                        </span>
-                        <span className="font-bold text-green-600">
-                          +{formatCreditsText(calculateCampaignBonus(finalAmount))}
-                        </span>
-              </div>
-            )}
-
-                    <div className="border-t-2 border-blue-300 pt-3 flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">Total créditos:</span>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {formatCreditsText(total)}
-              </div>
-                        <div className="text-xs text-gray-500">Listos para usar</div>
-            </div>
-          </div>
-        </div>
-
-                  <div className="flex flex-col gap-3 mt-6">
-                    <button
-                      onClick={handleContinueToPayment}
-                      disabled={!selectedAmount || selectedAmount < 100000}
-                      className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold shadow-xl flex items-center justify-center gap-2 text-lg"
-                    >
-                      <CreditCard className="w-5 h-5" />
-                      Continuar al Pago
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                    
-                    <button
-                      onClick={handleCloseModal}
-                      className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-                    >
-                      Cancelar
-                    </button>
-      </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Step 2: Payment Method */}
-        {step === 'payment' && (
-          <>
-            {/* Header */}
-            <div className="flex-shrink-0 p-6 bg-gradient-to-r from-green-600 to-emerald-700 text-white sm:rounded-t-3xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">🔒 Método de Pago</h2>
-                  <p className="text-green-100 text-sm">
-                    Total a pagar: {formatCurrency(selectedPaymentMethod === 'card' ? getTotalWithCommission() : finalAmount)}
-                    {selectedPaymentMethod === 'card' && (
-                      <span className="block text-xs text-green-200 mt-1">
-                        Incluye comisión financiera del 5%
-                      </span>
-                    )}
-                  </p>
-              </div>
-                <button
-                  onClick={() => setStep('packages')}
-                  className="p-3 hover:bg-white/20 rounded-xl transition-colors"
-                >
-                <X className="w-6 h-6" />
-                </button>
-            </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {/* Payment Method Selection */}
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Selecciona tu método de pago</h3>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <button
-                    onClick={() => setSelectedPaymentMethod('card')}
-                    className={`p-6 rounded-2xl border-2 transition-all ${
-                      selectedPaymentMethod === 'card'
-                        ? 'border-blue-500 bg-blue-50 shadow-lg'
-                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
-                    }`}
-                  >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                          <CreditCard className="w-6 h-6 text-blue-600" />
-                        </div>
-                      <div className="text-left">
-                        <h4 className="font-bold text-gray-900">Tarjeta de Crédito</h4>
-                        <p className="text-sm text-gray-600">Visa, Mastercard, Amex</p>
-                        <p className="text-xs text-orange-600 font-medium mt-1">+ 5% comisión financiera</p>
-                        </div>
-                      </div>
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedPaymentMethod('pse')}
-                    className={`p-6 rounded-2xl border-2 transition-all ${
-                      selectedPaymentMethod === 'pse'
-                        ? 'border-green-500 bg-green-50 shadow-lg'
-                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
-                    }`}
-                  >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                          <Shield className="w-6 h-6 text-green-600" />
-                        </div>
-                      <div className="text-left">
-                        <h4 className="font-bold text-gray-900">PSE</h4>
-                        <p className="text-sm text-gray-600">Pago Seguro en Línea</p>
-                        <p className="text-xs text-green-600 font-medium mt-1">Sin comisión adicional</p>
-                  </div>
-                  </div>
-                  </button>
-                </div>
-              </div>
-
-
-              {selectedPaymentMethod === 'pse' && (
-                <div className="mb-8">
-                  <h4 className="text-lg font-bold text-gray-900 mb-6">Información para PSE</h4>
-                  
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de documento</label>
-                        <select
-                          value={paymentData.documentType}
-                          onChange={(e) => setPaymentData(prev => ({ ...prev, documentType: e.target.value }))}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none bg-gray-50 focus:bg-white transition-all"
-                        >
-                          <option value="CC">Cédula de Ciudadanía</option>
-                          <option value="CE">Cédula de Extranjería</option>
-                          <option value="NIT">NIT</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Número de documento</label>
-                        <input
-                          type="text"
-                          placeholder="123456789"
-                          value={paymentData.documentNumber}
-                          onChange={(e) => setPaymentData(prev => ({ ...prev, documentNumber: e.target.value }))}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none bg-gray-50 focus:bg-white transition-all"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Correo electrónico</label>
-                        <input
-                          type="email"
-                          placeholder="tu@email.com"
-                          value={paymentData.email}
-                          onChange={(e) => setPaymentData(prev => ({ ...prev, email: e.target.value }))}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none bg-gray-50 focus:bg-white transition-all"
-                        />
-                  </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                        <input
-                          type="tel"
-                          placeholder="300 123 4567"
-                          value={paymentData.phone}
-                          onChange={(e) => setPaymentData(prev => ({ ...prev, phone: e.target.value }))}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none bg-gray-50 focus:bg-white transition-all"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Payment Summary */}
-              {selectedPaymentMethod && (
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 mb-8 border-2 border-gray-200">
-                  <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    📋 Resumen del pago
-                  </h4>
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Monto:</span>
-                      <span className="text-xl font-bold">{formatCurrency(finalAmount)}</span>
-              </div>
-
-                    {/* Level Bonus */}
-                    {calculateLevelBonus(finalAmount) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <Crown className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                          <span className="text-blue-600 text-sm truncate">
-                            Bonus Nivel {currentLevel.name} ({currentLevel.bonusPercentage}%):
-                          </span>
-                </div>
-                        <span className="font-bold text-blue-600 ml-2 text-sm">
-                          +{formatCreditsText(calculateLevelBonus(finalAmount))}
-                    </span>
-            </div>
-          )}
-                    
-                    {/* Campaign Bonus */}
-                    {calculateCampaignBonus(finalAmount) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <Gift className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          <span className="text-green-600 text-sm truncate">
-                            Bonus {currentCampaign?.name} ({currentCampaign?.value}%):
-                          </span>
-                        </div>
-                        <span className="font-bold text-green-600 ml-2 text-sm">
-                          +{formatCreditsText(calculateCampaignBonus(finalAmount))}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {/* Financial Commission - Only for Credit Card */}
-                    {selectedPaymentMethod === 'card' && (
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <CreditCard className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                          <span className="text-orange-600 text-sm truncate">
-                            Comisión financiera (5%):
-                          </span>
-                        </div>
-                        <span className="font-bold text-orange-600 ml-2 text-sm">
-                          +{formatCurrency(calculateFinancialCommission(finalAmount, selectedPaymentMethod))}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <div className="border-t-2 border-gray-300 pt-3 flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">
-                        {selectedPaymentMethod === 'card' ? 'Total a pagar:' : 'Total créditos:'}
-                      </span>
-                      <div className="text-right">
-                        {selectedPaymentMethod === 'card' ? (
-                          <>
-                            <div className="text-2xl font-bold text-gray-900">
-                              {formatCurrency(getTotalWithCommission())}
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              = {formatCreditsText(total)} créditos
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-2xl font-bold text-blue-600">{formatCreditsText(total)}</span>
-                        )}
-                      </div>
-                    </div>
-            </div>
-                </div>
-              )}
-              
-                {/* Payment Buttons */}
-                
-
-              {/* Payment Form */}
-              {selectedPaymentMethod === 'card' && (
-                <div className="mb-8">
-                  <h4 className="text-lg font-bold text-gray-900 mb-6">Información de la tarjeta</h4>
-                  
-                    {isProcessing ? (
-                      <div className="flex justify-center items-center py-8">
-                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                        <p className="text-sm text-gray-600 dark:text-gray-400 ml-3">
-                          Procesando pago... no cierre la página
-                        </p>
-                      </div>
-                    ) : (
-                      <Elements stripe={stripePromise}>
-                        <PaymentForm
-                          onSuccess={handlePayment}
-                          onError={handlePaymentError}
-                          amount={getTotalWithCommission()}
-                        />
-                      </Elements>
-                    )}
-              
-
-             
-                </div>
-                )}
-                
-              <div className="flex flex-col gap-4">
-                  
-                  <button
-                  onClick={() => setStep('packages')}
-                  className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-                  >
-                  Volver a Paquetes
-                    </button>
-                </div>
-              </div>
-          </>
-            )}
-      </div>
-    </div>
-  );
-});
+// TODO: Old modal code completely removed - using new RechargeModal component
 
 // Provider simplificado
 const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -1975,6 +1339,13 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
     .filter(t => t.amount < 0)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
+  // Función deposit para el nuevo modal
+  const deposit = async (depositData: { amount: number; paymentReference: string; description: string }) => {
+    console.log('💳 Deposit function called:', depositData);
+    // Simula el procesamiento del pago
+    return { success: true, transactionId: depositData.paymentReference };
+  };
+
   const handleRecharge = async (amount: number) => {
     console.log('🎯 handleRecharge called with amount:', amount);
     
@@ -2056,7 +1427,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
         {/* Header - Mobile optimized */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Wallet de Créditos</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Wallet</h1>
             <p className="text-gray-600 mt-1 text-sm sm:text-base">
               Potencia tu creatividad e ilumina la ciudad
             </p>
@@ -2066,12 +1437,59 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 rounded-xl font-semibold shadow-lg transition-colors flex items-center justify-center gap-2 min-h-[48px] w-full sm:w-auto"
           >
             <Zap className="w-5 h-5" />
-            Recargar Créditos
+            Recargar
           </button>
         </div>
 
-        {/* Motivational Banner */}
-        <MotivationalBanner userType={userType} bonusPercentage={userBonusPercentage} />
+        {/* Campaign Banner - Moved to top */}
+        {activeBonus && (
+          <div className="relative mb-6 sm:mb-8 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl sm:rounded-3xl p-4 sm:p-8 relative overflow-hidden">
+              {/* Main content - Mobile first */}
+              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-6">
+                  {/* Icon */}
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl border border-white/30">
+                    {activeBonus.icon}
+                  </div>
+
+                  {/* Campaign info */}
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                      <h3 className="text-lg sm:text-2xl font-bold text-white">
+                        {activeBonus.name}
+                      </h3>
+                    </div>
+                    <p className="text-blue-100 text-xs sm:text-sm mb-3 max-w-lg">
+                      {activeBonus.description}
+                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/30 w-fit">
+                        <Timer className="w-4 h-4 text-yellow-300" />
+                        <span className="text-white font-semibold text-sm">
+                          ¡Solo {timeLeft} días!
+                        </span>
+                      </div>
+                      <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-3 sm:px-4 py-2 rounded-lg font-bold text-sm w-fit">
+                        Hasta +{activeBonus.value}% bonus
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Button - Mobile optimized */}
+                <button
+                  onClick={() => setIsRechargeModalOpen(true)}
+                  className="bg-white text-blue-700 hover:text-blue-800 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 min-h-[48px] w-full sm:w-auto"
+                >
+                  <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+                  ¡Aprovechar oferta!
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Grid Layout - Mobile first */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
@@ -2080,7 +1498,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Créditos disponibles</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Saldo disponible</h2>
                   <div className="text-3xl sm:text-4xl font-bold text-blue-600">
                     {formatBalance(balance)}
                   </div>
@@ -2127,7 +1545,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                     ¿Cómo funcionan los Shareflow Credits?
                     <CreditTooltip 
                       content="Sistema de moneda virtual"
-                      subContent="Inspirado en las mejores plataformas globales, nuestros créditos te dan control total."
+                      subContent="Inspirado en las mejores plataformas globales, nuestro sistema te da control total."
                     >
                       <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
                     </CreditTooltip>
@@ -2145,7 +1563,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                     </p>
                     <p className="text-sm flex items-start gap-2">
                       <span className="text-green-500">♾️</span>
-                      <span><strong>Sin vencimiento:</strong> Tus créditos nunca expiran</span>
+                      <span><strong>Sin vencimiento:</strong> Tu saldo nunca expira</span>
                     </p>
                     <p className="text-sm flex items-start gap-2">
                       <span className="text-red-500">🚀</span>
@@ -2214,55 +1632,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
           </div>
         </div>
 
-        {/* Campaign Banner - Mobile optimized */}
-        {activeBonus && (
-          <div className="relative mb-6 sm:mb-8 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl sm:rounded-3xl p-4 sm:p-8 relative overflow-hidden">
-              {/* Main content - Mobile first */}
-              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3 sm:gap-6">
-                  {/* Icon */}
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl border border-white/30">
-                    {activeBonus.icon}
-                  </div>
 
-                  {/* Campaign info */}
-                  <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                      <h3 className="text-lg sm:text-2xl font-bold text-white">
-                        {activeBonus.name}
-                      </h3>
-                    </div>
-                    <p className="text-blue-100 text-xs sm:text-sm mb-3 max-w-lg">
-                      {activeBonus.description}
-                    </p>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                      <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/30 w-fit">
-                        <Timer className="w-4 h-4 text-yellow-300" />
-                        <span className="text-white font-semibold text-sm">
-                          ¡Solo {timeLeft} días!
-                        </span>
-                      </div>
-                      <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-3 sm:px-4 py-2 rounded-lg font-bold text-sm w-fit">
-                        Hasta +{activeBonus.value}% bonus
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CTA Button - Mobile optimized */}
-                <button
-                  onClick={() => setIsRechargeModalOpen(true)}
-                  className="bg-white text-blue-700 hover:text-blue-800 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 min-h-[48px] w-full sm:w-auto"
-                >
-                  <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-                  ¡Aprovechar oferta!
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Compact Recent Activity */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
@@ -2285,7 +1655,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium mb-1">Total Créditos</p>
+                  <p className="text-green-600 text-sm font-medium mb-1">Total</p>
                   <p className="text-xl sm:text-2xl font-bold text-green-700">
                     +{formatCreditsText(totalCredits)}
                   </p>
@@ -2408,11 +1778,18 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
           onRecharge={handleRecharge}
           currentBalance={wallet.balance}
           currentCampaign={activeBonus}
-          isReturningUser={isReturningUser}
-          userBonusPercentage={userBonusPercentage}
+          currentLevel={currentLevel}
           userType={userType}
           timeLeft={timeLeft}
-          currentLevel={currentLevel}
+          calculateBonus={(amount) => calculateBonus(amount, activeBonus, currentLevel, userBonusPercentage)}
+          calculateLevelBonus={(amount) => calculateLevelBonus(amount, currentLevel)}
+          calculateCampaignBonus={(amount) => calculateCampaignBonus(amount, activeBonus)}
+          calculateFinancialCommission={calculateFinancialCommission}
+          formatBalance={formatBalance}
+          formatCurrency={formatCurrency}
+          formatCreditsText={formatCreditsText}
+          deposit={deposit}
+          PaymentForm={PaymentForm}
         />
 
         <LevelsModalComponent
@@ -2558,7 +1935,7 @@ const CelebrationPage: React.FC<CelebrationPageProps> = memo(({ isOpen, onClose,
             ¡Recarga Exitosa! 🎉
           </h2>
           <p className="text-gray-600">
-            Tus créditos ya están listos para brillar en la ciudad
+            Tu saldo ya está listo para brillar en la ciudad
           </p>
         </motion.div>
 
@@ -2605,7 +1982,7 @@ const CelebrationPage: React.FC<CelebrationPageProps> = memo(({ isOpen, onClose,
           )}
           
           <div className="border-t border-gray-300 pt-3 flex justify-between items-center">
-            <span className="font-bold text-gray-900">Total créditos:</span>
+            <span className="font-bold text-gray-900">Total:</span>
             <div className="text-right">
               <div className="font-bold text-2xl text-blue-600">
                 💰 {formatCreditsText(totalCredits)}
