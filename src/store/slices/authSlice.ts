@@ -49,6 +49,7 @@ export const login = createAsyncThunk(
     try {
       // For demo purposes, accept demo credentials
       if (credentials.email === 'demo@shareflow.me' && credentials.password === 'ShareFlow2024!') {
+        console.log('Using demo credentials, returning demo user');
         return {
           token: 'demo-token',
           user: {
@@ -61,31 +62,25 @@ export const login = createAsyncThunk(
         };
       }
       
-      try {
-        const { data } = await request.post('/Auth/login', {
-          email: credentials.email,
-          password: credentials.password
-        });
-        
-        // Si data.user no existe, intentamos extraerlo del token JWT
-        if (data.token && !data.user) {
-          data.user = extractUserFromToken(data.token);
-        }
-        
-        return data;
-      } catch (apiError: any) {
-        if (apiError.response && apiError.response.data.message) { 
-          alert(apiError.response.data.message);
-        } else {
-          alert('Error al iniciar sesión');
-        }
-        
-        if (apiError.response && apiError.response.data) {
-          return rejectWithValue(apiError.response.data.message || 'Error al iniciar sesión');
-        }
-        throw apiError;
+      console.log('Making API request to:', '/Auth/login');
+      const { data } = await request.post('/Auth/login', {
+        email: credentials.email,
+        password: credentials.password
+      });
+      
+      // Si data.user no existe, intentamos extraerlo del token JWT
+      if (data.token && !data.user) {
+        data.user = extractUserFromToken(data.token);
       }
-    } catch (error) {
+      
+      return data;
+    } catch (apiError: any) {
+      console.error('Login API error:', apiError);
+      
+      if (apiError.response && apiError.response.data) {
+        return rejectWithValue(apiError.response.data.message || 'Error al iniciar sesión');
+      }
+      
       return rejectWithValue('Error de conexión');
     }
   }

@@ -418,11 +418,13 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                 </div>
               )}
               {isCollapsed ? (
-                <Tooltip content={ user?.username ?? ''}>
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                </Tooltip>
+                <div className="flex flex-col items-center gap-2">
+                  <Tooltip content={ user?.username ?? ''}>
+                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary" />
+                    </div>
+                  </Tooltip>
+                </div>
               ) : (
                 <Link
                   to="/profile"
