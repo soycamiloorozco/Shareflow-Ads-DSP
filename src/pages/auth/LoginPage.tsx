@@ -36,8 +36,14 @@ export function LoginPage() {
     : null;
 
   const onSubmit = async (data: LoginFormData) => {
-    const response = await login(data.email, data.password, data.remember);
-    console.log({response});
+    try {
+      console.log('LoginPage: Attempting login with:', { email: data.email, remember: data.remember });
+      const response = await login(data.email, data.password, data.remember);
+      console.log('LoginPage: Login successful:', response);
+    } catch (error) {
+      console.error('LoginPage: Login failed:', error);
+      // El error ya se maneja en el hook useAuth y se muestra en la UI a través del estado error
+    }
   };
 
   const useDemoCredentials = () => {
@@ -78,6 +84,19 @@ export function LoginPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-success-800">{successMessage}</p>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="p-4 bg-error-50 border border-error-200 rounded-lg flex items-start gap-3 mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-error-800">{error}</p>
                 </div>
               </div>
             )}

@@ -84,6 +84,8 @@ export const ScreenCard = React.memo<ScreenCardProps>(({
     }
   }, [handleCardClick]);
 
+
+
   if (loading) {
     return (
       <div className={`bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm animate-pulse ${className}`}>
@@ -272,19 +274,22 @@ export const ScreenCard = React.memo<ScreenCardProps>(({
               <div className="text-xs text-gray-500">desde / hora</div>
             </div>
 
-            {/* CTA Button - Enhanced Touch Target */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('CTA Button clicked for screen:', screen.id);
-                onSelect(screen);
-              }}
-              className="px-3 py-2 sm:px-4 sm:py-2.5 bg-[#353FEF] hover:bg-[#2A32C5] text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 shadow-sm touch-manipulation min-h-[44px]"
-              aria-label={`Ver detalles de ${screen.name}`}
-            >
-              <span>Ver</span>
-              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
-            </button>
+            {/* Action Button */}
+            <div className="flex items-center gap-2">
+              {/* View Details Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('CTA Button clicked for screen:', screen.id);
+                  onSelect(screen);
+                }}
+                className="px-3 py-2 sm:px-4 sm:py-2.5 bg-[#353FEF] hover:bg-[#2A32C5] text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 shadow-sm touch-manipulation min-h-[44px]"
+                aria-label={`Ver detalles de ${screen.name}`}
+              >
+                <span>Ver detalles</span>
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
