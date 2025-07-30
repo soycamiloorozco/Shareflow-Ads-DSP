@@ -276,21 +276,31 @@ export function MarketplaceRefactored() {
   const [viewMode, setViewMode] = useState<ViewMode>('sectioned');
   const [showCircuits, setShowCircuits] = useState(false); // Changed to false so API screens are shown by default
 
-  // Get search query from filters state
-  const searchQuery = filters.search.query;
+  // Estado local para el input de búsqueda (separado de los filtros)
+  const [searchQuery, setSearchQuery] = useState(filters.search.query);
 
-  // Debounced search
+  // Debounced search para actualizar los filtros sin afectar el input
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Update search filter when debounced query changes
+  // Actualizar filtros solo cuando el debounced query cambie
   useEffect(() => {
     if (debouncedSearchQuery !== filters.search.query) {
-      updateFilters({
+      // Crear nuevo objeto de filtros con la query actualizada
+      const newFilters = {
         ...filters,
         search: { ...filters.search, query: debouncedSearchQuery }
-      });
+      };
+      updateFilters(newFilters);
     }
-  }, [debouncedSearchQuery, filters, updateFilters]);
+  }, [debouncedSearchQuery]); // Solo depender del debounced query para evitar ciclos
+
+  // Sincronizar el estado local cuando los filtros cambien externamente (por ejemplo, al limpiar filtros)
+  useEffect(() => {
+    // Solo sincronizar si el cambio viene de fuera (no del debounce actual)
+    if (filters.search.query !== searchQuery && filters.search.query !== debouncedSearchQuery) {
+      setSearchQuery(filters.search.query);
+    }
+  }, [filters.search.query, searchQuery, debouncedSearchQuery]);
 
   // Filter options based on combined screens
   const filterOptions = useMemo(() => generateFilterOptions(allCombinedScreens), [allCombinedScreens]);
@@ -428,11 +438,9 @@ export function MarketplaceRefactored() {
 
   // Event handlers
   const handleSearchChange = useCallback((query: string) => {
-    updateFilters({
-      ...filters,
-      search: { ...filters.search, query }
-    });
-  }, [filters, updateFilters]);
+    // Actualizar solo el estado local, los filtros se actualizarán via debounce
+    setSearchQuery(query);
+  }, []);
 
   const handleScreenSelect = useCallback((screen: Screen) => {
     const targetPath = `/screens/${screen.id}`;
@@ -520,6 +528,7 @@ export function MarketplaceRefactored() {
             onInfoClick={handleInfoClick}
             filteredCount={filteredScreens.length}
             loading={loading}
+            availableScreens={screens}
           />
 
           {/* Main Content */}

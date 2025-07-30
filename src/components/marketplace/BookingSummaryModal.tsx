@@ -190,6 +190,11 @@ const useWalletBalance = () => {
           requestBody.purchaseType = bookingData.type;
         }
 
+        // Add mediaType if available
+        if (bookingData?.mediaType) {
+          requestBody.mediaType = bookingData.mediaType;
+        }
+
         // Debug: Log bookingData to see what's available
         console.log('🔍 bookingData.creative available:', !!bookingData?.creative);
         if (bookingData?.creative) {
@@ -207,7 +212,8 @@ const useWalletBalance = () => {
             base64: bookingData.creative.base64,
             fileName: bookingData.creative.fileName,
             fileType: bookingData.creative.fileType,
-            fileSize: bookingData.creative.fileSize
+            fileSize: bookingData.creative.fileSize,
+            mediaType: bookingData.creative.mediaType || bookingData.mediaType
           };
         } else if (bookingData?.file && !bookingData?.uploadLater) {
           // Convert file to base64 synchronously for this request
@@ -224,11 +230,14 @@ const useWalletBalance = () => {
             reader.readAsDataURL(bookingData.file);
           });
           
+          const mediaType = bookingData.file.type.startsWith('video/') ? 'video' : 'image';
+          
           requestBody.creative = {
             base64: base64Data,
             fileName: bookingData.file.name,
             fileType: bookingData.file.type,
-            fileSize: bookingData.file.size
+            fileSize: bookingData.file.size,
+            mediaType: mediaType
           };
         } else {
           // If no creative data, send a placeholder to satisfy the required field
@@ -236,7 +245,8 @@ const useWalletBalance = () => {
             base64: "",
             fileName: "placeholder.png",
             fileType: "image/png",
-            fileSize: 0
+            fileSize: 0,
+            mediaType: "image"
           };
         }
 

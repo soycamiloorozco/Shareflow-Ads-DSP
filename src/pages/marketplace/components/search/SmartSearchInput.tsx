@@ -3,6 +3,7 @@ import { Search, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SearchSuggestions } from './SearchSuggestions';
 import { SearchSuggestion } from '../../types/filter.types';
+import { Screen } from '../../types';
 
 interface SmartSearchInputProps {
   value: string;
@@ -15,6 +16,7 @@ interface SmartSearchInputProps {
   loading?: boolean;
   className?: string;
   'aria-label'?: string;
+  availableScreens?: Screen[]; // Nueva prop para los datos de pantallas de la API
 }
 
 export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
@@ -27,7 +29,8 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
   suggestions = [],
   loading = false,
   className = '',
-  'aria-label': ariaLabel = 'Smart search input for marketplace'
+  'aria-label': ariaLabel = 'Smart search input for marketplace',
+  availableScreens = [] // Nueva prop con default vacío
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -35,101 +38,195 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Generate smart suggestions based on input
+  // Generate smart suggestions based on API data
   const smartSuggestions = useMemo(() => {
     if (!value.trim() || value.length < 2) {
-      // Show popular suggestions when no input
-      return [
-        { id: 'bogota', text: 'Bogotá', type: 'location' as const, count: 45, icon: '📍' },
-        { id: 'medellin', text: 'Medellín', type: 'location' as const, count: 32, icon: '📍' },
-        { id: 'mall', text: 'Centros Comerciales', type: 'category' as const, count: 28, icon: '🏬' },
-        { id: 'billboard', text: 'Vallas Publicitarias', type: 'category' as const, count: 56, icon: '📺' },
-        { id: 'moments', text: 'Pantallas con Momentos', type: 'venue' as const, count: 23, icon: '⚡' }
-      ];
+      // Generar sugerencias populares basadas en datos reales de pantallas
+      if (availableScreens.length === 0) {
+        return []; // Retornar array vacío si no hay pantallas disponibles
+      }
+
+      // Obtener ciudades más populares de los datos reales
+      const cityCount = new Map<string, number>();
+      const categoryCount = new Map<string, { name: string; count: number }>();
+      
+      availableScreens.forEach(screen => {
+        // Extraer ciudad de la ubicación
+        const locationParts = screen.location.split(',');
+        const city = locationParts[locationParts.length - 1]?.trim();
+        if (city && city !== 'Colombia') {
+          cityCount.set(city, (cityCount.get(city) || 0) + 1);
+        }
+        
+        // Contar categorías
+        if (screen.category?.id && screen.category?.name) {
+          const existing = categoryCount.get(screen.category.id);
+          if (existing) {
+            existing.count++;
+          } else {
+            categoryCount.set(screen.category.id, { 
+              name: screen.category.name, 
+              count: 1 
+            });
+          }
+        }
+      });
+
+      const popularSuggestions: SearchSuggestion[] = [];
+
+      // Top 3 ciudades
+      const topCities = Array.from(cityCount.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+      
+      topCities.forEach(([city, count]) => {
+        popularSuggestions.push({
+          id: `city-${city.toLowerCase()}`,
+          text: city,
+          type: 'location',
+          count,
+          icon: '📍'
+        });
+      });
+
+      // Top 2 categorías
+      const topCategories = Array.from(categoryCount.entries())
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 2);
+      
+      topCategories.forEach(([categoryId, { name, count }]) => {
+        popularSuggestions.push({
+          id: `category-${categoryId}`,
+          text: name,
+          type: 'category',
+          count,
+          icon: '🏢'
+        });
+      });
+
+      // Pantallas con momentos si están disponibles
+      const screensWithMoments = availableScreens.filter(screen => screen.pricing?.allowMoments);
+      if (screensWithMoments.length > 0) {
+        popularSuggestions.push({
+          id: 'moments-feature',
+          text: 'Pantallas con Momentos (15s)',
+          type: 'venue',
+          count: screensWithMoments.length,
+          icon: '⚡'
+        });
+      }
+
+      return popularSuggestions.slice(0, 5);
     }
 
     const query = value.toLowerCase().trim();
     const filtered: SearchSuggestion[] = [];
 
-    // Location suggestions
-    const locations = [
-      { name: 'Bogotá', count: 45 },
-      { name: 'Medellín', count: 32 },
-      { name: 'Cali', count: 28 },
-      { name: 'Barranquilla', count: 18 },
-      { name: 'Cartagena', count: 12 },
-      { name: 'Zona Rosa', count: 15 },
-      { name: 'El Dorado', count: 8 },
-      { name: 'Chapinero', count: 22 }
-    ];
+    // Buscar ubicaciones reales
+    const locationMatches = new Map<string, number>();
+    availableScreens.forEach(screen => {
+      const locationParts = screen.location.split(',');
+      locationParts.forEach(part => {
+        const location = part.trim();
+        if (location.toLowerCase().includes(query) && location !== 'Colombia') {
+          locationMatches.set(location, (locationMatches.get(location) || 0) + 1);
+        }
+      });
+    });
 
-    locations.forEach(location => {
-      if (location.name.toLowerCase().includes(query)) {
+    // Agregar ubicaciones que coincidan
+    Array.from(locationMatches.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .forEach(([location, count]) => {
         filtered.push({
-          id: `location-${location.name.toLowerCase()}`,
-          text: location.name,
+          id: `location-${location.toLowerCase().replace(/\s+/g, '-')}`,
+          text: location,
           type: 'location',
-          count: location.count,
+          count,
           icon: '📍'
         });
+      });
+
+    // Buscar categorías reales
+    const categoryMatches = new Map<string, { name: string; count: number }>();
+    availableScreens.forEach(screen => {
+      if (screen.category?.name?.toLowerCase().includes(query)) {
+        const existing = categoryMatches.get(screen.category.id);
+        if (existing) {
+          existing.count++;
+        } else {
+          categoryMatches.set(screen.category.id, {
+            name: screen.category.name,
+            count: 1
+          });
+        }
       }
     });
 
-    // Category suggestions
-    const categories = [
-      { name: 'Centros Comerciales', count: 28 },
-      { name: 'Vallas Publicitarias', count: 56 },
-      { name: 'Transporte', count: 34 },
-      { name: 'Aeropuertos', count: 8 },
-      { name: 'Estadios', count: 12 },
-      { name: 'Universidades', count: 16 }
-    ];
-
-    categories.forEach(category => {
-      if (category.name.toLowerCase().includes(query)) {
+    // Agregar categorías que coincidan
+    Array.from(categoryMatches.entries())
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 2)
+      .forEach(([categoryId, { name, count }]) => {
         filtered.push({
-          id: `category-${category.name.toLowerCase()}`,
-          text: category.name,
+          id: `category-${categoryId}`,
+          text: name,
           type: 'category',
-          count: category.count,
+          count,
           icon: '🏢'
         });
-      }
+      });
+
+    // Buscar nombres de pantallas reales
+    const screenMatches = availableScreens
+      .filter(screen => screen.name.toLowerCase().includes(query))
+      .slice(0, 2);
+
+    screenMatches.forEach(screen => {
+      filtered.push({
+        id: `screen-${screen.id}`,
+        text: screen.name,
+        type: 'screen',
+        icon: '📺'
+      });
     });
 
-    // Screen name suggestions
-    const screens = [
-      'Pantalla LED Perimetral',
-      'Gran Pantalla Digital',
-      'Valla Digital Premium',
-      'Pantalla Principal',
-      'Pantalla Interactiva'
-    ];
-
-    screens.forEach(screen => {
-      if (screen.toLowerCase().includes(query)) {
+    // Sugerencias de características especiales
+    if (query.includes('momento') || query.includes('15') || query.includes('segundo')) {
+      const screensWithMoments = availableScreens.filter(screen => screen.pricing?.allowMoments);
+      if (screensWithMoments.length > 0) {
         filtered.push({
-          id: `screen-${screen.toLowerCase()}`,
-          text: screen,
-          type: 'screen',
-          icon: '📺'
+          id: 'moments-feature',
+          text: 'Pantallas con Momentos (15s)',
+          type: 'venue',
+          count: screensWithMoments.length,
+          icon: '⚡'
         });
       }
-    });
-
-    // Feature suggestions
-    if (query.includes('momento') || query.includes('15') || query.includes('segundo')) {
-      filtered.push({
-        id: 'moments-feature',
-        text: 'Pantallas con Momentos (15s)',
-        type: 'venue',
-        count: 23,
-        icon: '⚡'
-      });
     }
 
-    return filtered.slice(0, 6); // Limit to 6 suggestions
-  }, [value]);
+    // Sugerencias de precio si buscan términos relacionados
+    if (query.includes('precio') || query.includes('barato') || query.includes('económico') || query.includes('accesible')) {
+      const budgetScreens = availableScreens.filter(screen => {
+        const price = typeof screen.price === 'number' ? screen.price : 
+                     screen.pricing?.bundles?.hourly?.price || 0;
+        return price > 0 && price <= 800000; // Menos de 800K COP
+      });
+
+      if (budgetScreens.length > 0) {
+        filtered.push({
+          id: 'budget-friendly',
+          text: 'Precios Accesibles',
+          type: 'category',
+          count: budgetScreens.length,
+          icon: '💰'
+        });
+      }
+    }
+
+    return filtered.slice(0, 6); // Limitar a 6 sugerencias
+  }, [value, availableScreens]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

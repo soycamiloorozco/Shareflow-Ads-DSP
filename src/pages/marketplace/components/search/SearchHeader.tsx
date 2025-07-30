@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import { Button } from '../../../../components/Button';
 import { SmartSearchInput } from './SmartSearchInput';
 import { SearchHeaderProps } from '../../types';
+import { Screen } from '../../types';
 
-export const SearchHeader = React.memo<SearchHeaderProps>(({
+export const SearchHeader = React.memo<SearchHeaderProps & { availableScreens?: Screen[] }>(({
   searchQuery,
   onSearchChange,
   onInfoClick,
@@ -12,7 +13,8 @@ export const SearchHeader = React.memo<SearchHeaderProps>(({
   suggestions = [],
   loading = false,
   className = '',
-  'aria-label': ariaLabel = 'Search header for marketplace screens'
+  'aria-label': ariaLabel = 'Search header for marketplace screens',
+  availableScreens = [] // Nueva prop para los datos de pantallas de la API
 }) => {
   const handleSmartSearch = useCallback((query: string) => {
     onSearchChange(query);
@@ -85,6 +87,7 @@ export const SearchHeader = React.memo<SearchHeaderProps>(({
                 loading={loading}
                 className="w-full"
                 aria-label="Search for screens, locations, or categories"
+                availableScreens={availableScreens}
               />
             </div>
           

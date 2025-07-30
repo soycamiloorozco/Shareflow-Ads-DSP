@@ -4,37 +4,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import {
-  ArrowLeft, Heart, Share2,
-  Clock, Wallet, Monitor, Check,
+  ArrowLeft, 
+  Wallet, 
   MapPin, Star, Eye,
   ChevronDown, ChevronUp,
-  Linkedin, Twitter, Facebook,
-  Calendar,
+  
   Users,
-  ChevronRight,
-  Building,
-  BarChart3,
-  Menu,
-  X,
   HelpCircle,
-  Info,
   TrendingUp,
   Zap,
   Shield,
   Award,
-  MessageCircle,
   ShoppingCart,
   Navigation
 } from 'lucide-react';
 import { screens as mockScreens } from '../data/mockData';
 import { demoScreens as marketplaceDemoScreens } from '../data/demoScreens';
 import { constants } from '../config/constants';
-import { Button } from '../components/Button';
 import { ScreenNotFound } from '../components/ScreenNotFound';
 import { Screen } from '../types';
 
 // Import MarketplaceApiService for better API integration
-import { MarketplaceApiService } from './marketplace/services/api/MarketplaceApiService';
 
 // Demo screens from marketplace (should match MarketplaceRefactored.tsx)
 const demoScreens = [
@@ -253,30 +243,19 @@ const demoScreens = [
 const allScreens = [...mockScreens, ...convertDemoScreensToScreens(marketplaceDemoScreens)] as Screen[];
 import {
   OpenRTBBidRequest,
-  OpenRTBBidResponse,
   DOOHCampaignRequest,
   DOOHCampaignResponse,
   DOOHUtils,
   DOOHVenueType,
   DOOHVenueSubType,
-  DOOHVenueLocation,
   DOOHCampaignStatus,
   DOOHScreen,
   DOOHInventoryRequest,
   DOOHInventoryResponse,
-  DOOHInventoryAllocation,
-  DOOHMetrics,
   DOOHTargetingCriteria,
   DOOHBudget,
   DOOHSchedule,
-  DOOHTimeSlot,
-  DOOHCoordinates,
-  DOOHScreenSpecs,
-  DOOHAvailability,
-  DOOHPricing,
-  DOOHAudienceMetrics,
-  DOOHFrequency
-} from '../types/openrtb-dooh';
+  DOOHTimeSlot} from '../types/openrtb-dooh';
 // OPTIMIZED COMPONENTS WITH QWIK PERFORMANCE INDICATORS
 
 import ScreenLocationMap from '../components/marketplace/ScreenLocationMap';
@@ -288,7 +267,7 @@ import { BookingSummaryModal } from '../components/marketplace/BookingSummaryMod
 import { ScreenGallery } from '../components/marketplace/ScreenGallery';
 import { ModernScreenSpecs } from '../components/marketplace/ModernScreenSpecs';
 
-import { VENUE_TAXONOMY, VenueAIClassifier, type VenueParentCategory, type VenueChildCategory, type AudienceType, type DwellTime } from '../types/venue-categories';
+import { VENUE_TAXONOMY, VenueAIClassifier, type VenueParentCategory, type AudienceType, type DwellTime } from '../types/venue-categories';
 import { WalletProvider } from './WalletPageNew';
 import { useSSPInventory } from './marketplace/hooks/useSSPInventory';
 

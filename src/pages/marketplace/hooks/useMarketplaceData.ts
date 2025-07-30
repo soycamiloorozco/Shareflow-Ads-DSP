@@ -35,6 +35,208 @@ const getCategoryDisplayName = (category: string): string => {
   return categoryMap[category] || category;
 };
 
+// Helper function to generate real sections from API data
+const generateRealSectionsFromScreens = (screens: Screen[]): MarketplaceSection[] => {
+  if (screens.length === 0) return [];
+
+  const sections: MarketplaceSection[] = [];
+
+  // 1. Section: Pantallas Populares (highest rated screens)
+  const popularScreens = screens
+    .filter(screen => screen.rating >= 4.0)
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 8);
+
+  if (popularScreens.length > 0) {
+    sections.push({
+      id: 'popular-screens',
+      title: 'Pantallas Populares',
+      subtitle: 'Las pantallas mejor valoradas por nuestros usuarios',
+      screens: popularScreens,
+      displayType: 'horizontal-scroll',
+      priority: 1,
+      metadata: {
+        algorithm: 'trending-analysis',
+        confidence: 0.9,
+        refreshInterval: 300000, // 5 minutes
+        trackingId: `popular-${Date.now()}`,
+        generatedAt: new Date()
+      }
+    });
+  }
+
+  // 2. Section: Por Categorías (group by categories)
+  const categoriesMap = new Map<string, Screen[]>();
+  screens.forEach(screen => {
+    if (screen.category?.id) {
+      const categoryId = screen.category.id;
+      if (!categoriesMap.has(categoryId)) {
+        categoriesMap.set(categoryId, []);
+      }
+      categoriesMap.get(categoryId)!.push(screen);
+    }
+  });
+
+  // Get the category with most screens
+  let largestCategory = '';
+  let largestCategoryScreens: Screen[] = [];
+  categoriesMap.forEach((categoryScreens, categoryId) => {
+    if (categoryScreens.length > largestCategoryScreens.length) {
+      largestCategory = categoryId;
+      largestCategoryScreens = categoryScreens;
+    }
+  });
+
+  if (largestCategoryScreens.length > 0) {
+    const categoryName = largestCategoryScreens[0].category?.name || largestCategory;
+    sections.push({
+      id: `category-${largestCategory}`,
+      title: `Mejores en ${categoryName}`,
+      subtitle: `Pantallas destacadas en la categoría ${categoryName}`,
+      screens: largestCategoryScreens.slice(0, 6),
+      displayType: 'grid',
+      priority: 2,
+      metadata: {
+        algorithm: 'geographic-popularity',
+        confidence: 0.8,
+        refreshInterval: 600000, // 10 minutes
+        trackingId: `category-${largestCategory}-${Date.now()}`,
+        generatedAt: new Date()
+      }
+    });
+  }
+
+  // 3. Section: Por Ubicación (group by city)
+  const citiesMap = new Map<string, Screen[]>();
+  screens.forEach(screen => {
+    const locationParts = screen.location.split(',');
+    const city = locationParts[locationParts.length - 1]?.trim() || 'Sin ciudad';
+    if (!citiesMap.has(city)) {
+      citiesMap.set(city, []);
+    }
+    citiesMap.get(city)!.push(screen);
+  });
+
+  // Get the city with most screens
+  let largestCity = '';
+  let largestCityScreens: Screen[] = [];
+  citiesMap.forEach((cityScreens, city) => {
+    if (cityScreens.length > largestCityScreens.length && city !== 'Sin ciudad') {
+      largestCity = city;
+      largestCityScreens = cityScreens;
+    }
+  });
+
+  if (largestCityScreens.length > 0) {
+    sections.push({
+      id: `location-${largestCity.toLowerCase().replace(/\s+/g, '-')}`,
+      title: `Pantallas en ${largestCity}`,
+      subtitle: `Las mejores ubicaciones disponibles en ${largestCity}`,
+      screens: largestCityScreens
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        .slice(0, 8),
+      displayType: 'horizontal-scroll',
+      priority: 3,
+      metadata: {
+        algorithm: 'geographic-popularity',
+        confidence: 0.85,
+        refreshInterval: 600000, // 10 minutes
+        trackingId: `location-${largestCity}-${Date.now()}`,
+        generatedAt: new Date()
+      }
+    });
+  }
+
+  // 4. Section: Precios Accesibles (budget-friendly screens)
+  const budgetScreens = screens
+    .filter(screen => {
+      const price = typeof screen.price === 'number' ? screen.price : 
+                   screen.pricing?.bundles?.hourly?.price || 0;
+      return price > 0 && price <= 800000; // Less than 800K COP
+    })
+    .sort((a, b) => {
+      const priceA = typeof a.price === 'number' ? a.price : a.pricing?.bundles?.hourly?.price || 0;
+      const priceB = typeof b.price === 'number' ? b.price : b.pricing?.bundles?.hourly?.price || 0;
+      return priceA - priceB;
+    })
+    .slice(0, 6);
+
+  if (budgetScreens.length > 0) {
+    sections.push({
+      id: 'budget-friendly',
+      title: 'Precios Accesibles',
+      subtitle: 'Pantallas de alta calidad a precios competitivos',
+      screens: budgetScreens,
+      displayType: 'grid',
+      priority: 4,
+      metadata: {
+        algorithm: 'content-based',
+        confidence: 0.75,
+        refreshInterval: 900000, // 15 minutes
+        trackingId: `budget-${Date.now()}`,
+        generatedAt: new Date()
+      }
+    });
+  }
+
+  // 5. Section: Alto Tráfico (high traffic screens)
+  const highTrafficScreens = screens
+    .filter(screen => {
+      const traffic = screen.views?.daily || screen.metrics?.dailyTraffic || 0;
+      return traffic > 15000;
+    })
+    .sort((a, b) => {
+      const trafficA = a.views?.daily || a.metrics?.dailyTraffic || 0;
+      const trafficB = b.views?.daily || b.metrics?.dailyTraffic || 0;
+      return trafficB - trafficA;
+    })
+    .slice(0, 6);
+
+  if (highTrafficScreens.length > 0) {
+    sections.push({
+      id: 'high-traffic',
+      title: 'Alto Tráfico',
+      subtitle: 'Pantallas con mayor audiencia y visibilidad',
+      screens: highTrafficScreens,
+      displayType: 'featured',
+      priority: 5,
+      metadata: {
+        algorithm: 'trending-analysis',
+        confidence: 0.9,
+        refreshInterval: 300000, // 5 minutes
+        trackingId: `traffic-${Date.now()}`,
+        generatedAt: new Date()
+      }
+    });
+  }
+
+  // 6. Section: Recién Agregadas (if we had a createdAt field, we'd use recent screens)
+  // For now, we'll use a random selection as "nuevas"
+  const newScreens = [...screens]
+    .sort(() => Math.random() - 0.5) // Random shuffle
+    .slice(0, 8);
+
+  if (newScreens.length > 0) {
+    sections.push({
+      id: 'recently-added',
+      title: 'Recién Agregadas',
+      subtitle: 'Nuevas pantallas disponibles en nuestra plataforma',
+      screens: newScreens,
+      displayType: 'horizontal-scroll',
+      priority: 6,
+      metadata: {
+        algorithm: 'new-discovery',
+        confidence: 0.7,
+        refreshInterval: 1800000, // 30 minutes
+        trackingId: `new-${Date.now()}`,
+        generatedAt: new Date()
+      }
+    });
+  }
+
+  return sections;
+};
+
 interface UseMarketplaceDataProps {
   initialScreens?: Screen[];
   initialFilters?: FilterState;
@@ -229,7 +431,6 @@ export const useMarketplaceData = ({
       // Try to use the new api/Screens/all endpoint first
       try {
         const response = await fetch(`${constants.api_url}/Screens/all`);
-        
         if (response.ok) {
           const apiScreens = await response.json();
           
@@ -498,27 +699,39 @@ export const useMarketplaceData = ({
     setState(prev => ({ ...prev, sectionsLoading: true, sectionsError: null }));
 
     try {
-      // Determine location from filters or provided location
-      const targetLocation = options.location || 
-        (state.filters.location.cities.length > 0 ? state.filters.location.cities[0] : undefined);
+      // Wait for screens to be loaded if they're not available yet
+      if (state.screens.length === 0 && state.loading) {
+        console.log('⏳ Waiting for screens to load before generating sections...');
+        setState(prev => ({ ...prev, sectionsLoading: false }));
+        return;
+      }
 
-      // Set available screens in grouping engine to avoid double API calls
-      groupingEngine.setAvailableScreens(state.screens);
-      
-      // Generate sections using the grouping engine
-      const result = await groupingEngine.generateSections({
+      console.log('🔄 Generating sections from real API data:', {
+        availableScreens: state.screens.length,
         userId: options.userId,
-        location: targetLocation,
-        maxSections: options.maxSections || 6,
-        forceRefresh: options.forceRefresh || false,
-        includeAnalytics: true
+        location: options.location,
+        maxSections: options.maxSections
       });
 
-      // Apply current filters to sections if any are active (optimized)
-      let processedSections = result.sections;
-      if (hasActiveFilters) {
-        processedSections = applyFiltersToSections(result.sections, state.filters);
+      // Generate sections from real API data
+      let realSections = generateRealSectionsFromScreens(state.screens);
+      
+      // Limit sections if maxSections is specified
+      if (options.maxSections && options.maxSections > 0) {
+        realSections = realSections.slice(0, options.maxSections);
       }
+
+      // Apply current filters to sections if any are active (optimized)
+      let processedSections = realSections;
+      if (hasActiveFilters) {
+        processedSections = applyFiltersToSections(realSections, state.filters);
+      }
+
+      console.log('✅ Generated sections from API data:', {
+        totalSections: processedSections.length,
+        sectionTitles: processedSections.map(s => s.title),
+        totalScreensInSections: processedSections.reduce((acc, s) => acc + s.screens.length, 0)
+      });
 
       setState(prev => ({
         ...prev,
@@ -529,14 +742,9 @@ export const useMarketplaceData = ({
         lastSectionRefresh: new Date()
       }));
 
-      // Track section generation for analytics
-      if (result.analytics && process.env.NODE_ENV === 'development') {
-        console.debug('Section generation analytics:', result.analytics);
-      }
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate sections';
-      console.error('Failed to load sections:', error);
+      console.error('❌ Failed to load sections from API data:', error);
       
       setState(prev => ({
         ...prev,
@@ -545,7 +753,20 @@ export const useMarketplaceData = ({
         sections: [] // Clear sections on error
       }));
     }
-  }, [state.filters, state.sectionsCacheKey, state.sections.length, state.lastSectionRefresh, hasActiveFilters, generateSectionsCacheKey]);
+  }, [state.filters, state.sectionsCacheKey, state.sections.length, state.lastSectionRefresh, state.screens, state.loading, hasActiveFilters, generateSectionsCacheKey]);
+
+  // Auto-generate sections when screens are loaded from API
+  useEffect(() => {
+    if (state.screens.length > 0 && state.sections.length === 0 && !state.sectionsLoading) {
+      console.log('🔄 Auto-generating sections because screens were loaded from API');
+      loadSections({
+        maxSections: 6,
+        forceRefresh: false
+      }).catch(error => {
+        console.error('❌ Auto-generation of sections failed:', error);
+      });
+    }
+  }, [state.screens.length, state.sections.length, state.sectionsLoading, loadSections]);
 
   // Apply filters to sections while maintaining section structure (optimized)
   const applyFiltersToSections = useCallback((sections: MarketplaceSection[], filters: FilterState): MarketplaceSection[] => {

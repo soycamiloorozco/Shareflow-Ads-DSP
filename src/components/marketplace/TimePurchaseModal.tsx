@@ -1672,6 +1672,8 @@ export function TimePurchaseModal({
         price: totalPrice
       });
 
+      const mediaType = finalFile ? (finalFile.type.startsWith('video/') ? 'video' : 'image') : undefined;
+
       onComplete({
         screen,
         type: purchaseType,
@@ -1689,11 +1691,13 @@ export function TimePurchaseModal({
         uploadLater: uploadLater,
         imageDimensions: imageDimensions,
         price: totalPrice,
+        mediaType: mediaType,
         creative: finalFile && !uploadLater ? {
           base64: base64Data,
           fileName: finalFile.name,
           fileType: finalFile.type,
-          fileSize: finalFile.size
+          fileSize: finalFile.size,
+          mediaType: mediaType
         } : undefined
       });
     }
