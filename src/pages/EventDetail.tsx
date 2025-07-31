@@ -172,6 +172,7 @@ export function EventDetail() {
   // Creative upload state
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [fileBase64, setFileBase64] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -293,7 +294,7 @@ export function EventDetail() {
     
     const data = {
       sportEventId: id ?? "0",
-      FilePath: preview ?? '',
+      FilePath: fileBase64 ?? '',
       PurchaseDetails,
     };
 
@@ -346,6 +347,23 @@ export function EventDetail() {
       };
       
       video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          resolve(reader.result as string);
+        } else {
+          reject(new Error('Error al convertir archivo a base64'));
+        }
+      };
+      reader.onerror = () => {
+        reject(new Error('Error al leer el archivo'));
+      };
+      reader.readAsDataURL(file);
     });
   };
 
@@ -514,10 +532,21 @@ export function EventDetail() {
           updateProgress(100, 'Completado');
           setFile(file);
           setPreview(URL.createObjectURL(file));
-          setLoading(false);
-          setUploadProgress(0);
-          setCurrentStep('');
-          resolve();
+          
+          // Convertir a base64
+          convertFileToBase64(file).then(base64 => {
+            setFileBase64(base64);
+            setLoading(false);
+            setUploadProgress(0);
+            setCurrentStep('');
+            resolve();
+          }).catch(error => {
+            console.error('Error convirtiendo a base64:', error);
+            setLoading(false);
+            setUploadProgress(0);
+            setCurrentStep('');
+            resolve(); // Continuar aunque falle la conversión
+          });
           return;
         }
 
@@ -553,14 +582,31 @@ export function EventDetail() {
             setFile(adjustedFile);
             setPreview(URL.createObjectURL(adjustedFile));
             
-            // Limpiar estados de progreso después de un momento
-            setTimeout(() => {
-              setLoading(false);
-              setUploadProgress(0);
-              setCurrentStep('');
-            }, 500);
+            // Convertir a base64
+            convertFileToBase64(adjustedFile).then(base64 => {
+              setFileBase64(base64);
+              
+              // Limpiar estados de progreso después de un momento
+              setTimeout(() => {
+                setLoading(false);
+                setUploadProgress(0);
+                setCurrentStep('');
+              }, 500);
+              
+              resolve();
+            }).catch(error => {
+              console.error('Error convirtiendo a base64:', error);
+              
+              // Limpiar estados de progreso aunque falle la conversión
+              setTimeout(() => {
+                setLoading(false);
+                setUploadProgress(0);
+                setCurrentStep('');
+              }, 500);
+              
+              resolve(); // Continuar aunque falle la conversión
+            });
             
-            resolve();
           }, 500);
         };
 
@@ -704,6 +750,7 @@ export function EventDetail() {
   const removeFile = useCallback(() => {
     setFile(null);
     setPreview(null);
+    setFileBase64(null);
     setUploadProgress(0);
     setCurrentStep('');
     setLoading(false);
@@ -882,7 +929,7 @@ export function EventDetail() {
   };
 
   const handleProceedToPayment = () => {
-    if (file) {
+    if (file && fileBase64) {
       setFlowStep('payment');
       setStep(3);
       window.scrollTo(0, 0);
@@ -1557,7 +1604,7 @@ export function EventDetail() {
                 variant="primary"
                 size="lg"
                 icon={ChevronRight}
-                disabled={!file}
+                disabled={!file || !fileBase64}
                 onClick={handleProceedToPayment}
               >
                 Continuar al pago
@@ -2156,7 +2203,7 @@ export function EventDetail() {
                         size="lg"
                         fullWidth
                         icon={ChevronRight}
-                        disabled={!file}
+                        disabled={!file || !fileBase64}
                         onClick={handleProceedToPayment}
                       >
                         Continuar al pago
