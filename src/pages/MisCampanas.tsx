@@ -233,13 +233,13 @@ export function MisCampanas() {
     switch (type) {
       case 'programmatic':
     return {
-          label: 'Smart Campaign',
+          label: 'Programático',
           icon: <Bot className="w-4 h-4 text-emerald-600" />,
           bgColor: 'bg-emerald-50',
           textColor: 'text-emerald-700',
           borderColor: 'border-emerald-200',
           canPause: true,
-          description: 'Compra programática OpenRTB'
+          description: ''
         };
       case 'marketplace':
         return {
@@ -249,27 +249,27 @@ export function MisCampanas() {
           textColor: 'text-blue-700',
           borderColor: 'border-blue-200',
           canPause: false,
-          description: 'Compra directa por reserva'
+          description: ''
         };
       case 'events':
         return {
-          label: 'Eventos',
+          label: 'Eventos Deportivos',
           icon: <Trophy className="w-4 h-4 text-orange-600" />,
           bgColor: 'bg-orange-50',
           textColor: 'text-orange-700',
           borderColor: 'border-orange-200',
           canPause: false,
-          description: 'Evento deportivo'
+          description: ''
         };
       default:
         return {
-          label: 'Otra',
+          label: 'Otro',
           icon: <Briefcase className="w-4 h-4 text-gray-600" />,
           bgColor: 'bg-gray-50',
           textColor: 'text-gray-700',
           borderColor: 'border-gray-200',
           canPause: false,
-          description: 'Tipo de campaña'
+          description: ''
         };
     }
    };
@@ -334,7 +334,7 @@ export function MisCampanas() {
                   Exportar
                 </button>
               <button
-                  onClick={() => navigate('/create-campaign')}
+                  onClick={() => navigate('/marketplace')}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                   <Plus className="w-4 h-4" />
@@ -672,12 +672,9 @@ export function MisCampanas() {
                         </div>
                       </td>
                       <td className="px-6 py-3">
-                        <div className="flex items-start flex-col gap-1">
-                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${purchaseTypeConfig.bgColor} ${purchaseTypeConfig.textColor} ${purchaseTypeConfig.borderColor}`}>
-                            {purchaseTypeConfig.icon}
-                            <span>{purchaseTypeConfig.label}</span>
-                          </div>
-                          <div className="text-xs text-gray-500 leading-tight">{purchaseTypeConfig.description}</div>
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${purchaseTypeConfig.bgColor} ${purchaseTypeConfig.textColor} ${purchaseTypeConfig.borderColor}`}>
+                          {purchaseTypeConfig.icon}
+                          <span>{purchaseTypeConfig.label}</span>
                         </div>
                       </td>
                       <td className="px-6 py-3">
@@ -768,7 +765,7 @@ export function MisCampanas() {
             </p>
               {!searchQuery && (
             <button
-                  onClick={() => navigate('/create-campaign')}
+                  onClick={() => navigate('/marketplace')}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />

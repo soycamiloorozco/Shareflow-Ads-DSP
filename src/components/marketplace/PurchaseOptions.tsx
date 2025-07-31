@@ -201,7 +201,24 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
     };
 
     // Helper functions for package display - MOVED HERE TO AVOID HOISTING ISSUES
-    const getPackageDisplayName = (packageType: string): string => {
+    const getPackageDisplayName = (packageType: string, isOnlyPackage: boolean = false): string => {
+      if (isOnlyPackage) {
+        switch (packageType) {
+          case 'moments':
+            return 'Regular';
+          case 'hourly':
+            return 'Regular';
+          case 'daily':
+            return 'Regular';
+          case 'weekly':
+            return 'Regular';
+          case 'monthly':
+            return 'Regular';
+          default:
+            return 'Regular';
+        }
+      }
+      
       switch (packageType) {
         case 'moments':
           return 'Momento Básico';
@@ -386,9 +403,12 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
       
       // Only create main bundle if there are NO variants
       if (!hasVariants) {
+        // Check if this will be the only package for this type
+        const isOnlyPackage = testScreenPackages.filter(p => p.packageType === packageType && p.enabled).length === 1;
+        
         const mainBundle = {
           id: `${packageType}_${pkg.id}`,
-          name: getPackageDisplayName(packageType),
+          name: getPackageDisplayName(packageType, isOnlyPackage),
           description: getPackageDescription(packageType),
           duration: duration,
           price: basePrice,
@@ -439,8 +459,8 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
 
         const variantBundle = {
           id: `${packageType}_variant_${variant.id}`,
-          name: variant.name || `Variante - ${variant.frequency}`,
-          description: `Opción especial con ${variant.frequency} - ${variant.spotsPerHour || variant.spotsPerDay || 'spots personalizados'}`,
+          name: variant.name || getPackageDisplayName(packageType, false),
+          description: getPackageDescription(packageType),
           duration: duration,
           price: variant.price || basePrice,
           frequency: {
@@ -774,7 +794,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
               className="mb-6"
             >
               <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-[#353FEF] to-[#4F46E5] bg-clip-text text-transparent">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   Opciones de Publicidad
                 </h2>
                 <p className="text-base text-gray-600">
@@ -1049,17 +1069,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
                          } ${bundle.isHighlighted ? 'bg-gradient-to-br from-amber-50 via-orange-50 to-white border-amber-300' : bundle.isVariant ? 'bg-gradient-to-br from-purple-50 via-indigo-50 to-white border-purple-300' : 'bg-white'}`}
                   >
                                          {/* Enhanced Badges - Show different badges for variants and main packages */}
-                        {bundle.isVariant ? (
-                       <motion.div 
-                             className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-bold rounded-full shadow-lg flex items-center gap-1`}
-                         initial={{ scale: 0, rotate: 10 }}
-                         animate={{ scale: 1, rotate: 0 }}
-                         transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 10 }}
-                       >
-                             <Sparkles className="w-3 h-3" />
-                             {isMobile ? 'VARIANTE' : 'VARIANTE ESPECIAL'}
-                       </motion.div>
-                         ) : bundle.isHighlighted ? (
+                        {bundle.isHighlighted ? (
                        <motion.div 
                              className={`absolute ${isMobile ? '-top-2 left-3 px-3 py-1 text-xs' : '-top-3 left-4 px-4 py-2 text-xs'} bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-full shadow-lg`}
                              initial={{ scale: 0, rotate: -10 }}
@@ -1123,19 +1133,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
                          <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Total spots: <span className="font-bold text-gray-900">{bundle.frequency.totalSpots}</span></span>
                       </motion.div>
 
-                          {/* Reach Information - Show if available */}
-                          {bundle.reach && bundle.reach > 0 && (
-                            <motion.div 
-                             className={`flex items-center gap-3 text-sm text-gray-700 ${isMobile ? 'gap-2' : isModalMode ? 'gap-2' : 'gap-3'}`}
-                             whileHover={isMobile || isModalMode ? {} : { x: 3 }}
-                             transition={{ duration: 0.2 }}
-                           >
-                             <div className={`${isMobile ? 'w-6 h-6' : isModalMode ? 'w-7 h-7' : 'w-10 h-10'} bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center`}>
-                               <Eye className={`${isMobile ? 'w-2.5 h-2.5' : isModalMode ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-green-600`} />
-                             </div>
-                             <span className={`${isMobile ? 'text-xs' : isModalMode ? 'text-xs' : 'text-sm'} flex-1 font-medium`}>Alcance estimado: <span className="font-bold text-gray-900">{bundle.reach.toLocaleString()}</span></span>
-                          </motion.div>
-                          )}
+                
 
                       {/* ML Insights Section - Hidden for user, only for internal use */}
                       {false && bundle.mlInsights && !isMobile && (
@@ -1162,7 +1160,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
                                          {/* Enhanced Price Section */}
                      <div className={`flex items-end justify-between mt-auto ${isModalMode ? 'pt-2 border-t border-gray-100' : 'pt-4 border-t border-gray-100'}`}>
                        <div className="flex-1">
-                         <div className={`${isMobile ? 'text-2xl' : isModalMode ? 'text-xl' : 'text-3xl'} font-bold bg-gradient-to-r from-[#353FEF] to-[#4F46E5] bg-clip-text text-transparent ${isModalMode ? 'mb-1' : 'mb-2'} break-words`}>
+                         <div className={`${isMobile ? 'text-2xl' : isModalMode ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 ${isModalMode ? 'mb-1' : 'mb-2'} break-words`}>
                            ${bundle.price.toLocaleString()}
                          </div>
                         
@@ -1176,7 +1174,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
                       
                        {selectedBundle?.id === bundle.id && (
                         <motion.div 
-                           className={`bg-gradient-to-r from-[#353FEF] to-[#4F46E5] text-white ${isMobile ? 'px-3 py-1' : 'px-4 py-2'} rounded-full text-xs font-semibold shadow-lg`}
+                           className={`bg-gradient-to-r from-blue-600 to-indigo-600 text-white ${isMobile ? 'px-3 py-1' : 'px-4 py-2'} rounded-full text-xs font-semibold shadow-lg`}
                            initial={{ scale: 0, x: 20 }}
                            animate={{ scale: 1, x: 0 }}
                           transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -1212,25 +1210,25 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
               >
                 <Button
                   size={isMobile ? "md" : "lg"}
-                  className={`w-full transition-all duration-300 ${isMobile ? 'h-12 text-sm' : isModalMode ? 'h-14 text-base' : 'h-16 text-lg'} ${
+                  className={`w-full transition-all duration-300 font-semibold ${isMobile ? 'h-12 text-sm' : isModalMode ? 'h-14 text-base' : 'h-16 text-lg'} ${
                     selectedBundle 
-                      ? 'bg-gradient-to-r from-[#353FEF] to-[#4F46E5] hover:from-[#2D37E5] hover:to-[#4338CA] shadow-xl hover:shadow-2xl' 
-                      : ''
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl border-0' 
+                      : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                   }`}
                   onClick={handleContinueClick}
                   disabled={!selectedBundle}
                 >
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
                     {!selectedBundle 
                       ? "Selecciona un paquete" 
                       : (walletAvailable && walletBalance < (selectedBundle.price || 0))
                         ? <>
                             <Wallet className={`${isMobile ? 'w-4 h-4' : isModalMode ? 'w-5 h-5' : 'w-6 h-6'}`} />
-                            {isMobile ? 'Recargar' : 'Recargar saldo'}
+                            <span>{isMobile ? 'Recargar saldo' : 'Recargar saldo'}</span>
                           </>
                         : <>
                             <ArrowRight className={`${isMobile ? 'w-4 h-4' : isModalMode ? 'w-5 h-5' : 'w-6 h-6'}`} />
-                            {isMobile ? 'Continuar' : 'Continuar con la compra'}
+                            <span>{isMobile ? 'Continuar' : 'Continuar con la compra'}</span>
                           </>
                     }
                   </div>
@@ -1310,7 +1308,7 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
                   handleContinueClick();
                 }
               }}
-              className="group relative overflow-hidden bg-gradient-to-r from-[#353FEF] to-[#4F46E5] hover:from-[#2D37E5] hover:to-[#4338CA] text-white px-6 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 min-w-[200px]"
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 min-w-[200px]"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >

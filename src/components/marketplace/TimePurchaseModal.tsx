@@ -2230,21 +2230,21 @@ export function TimePurchaseModal({
                     exit="exit"
                     className="space-y-2 sm:space-y-4"
                   >
-                    {/* Mobile-optimized calendar section */}
-                    <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-xl sm:rounded-2xl shadow-lg border border-blue-100/50 p-3 sm:p-8">
-                      <div className="flex items-center justify-between mb-2 sm:mb-6">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    {/* Subtle calendar section */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-100 p-4 sm:p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 text-gray-600">
+                            <Calendar className="w-full h-full" />
                           </div>
                           <div>
-                            <h4 className="font-bold text-base sm:text-xl text-darkText">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900">
                               {isMomentsPurchase() ? 
                                 `Fecha ${isPremiumMoments() ? `- Momento ${activeMomentIndex + 1}` : ''}` :
-                                'Selecciona tu fecha'
+                                'Selecciona fecha'
                               }
                             </h4>
-                            <p className="text-xs sm:text-sm text-neutral-600 hidden sm:block">
+                            <p className="text-xs text-gray-500 hidden sm:block">
                               {isMomentsPurchase() ? 
                                 'Elige el día para tu momento' :
                                 'Elige el día para tu campaña'
@@ -2252,59 +2252,61 @@ export function TimePurchaseModal({
                             </p>
                           </div>
                         </div>
-                        <div className="px-2 py-1 sm:px-4 sm:py-2 bg-blue-100 rounded-lg">
-                          <span className="text-xs sm:text-sm font-medium text-blue-700">
-                            {selectedDates.length > 0 ? `${selectedDates.length} día${selectedDates.length > 1 ? 's' : ''}` : 'Sin selección'}
-                          </span>
-                        </div>
+                        {selectedDates.length > 0 && (
+                          <div className="px-2 py-1 bg-blue-50 rounded-md border border-blue-100">
+                            <span className="text-xs font-medium text-blue-700">
+                              {selectedDates.length} día{selectedDates.length > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       
-                      {/* Mobile month header */}
-                      <div className="flex items-center justify-between mb-2 sm:mb-6">
+                      {/* Subtle month header */}
+                      <div className="flex items-center justify-between mb-4">
                         <motion.div 
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="flex items-center gap-2 sm:gap-3"
+                          className="flex items-center gap-2"
                         >
-                          <div className="text-lg sm:text-2xl font-bold text-darkText capitalize">
+                          <div className="text-sm sm:text-base font-medium text-gray-700 capitalize">
                             {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
                           </div>
-                          <div className="px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+                          <div className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
                             HOY
                           </div>
                         </motion.div>
                         <div className="flex items-center gap-1">
                           <motion.button 
-                            className="mobile-touch-target hover:bg-blue-100 rounded-lg transition-colors"
-                            whileHover={{ x: -2, backgroundColor: "#DBEAFE" }}
+                            className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                            whileHover={{ x: -1 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                            <ChevronLeft className="w-4 h-4 text-gray-500" />
                           </motion.button>
                           <motion.button 
-                            className="mobile-touch-target hover:bg-blue-100 rounded-lg transition-colors"
-                            whileHover={{ x: 2, backgroundColor: "#DBEAFE" }}
+                            className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                            whileHover={{ x: 1 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                            <ChevronRight className="w-4 h-4 text-gray-500" />
                           </motion.button>
                         </div>
                       </div>
                         
-                      {/* Mobile day names */}
-                      <div className="grid grid-cols-7 gap-1 sm:gap-3 mb-2 sm:mb-6">
+                      {/* Subtle day names */}
+                      <div className="grid grid-cols-7 gap-1 mb-3">
                         {dayNames.map((day) => (
                           <div 
                             key={day} 
-                            className="text-center font-semibold text-blue-600 py-1 sm:py-3 text-xs sm:text-sm uppercase tracking-wider"
+                            className="text-center font-medium text-gray-500 py-2 text-xs uppercase tracking-wide"
                           >
                             {day}
                           </div>
                         ))}
                       </div>
                             
-                      {/* Mobile-optimized calendar grid */}
-                      <div className="grid grid-cols-7 gap-1 sm:gap-3 mb-2 sm:mb-6">
+                      {/* Subtle calendar grid */}
+                      <div className="grid grid-cols-7 gap-1 mb-4">
                         {calendarDays.map((date, index) => {
                           const isSelected = isDateSelected(date);
                           const isPast = isPastDate(date);
@@ -2317,12 +2319,12 @@ export function TimePurchaseModal({
                               disabled={isPast}
                               onClick={() => handleDateSelect(date)}
                               className={`
-                                mobile-calendar-day mobile-touch-target flex items-center justify-center text-sm sm:text-base font-semibold relative overflow-hidden transition-all duration-200
-                                ${isPast ? 'text-neutral-300 cursor-not-allowed bg-neutral-50' : 
-                                  isSelected ? 'text-white bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg' :
-                                  isCurrentDay ? 'text-blue-600 bg-blue-100 border-2 border-blue-400' :
-                                  isCurrentMonthDate ? 'text-darkText bg-white hover:bg-blue-50 shadow-sm border border-neutral-200' :
-                                  'text-neutral-400 bg-neutral-50'
+                                h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center text-sm font-medium rounded-lg relative transition-all duration-200
+                                ${isPast ? 'text-gray-300 cursor-not-allowed' : 
+                                  isSelected ? 'text-white bg-blue-500 shadow-sm' :
+                                  isCurrentDay ? 'text-blue-600 bg-blue-50 ring-1 ring-blue-200' :
+                                  isCurrentMonthDate ? 'text-gray-700 hover:bg-gray-50' :
+                                  'text-gray-400'
                                 }
                               `}
                               initial={{ opacity: 0, scale: 0.8 }}
@@ -2345,21 +2347,10 @@ export function TimePurchaseModal({
                                 {date.getDate()}
                               </span>
                               
-                              {/* Selected indicator */}
-                              {isSelected && (
-                                <motion.div
-                                  className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl"
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  transition={{ duration: 0.3, type: "spring" }}
-                                  style={{ zIndex: -1 }}
-                                />
-                              )}
-                              
                               {/* Today indicator */}
                               {isCurrentDay && !isSelected && (
                                 <motion.div
-                                  className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-blue-500 rounded-full"
+                                  className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
                                   transition={{ delay: 0.5 }}
@@ -2379,37 +2370,39 @@ export function TimePurchaseModal({
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
                           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                          className="bg-gradient-to-br from-white to-indigo-50/30 rounded-2xl shadow-lg border border-indigo-100/50 p-8"
+                          className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-100 p-4 sm:p-6"
                         >
-                          <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center">
-                                <Clock className="w-5 h-5 text-white" />
+                              <div className="w-6 h-6 text-gray-600">
+                                <Clock className="w-full h-full" />
                               </div>
                               <div>
-                                <h4 className="font-bold text-xl text-darkText">
+                                <h4 className="font-medium text-sm sm:text-base text-gray-900">
                                   {isHourlyStandard() ? 
-                                    "Selecciona tu horario" : 
+                                    "Selecciona horario" : 
                                     isHourlyExtended() ? 
-                                      "Selecciona tus 3 horarios" : 
-                                      "Selecciona tus horarios"
+                                      "Selecciona 3 horarios" : 
+                                      "Selecciona horarios"
                                   }
                                 </h4>
-                                <p className="text-sm text-neutral-600">
+                                <p className="text-xs text-gray-500 hidden sm:block">
                                   {isHourlyStandard() ? 
-                                    "Elige la franja horaria perfecta para tu audiencia" : 
+                                    "Elige la franja horaria perfecta" : 
                                     isHourlyExtended() ? 
-                                      "Selecciona exactamente 3 franjas para el paquete extendido" :
-                                      "Haz clic para seleccionar/deseleccionar las horas que desees. Puedes elegir 1, 2, 3 o más franjas horarias según tus necesidades."
+                                      "Selecciona exactamente 3 franjas" :
+                                      "Elige las horas que necesites"
                                   }
                                 </p>
                               </div>
                             </div>
-                            <div className="px-4 py-2 bg-indigo-100 rounded-lg">
-                              <span className="text-sm font-medium text-indigo-700">
-                                {selectedTimeSlots.length > 0 ? `${selectedTimeSlots.length} franja${selectedTimeSlots.length > 1 ? 's' : ''} seleccionada${selectedTimeSlots.length > 1 ? 's' : ''}` : 'Sin selección'}
-                              </span>
-                            </div>
+                            {selectedTimeSlots.length > 0 && (
+                              <div className="px-2 py-1 bg-blue-50 rounded-md border border-blue-100">
+                                <span className="text-xs font-medium text-blue-700">
+                                  {selectedTimeSlots.length} franja{selectedTimeSlots.length > 1 ? 's' : ''}
+                                </span>
+                              </div>
+                            )}
                           </div>
                           
                           {/* Error message for invalid selection */}
@@ -2417,51 +2410,33 @@ export function TimePurchaseModal({
                             <motion.div
                               initial={{ opacity: 0, y: -10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg"
+                              className="mb-3 p-2 bg-red-50 border border-red-100 rounded-md"
                             >
-                              <p className="text-sm text-red-700 font-medium">{error}</p>
+                              <p className="text-xs text-red-600">{error}</p>
                             </motion.div>
                           )}
                           
-                          {/* Info messages for packages */}
-                          {(isHourlyStandard() || isHourlyExtended()) ? (
+                          {/* Subtle info messages for packages */}
+                          {(isHourlyStandard() || isHourlyExtended()) && (
                             <motion.div
                               initial={{ opacity: 0, y: -10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                              className="mb-3 p-2 bg-blue-50 border border-blue-100 rounded-md"
                             >
                               <div className="flex items-start gap-2">
-                                <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                                <p className="text-sm text-blue-700">
-                                  {isHourlyStandard() ? (
-                                    <>
-                                      <strong>Paquete específico:</strong> Este paquete permite seleccionar únicamente 1 franja horaria. Al seleccionar una nueva franja, se reemplazará la anterior automáticamente.
-                                    </>
-                                  ) : (
-                                    <>
-                                      <strong>Paquete específico:</strong> Este paquete requiere seleccionar exactamente 3 franjas horarias.
-                                    </>
-                                  )}
-                                </p>
-                              </div>
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg"
-                            >
-                              <div className="flex items-start gap-2">
-                                <Info className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                <p className="text-sm text-green-700">
-                                  <strong>Compra flexible:</strong> Puedes seleccionar tantas franjas horarias como necesites. Ideal para crear campañas personalizadas con múltiples horarios de máximo impacto.
+                                <Info className="w-3 h-3 text-blue-500 mt-0.5 flex-shrink-0" />
+                                <p className="text-xs text-blue-600">
+                                  {isHourlyStandard() ? 
+                                    "Este paquete permite 1 franja horaria" : 
+                                    "Este paquete requiere exactamente 3 franjas"
+                                  }
                                 </p>
                               </div>
                             </motion.div>
                           )}
                           
-                                                    {/* Mobile time slots grid */}
-                          <div className="mobile-time-grid grid">
+                          {/* Subtle time slots grid */}
+                          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
                             {timeSlots.map((timeSlot, index) => {
                               const isSelected = selectedTimeSlots.includes(timeSlot.time);
                               
@@ -2470,10 +2445,10 @@ export function TimePurchaseModal({
                                   key={timeSlot.time}
                                   onClick={() => handleTimeSlotSelect(timeSlot.time)}
                                   className={`
-                                    mobile-time-slot mobile-touch-target transition-all duration-200 overflow-hidden relative
+                                    h-12 sm:h-14 px-2 rounded-lg text-xs font-medium transition-all duration-200 relative flex flex-col items-center justify-center
                                     ${isSelected 
-                                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg' 
-                                      : 'bg-white text-darkText hover:bg-blue-50 shadow-sm border border-neutral-200'
+                                      ? 'bg-blue-500 text-white shadow-sm' 
+                                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                                     }
                                   `}
                                   initial={{ opacity: 0, scale: 0.8 }}
@@ -2483,140 +2458,65 @@ export function TimePurchaseModal({
                                   }}
                                   transition={{ duration: 0.2, type: "spring" }}
                                   whileHover={{ 
-                                    scale: 1.05,
+                                    scale: 1.02,
                                     transition: { duration: 0.2 }
                                   }}
-                                  whileTap={{ scale: 0.95 }}
+                                  whileTap={{ scale: 0.98 }}
                                 >
-                                  <div className="relative z-10 flex flex-col items-center">
-                                    <div className="text-xs font-bold leading-tight">
+                                  <div className="text-center">
+                                    <div className="font-medium">
                                       {timeSlot.time.split(' - ')[0]}
-                                      {timeSlot.isPeakHour && (
-                                        <span className="text-xs ml-1">
-                                          {timeSlot.peakLevel === 'peak' ? '🔥' : '📈'}
-                                        </span>
-                                      )}
                                     </div>
-                                    {/* Price increase indicator - compact for small squares */}
-                                    {timeSlot.priceIncrease && timeSlot.priceIncrease > 0 && (
-                                      <div className="text-xs font-bold text-orange-300 mt-0.5">
-                                        +{Math.round((timeSlot.priceIncrease / (selectedBundle?.price || 100000)) * 100)}%
+                                    {timeSlot.isPeakHour && (
+                                      <div className="text-xs opacity-75">
+                                        {timeSlot.peakLevel === 'peak' ? '🔥' : '📈'}
                                       </div>
                                     )}
                                   </div>
-                                  
-                                  {/* Selected indicator */}
-                                  {isSelected && (
-                                    <motion.div
-                                      className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl"
-                                      initial={{ scale: 0, opacity: 0 }}
-                                      animate={{ scale: 1, opacity: 1 }}
-                                      transition={{ duration: 0.3, type: "spring" }}
-                                      style={{ zIndex: -1 }}
-                                    />
-                                  )}
                                 </motion.button>
                               );
                             })}
                           </div>
                           
-                          {/* Selected time slots summary */}
-                          {/* Mobile-optimized time slots summary */}
+                          {/* Subtle time slots summary */}
                           {selectedTimeSlots.length > 0 && (
                             <motion.div 
-                              className="mt-4 sm:mt-8 bg-blue-50 rounded-lg px-3 sm:px-6 py-3 sm:py-5 border-2 border-blue-200"
+                              className="mt-4 bg-gray-50 rounded-lg p-3 border border-gray-100"
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             >
-                              <div className="space-y-2 sm:space-y-3">
-                                <motion.div 
-                                  className="flex justify-between items-center"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ delay: 0.3 }}
-                                >
-                                  <span className="text-sm sm:text-base text-darkText font-medium">Franjas seleccionadas:</span>
-                                  <span className="text-base sm:text-lg font-bold text-blue-600">
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-gray-600">Franjas seleccionadas</span>
+                                  <span className="text-sm font-medium text-gray-900">
                                     {selectedTimeSlots.length} hora{selectedTimeSlots.length > 1 ? 's' : ''}
                                   </span>
-                                </motion.div>
-                                
-                                {/* Mobile-optimized pricing breakdown */}
-                                <div className="space-y-1 sm:space-y-2 max-h-32 sm:max-h-none overflow-y-auto">
-                                  {selectedTimeSlots.slice(0, 3).map((slot, index) => {
-                                    const timeSlot = timeSlots.find(ts => ts.time === slot);
-                                    const basePrice = selectedBundle?.price || screen?.pricing.bundles.hourly?.price || 0;
-                                    const slotPrice = basePrice + (timeSlot?.priceIncrease || 0);
-                                    const isPeakHour = timeSlot?.isPeakHour || false;
-                                    
-                                    return (
-                                      <motion.div
-                                        key={slot}
-                                        className="flex justify-between items-center text-xs sm:text-sm"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.4 + (index * 0.1) }}
-                                      >
-                                        <div className="flex items-center gap-1 sm:gap-2">
-                                          <span className="text-gray-600">{slot.split(' - ')[0]}</span>
-                                          {isPeakHour && (
-                                            <span className="text-xs bg-orange-100 text-orange-700 px-1 sm:px-2 py-0.5 rounded-full font-medium">
-                                              {timeSlot?.peakLevel === 'peak' ? '🔥' : '📈'}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <span className="font-medium text-gray-800">
-                                          ${slotPrice.toLocaleString('es-ES')}
-                                        </span>
-                                      </motion.div>
-                                    );
-                                  })}
-                                  {selectedTimeSlots.length > 3 && (
-                                    <div className="text-xs text-gray-500 text-center">
-                                      +{selectedTimeSlots.length - 3} más...
-                                    </div>
-                                  )}
                                 </div>
                                 
-                                <motion.div 
-                                  className="flex justify-between items-center pt-2 border-t border-blue-200"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ delay: 0.7 }}
-                                >
-                                  <span className="text-sm sm:text-base text-darkText font-medium">Total:</span>
-                                  <span className="text-lg sm:text-xl font-bold text-blue-600">
+                                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                                  <span className="text-sm font-medium text-gray-900">Total</span>
+                                  <span className="text-base font-semibold text-blue-600">
                                     ${totalPrice.toLocaleString('es-ES')}
                                   </span>
-                                </motion.div>
+                                </div>
                                 
-                                {/* Mobile-optimized selected time chips */}
-                                <div className="flex flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-3">
-                                  {selectedTimeSlots.slice(0, 4).map((slot) => (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {selectedTimeSlots.slice(0, 6).map((slot) => (
                                     <span 
                                       key={slot}
-                                      className="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm font-medium"
+                                      className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-xs font-medium"
                                     >
                                       {slot.split(' - ')[0]}
                                     </span>
                                   ))}
-                                  {selectedTimeSlots.length > 4 && (
-                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                                      +{selectedTimeSlots.length - 4}
+                                  {selectedTimeSlots.length > 6 && (
+                                    <span className="px-2 py-0.5 bg-gray-200 text-gray-600 rounded-md text-xs">
+                                      +{selectedTimeSlots.length - 6}
                                     </span>
                                   )}
                                 </div>
                               </div>
-                              
-                              <motion.div 
-                                className="mt-2 text-sm sm:text-base text-darkText"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.7 }}
-                              >
-                                para el <strong className="font-bold">{selectedDates[0]?.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</strong>
-                              </motion.div>
                             </motion.div>
                           )}
                         </motion.div>
@@ -3050,78 +2950,77 @@ export function TimePurchaseModal({
                   exit="exit"
                   className="space-y-6"
                 >
-                  {/* Header */}
-                  <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <Upload className="w-6 h-6 text-white" />
+                  {/* Subtle Header */}
+                  <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                    <div className="w-6 h-6 text-gray-600">
+                      <Upload className="w-full h-full" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900">Sube tu creatividad</h3>
-                      <p className="text-gray-600">Personaliza tu contenido para que se vea perfecto en pantalla</p>
+                      <h3 className="text-base font-medium text-gray-900">Sube tu creatividad</h3>
+                      <p className="text-xs text-gray-500">Personaliza tu contenido para la pantalla</p>
                     </div>
                   </div>
 
                   {/* Main Content Area */}
                 {!file && !uploadLater ? (
-                    /* Upload Area */
-                    <div className="space-y-6">
+                    /* Subtle Upload Area */
+                    <div className="space-y-4">
                     <div 
                       {...getRootProps()} 
-                        className="relative group border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all duration-300"
+                        className="relative border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
                     >
                       <input {...getInputProps()} />
                         <div className="relative z-10">
-                          <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <Upload className="w-10 h-10 text-blue-600" />
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <Upload className="w-6 h-6 text-gray-500" />
                           </div>
-                          <h4 className="text-xl font-bold text-gray-900 mb-2">
+                          <h4 className="text-sm font-medium text-gray-900 mb-1">
                             Arrastra tu archivo aquí
                           </h4>
-                          <p className="text-gray-600 mb-4">
-                            o haz clic para seleccionar desde tu dispositivo
+                          <p className="text-xs text-gray-500 mb-3">
+                            o haz clic para seleccionar
                           </p>
-                          <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors">
+                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
                             <Upload className="w-4 h-4" />
                             Seleccionar archivo
                           </div>
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                     
                       <div className="flex items-center justify-center">
                       <button
                         type="button"
                         onClick={() => setUploadLater(true)}
-                          className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 hover:underline"
+                          className="text-gray-600 hover:text-gray-700 text-sm flex items-center gap-2 hover:underline"
                       >
                           <Clock className="w-4 h-4" />
-                        Subir creatividad más tarde
+                        Subir más tarde
                       </button>
                     </div>
                   </div>
                 ) : file ? (
-                    /* File Uploaded - Main Editor Interface */
-                    <div className="space-y-6">
-                      {/* File Preview and Quick Actions */}
-                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
+                    /* File Uploaded - Subtle Interface */
+                    <div className="space-y-4">
+                      {/* File Preview */}
+                      <div className="bg-gray-50 rounded-lg p-4">
                       {file.type.startsWith('video/') ? (
-                          /* Video Preview - Full Width */
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                                <Play className="w-5 h-5 text-white" />
+                          /* Video Preview - Subtle */
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-5 h-5 text-gray-600">
+                                <Play className="w-full h-full" />
                               </div>
                               <div>
-                                <h4 className="font-bold text-gray-900 text-lg">Vista Previa del Video</h4>
-                                <p className="text-sm text-gray-600">Revisa tu contenido antes de continuar</p>
+                                <h4 className="font-medium text-gray-900 text-sm">Vista Previa del Video</h4>
+                                <p className="text-xs text-gray-500">Revisa tu contenido</p>
                               </div>
                             </div>
                             
-                            {/* Video Player */}
-                            <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
+                            {/* Video Player - Subtle */}
+                            <div className="relative bg-black rounded-lg overflow-hidden">
                         <video
                           src={isVideoTrimmed && trimmedVideoPreview ? trimmedVideoPreview : filePreview!}
-                                className="w-full h-auto max-h-96 object-contain"
+                                className="w-full h-auto max-h-64 object-contain"
                           controls
                                 preload="metadata"
                                 style={{ aspectRatio: '16/9' }}
@@ -3129,74 +3028,60 @@ export function TimePurchaseModal({
                                 Tu navegador no soporta la reproducción de video.
                               </video>
                               
-                              {/* Trimmed indicator */}
+                              {/* Subtle indicators */}
                               {isVideoTrimmed && (
-                                <div className="absolute top-4 left-4 bg-blue-500/90 backdrop-blur-sm rounded-lg px-3 py-2">
-                                  <div className="flex items-center gap-2 text-white text-sm">
-                                    <Scissors className="w-4 h-4" />
-                                    <span className="font-medium">Video recortado</span>
+                                <div className="absolute top-2 left-2 bg-blue-500/80 rounded-md px-2 py-1">
+                                  <div className="flex items-center gap-1 text-white text-xs">
+                                    <Scissors className="w-3 h-3" />
+                                    <span>Recortado</span>
                                   </div>
                                 </div>
                               )}
                               
-                              {/* Video Info Overlay */}
-                              <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2">
-                                <div className="flex items-center gap-2 text-white text-sm">
-                                  <Play className="w-4 h-4" />
-                                  <span className="font-medium">{file.name}</span>
-                                </div>
-                                <div className="text-xs text-gray-300 mt-1">
-                                  {(file.size / (1024 * 1024)).toFixed(2)} MB
-                                  {videoDuration && (
-                                    <span> • {videoDuration.toFixed(1)}s</span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              {/* Video Validation Status */}
-                              <div className="absolute top-4 right-4">
+                              {/* Video Status */}
+                              <div className="absolute top-2 right-2">
                                 {isVideoValid ? (
-                                  <div className="bg-green-500/90 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center gap-2">
-                                    <Check className="w-4 h-4 text-white" />
-                                    <span className="text-white text-sm font-medium">Válido</span>
+                                  <div className="bg-green-500/80 rounded-md px-2 py-1 flex items-center gap-1">
+                                    <Check className="w-3 h-3 text-white" />
+                                    <span className="text-white text-xs">Válido</span>
                                   </div>
                                 ) : (
-                                  <div className="bg-amber-500/90 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center gap-2">
-                                    <AlertTriangle className="w-4 h-4 text-white" />
-                                    <span className="text-white text-sm font-medium">Revisar</span>
+                                  <div className="bg-amber-500/80 rounded-md px-2 py-1 flex items-center gap-1">
+                                    <AlertTriangle className="w-3 h-3 text-white" />
+                                    <span className="text-white text-xs">Revisar</span>
                                   </div>
                                 )}
                               </div>
                             </div>
                             
-                            {/* Video Details */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                              <div className="bg-white rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Clock className="w-4 h-4 text-blue-500" />
-                                  <span className="text-sm font-medium text-gray-700">Duración</span>
+                            {/* Video Details - Subtle */}
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div className="bg-white rounded-md p-2">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Clock className="w-3 h-3 text-gray-500" />
+                                  <span className="text-gray-600">Duración</span>
                                 </div>
-                                <div className="text-lg font-bold text-gray-900">
+                                <div className="font-medium text-gray-900">
                                   {videoDuration ? `${videoDuration.toFixed(1)}s` : 'Calculando...'}
                                 </div>
                               </div>
                               
-                              <div className="bg-white rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Monitor className="w-4 h-4 text-green-500" />
-                                  <span className="text-sm font-medium text-gray-700">Formato</span>
+                              <div className="bg-white rounded-md p-2">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Monitor className="w-3 h-3 text-gray-500" />
+                                  <span className="text-gray-600">Formato</span>
                                 </div>
-                                <div className="text-lg font-bold text-gray-900">
+                                <div className="font-medium text-gray-900">
                                   {file.name.split('.').pop()?.toUpperCase() || 'VIDEO'}
                                 </div>
                               </div>
                               
-                              <div className="bg-white rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Sparkles className="w-4 h-4 text-purple-500" />
-                                  <span className="text-sm font-medium text-gray-700">Estado</span>
+                              <div className="bg-white rounded-md p-2">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Sparkles className="w-3 h-3 text-gray-500" />
+                                  <span className="text-gray-600">Estado</span>
                                 </div>
-                                <div className={`text-lg font-bold ${isVideoValid ? 'text-green-600' : 'text-amber-600'}`}>
+                                <div className={`font-medium ${isVideoValid ? 'text-green-600' : 'text-amber-600'}`}>
                                   {isVideoValid ? 'Listo' : 'Pendiente'}
                                 </div>
                               </div>
@@ -3247,11 +3132,11 @@ export function TimePurchaseModal({
                             </div>
                           </div>
                         ) : (
-                          /* Image Preview - Original Layout */
-                          <div className="flex items-start gap-6">
+                          /* Image Preview - Subtle Layout */
+                          <div className="flex items-start gap-4">
                             {/* Preview */}
                             <div className="relative">
-                              <div className="w-32 h-24 bg-black rounded-xl overflow-hidden shadow-lg">
+                              <div className="w-20 h-16 bg-gray-100 rounded-lg overflow-hidden">
                                 <img
                                   src={isImageEdited && editedImagePreview ? editedImagePreview : filePreview!}
                                   alt="Preview"
@@ -3259,43 +3144,43 @@ export function TimePurchaseModal({
                                 />
                               </div>
                               {isImageEdited && (
-                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                                  <Check className="w-3 h-3 text-white" />
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                  <Check className="w-2 h-2 text-white" />
                                 </div>
                               )}
                             </div>
                           
                             {/* File Info */}
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Image className="w-5 h-5 text-gray-600" />
-                                <h4 className="font-bold text-gray-900 text-lg">{file.name}</h4>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Image className="w-4 h-4 text-gray-500" />
+                                <h4 className="font-medium text-gray-900 text-sm">{file.name}</h4>
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                              <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
                                 <span>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
                                 {imageDimensions && (
                                   <span>{imageDimensions.width} × {imageDimensions.height}px</span>
                                 )}
                               </div>
                               
-                              {/* Action Buttons */}
-                              <div className="flex items-center gap-3">
+                              {/* Action Buttons - Subtle */}
+                              <div className="flex items-center gap-2">
                         <button
                                   onClick={handleStartImageEdit}
-                                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+                                  className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                                     isImageEdited 
                                       ? 'bg-green-500 text-white hover:bg-green-600' 
                                       : imageValidation && !imageValidation.isValid
-                                        ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+                                        ? 'bg-red-500 text-white hover:bg-red-600'
                                       : 'bg-blue-500 text-white hover:bg-blue-600'
                                   }`}
                         >
-                          <Edit3 className="w-4 h-4" />
+                          <Edit3 className="w-3 h-3" />
                                   {isImageEdited 
-                                    ? 'Editar de nuevo' 
+                                    ? 'Editar' 
                                     : imageValidation && !imageValidation.isValid
-                                      ? '⚠️ Ajustar imagen (Requerido)'
-                                      : 'Editar imagen'
+                                      ? 'Ajustar (Requerido)'
+                                      : 'Editar'
                                   }
                         </button>
                         <button
@@ -3315,9 +3200,9 @@ export function TimePurchaseModal({
                                     setTrimmedVideoPreview(null);
                                     setIsVideoTrimmed(false);
                                   }}
-                                  className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-md text-xs font-medium hover:bg-gray-200 transition-colors"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3 h-3" />
                                   Eliminar
                         </button>
                               </div>
@@ -3326,39 +3211,39 @@ export function TimePurchaseModal({
                       )}
                     </div>
 
-                    {/* Video Validation Results */}
+                    {/* Video Validation Results - Subtle */}
                       {videoValidation && file && file.type.startsWith('video/') && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                          className={`p-6 rounded-2xl border-2 ${
+                          className={`p-3 rounded-lg border ${
                             videoValidation.isValid 
-                              ? 'bg-emerald-50 border-emerald-200' 
+                              ? 'bg-green-50 border-green-200' 
                               : videoValidation.hasCorrectDuration
                                 ? 'bg-amber-50 border-amber-200'
                                 : 'bg-red-50 border-red-200'
                           }`}
                         >
-                          <div className="flex items-start gap-4">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded-md flex items-center justify-center ${
                               videoValidation.isValid 
-                                ? 'bg-emerald-500' 
+                                ? 'bg-green-500' 
                                 : videoValidation.hasCorrectDuration
                                   ? 'bg-amber-500'
                                   : 'bg-red-500'
                             }`}>
                               {videoValidation.isValid ? (
-                                <Check className="w-6 h-6 text-white" />
+                                <Check className="w-3 h-3 text-white" />
                               ) : videoValidation.hasCorrectDuration ? (
-                                <Info className="w-6 h-6 text-white" />
+                                <Info className="w-3 h-3 text-white" />
                               ) : (
-                                <AlertTriangle className="w-6 h-6 text-white" />
+                                <AlertTriangle className="w-3 h-3 text-white" />
                               )}
                             </div>
                             <div className="flex-1">
-                              <h4 className={`font-bold text-lg mb-2 ${
+                              <h4 className={`font-medium text-sm mb-1 ${
                                 videoValidation.isValid 
-                                  ? 'text-emerald-800' 
+                                  ? 'text-green-800' 
                                   : videoValidation.hasCorrectDuration
                                     ? 'text-amber-800'
                                     : 'text-red-800'
@@ -3395,54 +3280,54 @@ export function TimePurchaseModal({
                         </motion.div>
                       )}
 
-                      {/* Image Validation Results */}
+                      {/* Image Validation Results - Subtle */}
                       {imageValidation && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                          className={`p-6 rounded-2xl border-2 ${
+                          className={`p-3 rounded-lg border ${
                             imageValidation.hasCorrectDimensions 
-                              ? 'bg-emerald-50 border-emerald-200' 
+                              ? 'bg-green-50 border-green-200' 
                               : imageValidation.hasCorrectAspectRatio
                                 ? 'bg-amber-50 border-amber-200'
                               : 'bg-orange-50 border-orange-200'
                         }`}
                       >
-                          <div className="flex items-start gap-4">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded-md flex items-center justify-center ${
                               imageValidation.hasCorrectDimensions 
-                                ? 'bg-emerald-500' 
+                                ? 'bg-green-500' 
                                 : imageValidation.hasCorrectAspectRatio
                                   ? 'bg-amber-500'
                                   : 'bg-orange-500'
                             }`}>
                               {imageValidation.hasCorrectDimensions ? (
-                                <Check className="w-6 h-6 text-white" />
+                                <Check className="w-3 h-3 text-white" />
                               ) : imageValidation.hasCorrectAspectRatio ? (
-                                <Info className="w-6 h-6 text-white" />
+                                <Info className="w-3 h-3 text-white" />
                               ) : (
-                                <AlertTriangle className="w-6 h-6 text-white" />
+                                <AlertTriangle className="w-3 h-3 text-white" />
                               )}
                             </div>
                           <div className="flex-1">
-                              <h4 className={`font-bold text-lg mb-2 ${
+                              <h4 className={`font-medium text-sm mb-1 ${
                                 imageValidation.hasCorrectDimensions 
-                                  ? 'text-emerald-800' 
+                                  ? 'text-green-800' 
                                   : imageValidation.hasCorrectAspectRatio
                                     ? 'text-amber-800'
                                   : 'text-orange-800'
                             }`}>
                                 {imageValidation.message}
                             </h4>
-                              <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
-                                <div className="bg-white/70 rounded-lg p-3">
-                                  <div className="font-medium text-gray-700 mb-1">Tu imagen</div>
-                                  <div className="text-gray-900 font-bold">
+                              <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
+                                <div className="bg-white/70 rounded-md p-2">
+                                  <div className="font-medium text-gray-600 mb-0.5">Tu imagen</div>
+                                  <div className="text-gray-900 font-medium">
                                     {imageDimensions?.width} × {imageDimensions?.height}px
                             </div>
                                 </div>
-                                <div className="bg-white/70 rounded-lg p-3">
-                                  <div className="font-medium text-gray-700 mb-1">Pantalla requerida</div>
+                                <div className="bg-white/70 rounded-md p-2">
+                                  <div className="font-medium text-gray-600 mb-0.5">Pantalla requerida</div>
                                   <div className="text-gray-900 font-bold">
                                     {screen?.specs.width} × {screen?.specs.height}px
                                   </div>
@@ -3464,101 +3349,54 @@ export function TimePurchaseModal({
                       </motion.div>
                     )}
 
-                      {/* Mobile-Optimized Touch Image Editor */}
+                      {/* Minimalist Image Editor */}
                       {isEditingImage && file && file.type.startsWith('image/') && screen && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
-                          className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200 overflow-hidden"
+                          className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
                         >
-                          {/* Mobile-optimized editor header */}
-                          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-8 py-4 sm:py-6">
+                          {/* Minimalist header */}
+                          <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                                  <Edit3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <Edit3 className="w-4 h-4 text-blue-600" />
                                 </div>
                                 <div>
-                                  <h4 className="text-lg sm:text-2xl font-bold text-white">Editor Touch</h4>
-                                  <p className="text-blue-100 text-xs sm:text-sm">
-                                    {isMobileEditor ? "Pellizca para zoom, toca y arrastra" : `${screen.specs.width} × ${screen.specs.height}px • ${file.name}`}
-                                  </p>
+                                  <h4 className="text-sm font-semibold text-gray-900">Ajustar imagen</h4>
+                                  <p className="text-xs text-gray-500">{screen.specs.width} × {screen.specs.height}px</p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 sm:gap-3">
+                              <div className="flex items-center gap-2">
                                 <button
                                   onClick={handleCancelEdit}
-                                  className="mobile-touch-target bg-white/20 text-white rounded-lg sm:rounded-xl font-medium hover:bg-white/30 transition-colors text-sm sm:text-base"
+                                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
                                 >
                                   Cancelar
                                 </button>
                                 <button
                                   onClick={handleApplyEdits}
-                                  className="mobile-touch-target bg-white text-blue-600 rounded-lg sm:rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                                  className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
                                 >
-                                  <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  <Check className="w-3 h-3" />
                                   Aplicar
                                 </button>
                               </div>
                             </div>
                           </div>
                           
-                          {/* Editor content optimized for mobile */}
-                          <div className="p-3 sm:p-8">
-                            {/* Mobile instructions */}
-                            {isMobileEditor && (
-                              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
-                                <div className="flex items-start gap-3">
-                                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <Info className="w-4 h-4 text-white" />
-                                  </div>
-                                  <div>
-                                    <h5 className="font-bold text-blue-800 text-sm mb-1">Gestos Touch</h5>
-                                    <div className="text-blue-700 text-xs space-y-1">
-                                      <p>• <strong>Pellizcar:</strong> Hacer zoom in/out</p>
-                                      <p>• <strong>Arrastrar:</strong> Mover imagen</p>
-                                      <p>• <strong>Tocar botones:</strong> Aplicar filtros</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Touch-optimized canvas area */}
-                            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-4 sm:mb-8">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                  <h5 className="font-bold text-gray-900 text-sm sm:text-lg">Vista Previa</h5>
-                                  <motion.div
-                                    animate={{ 
-                                      scale: imageTransformations.scale !== 1 || 
-                                             imageTransformations.brightness !== 1 || 
-                                             imageTransformations.contrast !== 1 || 
-                                             imageTransformations.saturation !== 1 ? [1, 1.1, 1] : 1
-                                    }}
-                                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-                                    className="w-2 h-2 bg-green-500 rounded-full"
-                                    style={{
-                                      opacity: imageTransformations.scale !== 1 || 
-                                              imageTransformations.brightness !== 1 || 
-                                              imageTransformations.contrast !== 1 || 
-                                              imageTransformations.saturation !== 1 ? 1 : 0.3
-                                    }}
-                                  />
-                                </div>
-                                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
-                                  <Monitor className="w-3 h-3 sm:w-4 sm:h-4" />
-                                  <span>{screen.specs.width}×{screen.specs.height}</span>
-                                </div>
-                              </div>
-                              
-                              <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-inner">
+                          {/* Minimalist editor content */}
+                          <div className="p-4">
+                            {/* Canvas area */}
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                              <div className="bg-white rounded-lg p-2 shadow-sm">
                                 <canvas
                                   ref={canvasRef}
                                   width={canvasSize.width}
                                   height={canvasSize.height}
-                                  className="mobile-canvas border border-gray-300 rounded-lg sm:rounded-xl cursor-move mx-auto block shadow-lg max-w-full h-auto"
+                                  className="border border-gray-200 rounded cursor-move mx-auto block max-w-full h-auto"
                                   onPointerDown={handlePointerDown}
                                   onPointerMove={handlePointerMove}
                                   onPointerUp={handlePointerUp}
@@ -3571,282 +3409,188 @@ export function TimePurchaseModal({
                                     touchAction: 'none'
                                   }}
                                 />
-                                <div className="flex flex-col sm:flex-row items-center justify-between mt-2 sm:mt-3 gap-2">
-                                  <p className="text-center text-xs text-gray-500">
-                                    {isMobileEditor ? "Pellizca para zoom, arrastra para mover" : "Arrastra la imagen para reposicionarla"}
-                                  </p>
-                                  
-                                  {/* Mobile quick transform buttons */}
-                                  {isMobileEditor && (
-                                    <div className="flex gap-1">
-                                      <motion.button
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={() => updateTransformations({ rotation: imageTransformations.rotation + 90 })}
-                                        className="mobile-touch-target bg-blue-500 text-white rounded-lg text-xs font-medium"
-                                      >
-                                        <RotateCw className="w-3 h-3" />
-                                      </motion.button>
-                                      <motion.button
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={() => updateTransformations({ flipX: !imageTransformations.flipX })}
-                                        className="mobile-touch-target bg-purple-500 text-white rounded-lg text-xs font-medium"
-                                      >
-                                        <Move className="w-3 h-3" />
-                                      </motion.button>
-                                      <motion.button
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={() => updateTransformations({ 
-                                          brightness: 1, 
-                                          contrast: 1, 
-                                          saturation: 1, 
-                                          scale: getMinimumScale(),
-                                          rotation: 0,
-                                          flipX: false,
-                                          flipY: false,
-                                          x: 0,
-                                          y: 0
-                                        })}
-                                        className="mobile-touch-target bg-gray-500 text-white rounded-lg text-xs font-medium"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </motion.button>
-                                    </div>
-                                  )}
-                                </div>
+                                <p className="text-center text-xs text-gray-500 mt-2">
+                                  Arrastra para mover • Pellizca para zoom
+                                </p>
                               </div>
                             </div>
 
-                            {/* Mobile-optimized controls */}
-                            <div className="space-y-3 sm:space-y-6">
-                              
-                              {/* Scale control - always visible and touch-optimized */}
-                              <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-lg border border-blue-100"
-                              >
-                                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                  <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                      <Maximize className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                                    </div>
-                                    <h6 className="font-bold text-gray-900 text-sm sm:text-lg">Zoom</h6>
-                                  </div>
-                                  <motion.div 
-                                    animate={{ scale: [1, 1.1, 1] }}
-                                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-                                    className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg text-xs sm:text-sm font-bold shadow-md"
-                                  >
-                                    {imageTransformations.scale.toFixed(1)}x
-                                  </motion.div>
+                            {/* Minimalist controls */}
+                            <div className="space-y-4">
+                              {/* Zoom control */}
+                              <div className="bg-white border border-gray-100 rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-sm font-medium text-gray-700">Zoom</label>
+                                  <span className="text-sm text-gray-500">{imageTransformations.scale.toFixed(1)}x</span>
                                 </div>
-                                
-                                <div className="relative">
-                                  <input
-                                    type="range"
-                                    min={getMinimumScale()}
-                                    max={3}
-                                    step={0.05}
-                                    value={imageTransformations.scale}
-                                    onChange={(e) => updateTransformations({ scale: parseFloat(e.target.value) })}
-                                    className="w-full mobile-slider bg-gradient-to-r from-blue-200 via-blue-300 to-indigo-400 rounded-full cursor-pointer"
-                                    style={{
-                                      background: `linear-gradient(to right, #3b82f6 0%, #6366f1 ${((imageTransformations.scale - getMinimumScale()) / (3 - getMinimumScale())) * 100}%, #e2e8f0 ${((imageTransformations.scale - getMinimumScale()) / (3 - getMinimumScale())) * 100}%, #e2e8f0 100%)`
-                                    }}
-                                  />
-                                  <div className="flex justify-between text-xs text-gray-500 mt-1 sm:mt-2">
-                                    <span>{getMinimumScale().toFixed(1)}x</span>
-                                    <span>3.0x</span>
-                                  </div>
-                                </div>
-                              </motion.div>
+                                <input
+                                  type="range"
+                                  min={getMinimumScale()}
+                                  max={3}
+                                  step={0.05}
+                                  value={imageTransformations.scale}
+                                  onChange={(e) => updateTransformations({ scale: parseFloat(e.target.value) })}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                />
+                              </div>
 
-                              {/* Mobile filter presets - simplified grid */}
-                              <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="bg-gradient-to-br from-white via-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-lg border border-purple-100"
-                              >
-                                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
-                                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                                    <Palette className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                                  </div>
-                                  <h6 className="font-bold text-gray-900 text-sm sm:text-lg">Filtros</h6>
-                                </div>
-                                
-                                <div className="mobile-filter-grid grid">
+                              {/* Filter presets */}
+                              <div className="bg-white border border-gray-100 rounded-lg p-3">
+                                <h6 className="text-sm font-medium text-gray-700 mb-3">Filtros</h6>
+                                <div className="grid grid-cols-3 gap-2">
                                   {FILTER_PRESETS.map((preset, index) => (
-                                    <MobileLazyFilterPreset
+                                    <button
                                       key={preset.id}
-                                      preset={preset}
-                                      index={index}
-                                      selectedPreset={selectedPreset}
-                                      onApply={applyPreset}
-                                    />
+                                      onClick={() => applyPreset(preset)}
+                                      className={`p-2 rounded-lg border text-xs font-medium transition-colors ${
+                                        selectedPreset === preset.id
+                                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                                      }`}
+                                    >
+                                      <div className={`w-full h-2 rounded mb-1 ${preset.gradient.replace('from-', 'bg-').replace(' to-', '').split(' ')[0]}`} />
+                                      <span>{preset.name}</span>
+                                    </button>
                                   ))}
                                 </div>
-                              </motion.div>
+                              </div>
 
-                              {/* Mobile manual adjustments - collapsible */}
-                              {!isMobileEditor && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.2 }}
-                                  className="bg-gradient-to-br from-white via-green-50 to-emerald-50 rounded-xl sm:rounded-2xl shadow-lg border border-green-100"
-                                >
-                                  <div className="p-3 sm:p-6">
-                                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
-                                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                                        <Sliders className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                                      </div>
-                                      <h6 className="font-bold text-gray-900 text-sm sm:text-lg">Ajustes Avanzados</h6>
+                              {/* Manual adjustments */}
+                              <div className="bg-white border border-gray-100 rounded-lg p-3">
+                                <h6 className="text-sm font-medium text-gray-700 mb-3">Ajustes</h6>
+                                <div className="space-y-3">
+                                  {/* Brightness */}
+                                  <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <label className="text-xs text-gray-600">Brillo</label>
+                                      <span className="text-xs text-gray-500">{imageTransformations.brightness.toFixed(1)}</span>
                                     </div>
-                                    
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-                                      {/* Brightness */}
-                                      <div className="space-y-2 sm:space-y-3">
-                                        <div className="flex items-center justify-between">
-                                          <label className="text-xs sm:text-sm font-bold text-gray-700 flex items-center gap-1 sm:gap-2">
-                                            ☀️ Brillo
-                                          </label>
-                                          <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg text-xs font-bold shadow-sm">
-                                            {imageTransformations.brightness.toFixed(1)}
-                                          </div>
-                                        </div>
-                                        <input
-                                          type="range"
-                                          min={0.5}
-                                          max={2}
-                                          step={0.05}
-                                          value={imageTransformations.brightness}
-                                          onChange={(e) => updateTransformations({ brightness: parseFloat(e.target.value) })}
-                                          className="w-full mobile-slider bg-gradient-to-r from-yellow-200 to-orange-300 rounded-full cursor-pointer"
-                                        />
-                                      </div>
-
-                                      {/* Contrast */}
-                                      <div className="space-y-2 sm:space-y-3">
-                                        <div className="flex items-center justify-between">
-                                          <label className="text-xs sm:text-sm font-bold text-gray-700 flex items-center gap-1 sm:gap-2">
-                                            ⚫ Contraste
-                                          </label>
-                                          <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-lg text-xs font-bold shadow-sm">
-                                            {imageTransformations.contrast.toFixed(1)}
-                                          </div>
-                                        </div>
-                                        <input
-                                          type="range"
-                                          min={0.5}
-                                          max={2}
-                                          step={0.05}
-                                          value={imageTransformations.contrast}
-                                          onChange={(e) => updateTransformations({ contrast: parseFloat(e.target.value) })}
-                                          className="w-full mobile-slider bg-gradient-to-r from-gray-300 to-gray-600 rounded-full cursor-pointer"
-                                        />
-                                      </div>
-
-                                      {/* Saturation */}
-                                      <div className="space-y-2 sm:space-y-3">
-                                        <div className="flex items-center justify-between">
-                                          <label className="text-xs sm:text-sm font-bold text-gray-700 flex items-center gap-1 sm:gap-2">
-                                            🌈 Saturación
-                                          </label>
-                                          <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg text-xs font-bold shadow-sm">
-                                            {imageTransformations.saturation.toFixed(1)}
-                                          </div>
-                                        </div>
-                                        <input
-                                          type="range"
-                                          min={0}
-                                          max={2}
-                                          step={0.05}
-                                          value={imageTransformations.saturation}
-                                          onChange={(e) => updateTransformations({ saturation: parseFloat(e.target.value) })}
-                                          className="w-full mobile-slider bg-gradient-to-r from-gray-300 via-pink-300 to-rose-400 rounded-full cursor-pointer"
-                                        />
-                                      </div>
-                                    </div>
+                                    <input
+                                      type="range"
+                                      min={0.5}
+                                      max={2}
+                                      step={0.05}
+                                      value={imageTransformations.brightness}
+                                      onChange={(e) => updateTransformations({ brightness: parseFloat(e.target.value) })}
+                                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    />
                                   </div>
-                                </motion.div>
-                              )}
+
+                                  {/* Contrast */}
+                                  <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <label className="text-xs text-gray-600">Contraste</label>
+                                      <span className="text-xs text-gray-500">{imageTransformations.contrast.toFixed(1)}</span>
+                                    </div>
+                                    <input
+                                      type="range"
+                                      min={0.5}
+                                      max={2}
+                                      step={0.05}
+                                      value={imageTransformations.contrast}
+                                      onChange={(e) => updateTransformations({ contrast: parseFloat(e.target.value) })}
+                                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                  </div>
+
+                                  {/* Saturation */}
+                                  <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <label className="text-xs text-gray-600">Saturación</label>
+                                      <span className="text-xs text-gray-500">{imageTransformations.saturation.toFixed(1)}</span>
+                                    </div>
+                                    <input
+                                      type="range"
+                                      min={0}
+                                      max={2}
+                                      step={0.05}
+                                      value={imageTransformations.saturation}
+                                      onChange={(e) => updateTransformations({ saturation: parseFloat(e.target.value) })}
+                                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </motion.div>
                       )}
 
-                      {/* Mobile-Optimized Video Editor with Touch Enhancements */}
+                      {/* Minimalist Video Editor */}
                       {isEditingVideo && file && file.type.startsWith('video/') && screen && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
-                          className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden"
+                          className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
                         >
-                          {/* Mobile-optimized header */}
-                          <div className="bg-gradient-to-r from-blue-500 to-purple-500 px-3 sm:px-4 py-3 sm:py-4">
-                            <div className="text-center">
-                              <h4 className="text-base sm:text-lg font-bold text-white mb-1">
-                                ✂️ {isMobileEditor ? "Editor de Video" : "Recortar Video"}
-                              </h4>
-                              <p className="text-blue-100 text-xs sm:text-sm">
-                                {isMobileEditor ? 
-                                  `Ajusta a ${videoTrimSettings.targetDuration}s • Toca para seleccionar` :
-                                  `Tu video necesita durar exactamente ${videoTrimSettings.targetDuration} segundos`
-                                }
-                              </p>
+                          {/* Simple header */}
+                          <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                  <Scissors className="w-4 h-4 text-purple-600" />
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-semibold text-gray-900">Recortar video</h4>
+                                  <p className="text-xs text-gray-500">Duración: {videoTrimSettings.targetDuration}s</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={handleCancelVideoEdit}
+                                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  onClick={handleApplyVideoTrim}
+                                  disabled={isProcessingVideo}
+                                  className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                >
+                                  {isProcessingVideo ? (
+                                    <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <Check className="w-3 h-3" />
+                                  )}
+                                  Aplicar
+                                </button>
+                              </div>
                             </div>
                           </div>
 
-                          {/* Content */}
+                          {/* Simple content */}
                           <div className="p-4">
-                            {/* Video Preview */}
-                            <div className="bg-black rounded-xl overflow-hidden mb-6">
+                            {/* Video preview */}
+                            <div className="bg-black rounded-lg overflow-hidden mb-4">
                               <video
                                 ref={setVideoRef}
                                 src={filePreview!}
-                                className="w-full h-48 object-contain"
+                                className="w-full h-40 object-contain"
                                 controls={true}
                                 preload="metadata"
                               />
                             </div>
 
-                            {/* Simple Visual Explanation */}
-                            <div className="text-center mb-6">
-                              <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full">
-                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span className="text-sm font-medium text-blue-700">
-                                  Elige qué parte del video usar
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Touch-optimized action buttons with haptic feedback */}
-                            <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                              <motion.button
-                                onClick={() => {
-                                  triggerHapticFeedback('light');
-                                  handleVideoTrimChange(0, videoTrimSettings.targetDuration);
-                                }}
-                                className="mobile-touch-target w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-lg shadow-lg hover:shadow-xl transition-all"
-                                whileTap={{ scale: 0.98 }}
-                                whileHover={{ scale: isMobileEditor ? 1 : 1.02 }}
+                            {/* Simple options */}
+                            <div className="space-y-2 mb-4">
+                              <button
+                                onClick={() => handleVideoTrimChange(0, videoTrimSettings.targetDuration)}
+                                className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-left transition-colors"
                               >
-                                <div className="flex items-center justify-center gap-2 sm:gap-3">
-                                  <span className="text-lg sm:text-xl">🎬</span>
-                                  <div className="text-left">
-                                    <div className="font-bold">Desde el inicio</div>
-                                    <div className="text-xs sm:text-sm opacity-90">
-                                      Los primeros {videoTrimSettings.targetDuration}s
-                                    </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <Play className="w-4 h-4 text-green-600" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">Desde el inicio</div>
+                                    <div className="text-sm text-gray-500">Primeros {videoTrimSettings.targetDuration}s</div>
                                   </div>
                                 </div>
-                              </motion.button>
+                              </button>
                               
-                              <motion.button
+                              <button
                                 onClick={() => {
-                                  triggerHapticFeedback('light');
                                   const center = (videoDuration || 0) / 2;
                                   const half = videoTrimSettings.targetDuration / 2;
                                   handleVideoTrimChange(
@@ -3854,43 +3598,38 @@ export function TimePurchaseModal({
                                     Math.min(videoDuration || 0, center + half)
                                   );
                                 }}
-                                className="mobile-touch-target w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-lg shadow-lg hover:shadow-xl transition-all"
-                                whileTap={{ scale: 0.98 }}
-                                whileHover={{ scale: isMobileEditor ? 1 : 1.02 }}
+                                className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-left transition-colors"
                               >
-                                <div className="flex items-center justify-center gap-2 sm:gap-3">
-                                  <span className="text-lg sm:text-xl">🎯</span>
-                                  <div className="text-left">
-                                    <div className="font-bold">Parte del centro</div>
-                                    <div className="text-xs sm:text-sm opacity-90">
-                                      {videoTrimSettings.targetDuration}s del medio
-                                    </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <Target className="w-4 h-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">Del centro</div>
+                                    <div className="text-sm text-gray-500">{videoTrimSettings.targetDuration}s del medio</div>
                                   </div>
                                 </div>
-                              </motion.button>
+                              </button>
                               
-                              <motion.button
+                              <button
                                 onClick={() => {
-                                  triggerHapticFeedback('light');
                                   handleVideoTrimChange(
                                     Math.max(0, (videoDuration || 0) - videoTrimSettings.targetDuration),
                                     videoDuration || 0
                                   );
                                 }}
-                                className="mobile-touch-target w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-sm sm:text-lg shadow-lg hover:shadow-xl transition-all"
-                                whileTap={{ scale: 0.98 }}
-                                whileHover={{ scale: isMobileEditor ? 1 : 1.02 }}
+                                className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-left transition-colors"
                               >
-                                <div className="flex items-center justify-center gap-2 sm:gap-3">
-                                  <span className="text-lg sm:text-xl">🏁</span>
-                                  <div className="text-left">
-                                    <div className="font-bold">Desde el final</div>
-                                    <div className="text-xs sm:text-sm opacity-90">
-                                      Los últimos {videoTrimSettings.targetDuration}s
-                                    </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <Pause className="w-4 h-4 text-purple-600" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">Desde el final</div>
+                                    <div className="text-sm text-gray-500">Últimos {videoTrimSettings.targetDuration}s</div>
                                   </div>
                                 </div>
-                              </motion.button>
+                              </button>
                             </div>
 
                             {/* Visual Progress Bar */}
@@ -3935,44 +3674,14 @@ export function TimePurchaseModal({
                               )}
                             </div>
 
-                            {/* Mobile-optimized action buttons */}
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
-                              <motion.button
-                                onClick={() => {
-                                  triggerHapticFeedback('medium');
-                                  handleCancelVideoEdit();
-                                }}
-                                className="mobile-touch-target order-2 sm:order-1 flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg sm:rounded-xl font-medium hover:bg-gray-200 transition-colors text-sm sm:text-base"
-                                whileTap={{ scale: 0.98 }}
-                              >
-                                Cancelar
-                              </motion.button>
-                              <motion.button
-                                onClick={() => {
-                                  if (!isProcessingVideo && Math.abs((videoTrimSettings.endTime - videoTrimSettings.startTime) - videoTrimSettings.targetDuration) <= 0.5) {
-                                    triggerHapticFeedback('heavy');
-                                    handleApplyVideoTrim();
-                                  }
-                                }}
-                                disabled={isProcessingVideo || Math.abs((videoTrimSettings.endTime - videoTrimSettings.startTime) - videoTrimSettings.targetDuration) > 0.5}
-                                className="mobile-touch-target order-1 sm:order-2 flex-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
-                                whileTap={{ scale: 0.98 }}
-                                whileHover={{ scale: isMobileEditor ? 1 : 1.02 }}
-                              >
-                                {isProcessingVideo ? (
-                                  <>
-                                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    <span className="hidden sm:inline">Procesando...</span>
-                                    <span className="sm:hidden">Procesando</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="text-sm sm:text-base">✨</span>
-                                    <span className="hidden sm:inline">Aplicar Recorte</span>
-                                    <span className="sm:hidden">Aplicar</span>
-                                  </>
-                                )}
-                              </motion.button>
+                            {/* Current selection info */}
+                            <div className="bg-gray-50 rounded-lg p-3 text-center">
+                              <div className="text-sm text-gray-600">
+                                Selección: {videoTrimSettings.startTime.toFixed(1)}s - {videoTrimSettings.endTime.toFixed(1)}s
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                Duración: {(videoTrimSettings.endTime - videoTrimSettings.startTime).toFixed(1)}s
+                              </div>
                             </div>
                           </div>
                         </motion.div>
@@ -4003,69 +3712,65 @@ export function TimePurchaseModal({
                   </div>
                 )}
                 
-                  {/* Technical Specifications */}
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center">
-                        <Monitor className="w-5 h-5 text-white" />
+                  {/* Technical Specifications - Subtle */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-5 h-5 text-gray-600">
+                        <Monitor className="w-full h-full" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 text-lg">Especificaciones técnicas</h4>
-                        <p className="text-gray-600 text-sm">Requisitos para tu contenido</p>
+                        <h4 className="font-medium text-gray-900 text-sm">Especificaciones técnicas</h4>
+                        <p className="text-gray-500 text-xs">Requisitos para tu contenido</p>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Screen Resolution Highlight */}
-                      <div className="bg-white rounded-2xl p-4 shadow-lg border-2 border-blue-200">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                            <Monitor className="w-4 h-4 text-white" />
+                      <div className="bg-white rounded-lg p-3 border border-blue-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-4 h-4 text-blue-600">
+                            <Monitor className="w-full h-full" />
                         </div>
-                          <span className="font-bold text-blue-800 text-base">Resolución de pantalla</span>
+                          <span className="font-medium text-blue-800 text-xs">Resolución de pantalla</span>
                         </div>
-                        <p className="text-2xl font-black text-blue-900 mb-2">
+                        <p className="text-lg font-bold text-blue-900 mb-1">
                           {screen?.specs.width} × {screen?.specs.height}
                         </p>
-                        <p className="text-xs text-blue-700 font-medium">
-                          Para mejor calidad, sube tu imagen en estas dimensiones exactas
+                        <p className="text-xs text-blue-600">
+                          Para mejor calidad, usa estas dimensiones
                         </p>
                       </div>
                       
                       {/* Other Specs */}
-                      <div className="bg-white rounded-2xl p-4 shadow-lg">
-                        <h5 className="font-bold text-gray-900 mb-3 text-base">Formatos y límites</h5>
-                        <div className="space-y-2 text-xs">
+                      <div className="bg-white rounded-lg p-3">
+                        <h5 className="font-medium text-gray-900 mb-2 text-xs">Formatos y límites</h5>
+                        <div className="space-y-1 text-xs">
                           <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span><strong>Formatos aceptados:</strong> JPG, PNG, MP4</span>
+                            <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                            <span><strong>Formatos:</strong> JPG, PNG, MP4</span>
                       </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span><strong>Duración de video:</strong> {screen?.specs?.videoSpotDuration || 30} segundos exactos</span>
+                            <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                            <span><strong>Video:</strong> {screen?.specs?.videoSpotDuration || 30}s exactos</span>
                     </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span><strong>Tamaño máximo:</strong> 100MB</span>
+                            <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                            <span><strong>Tamaño:</strong> 100MB máx</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span><strong>Aspecto ratio:</strong> {screen ? (screen.specs.width / screen.specs.height).toFixed(2) : 'N/A'}:1</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                            <span>No incluir contenido ofensivo o inapropiado</span>
+                            <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                            <span>Sin contenido ofensivo</span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 
-                {/* Error Message */}
+                {/* Error Message - Subtle */}
                   <AnimatePresence>
                 {error && (
                       <motion.div 
-                        className="p-6 bg-red-50 rounded-2xl flex items-start gap-4 border-2 border-red-200"
+                        className="p-3 bg-red-50 rounded-lg flex items-start gap-2 border border-red-200"
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
