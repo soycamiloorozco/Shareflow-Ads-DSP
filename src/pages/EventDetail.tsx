@@ -9,7 +9,7 @@ import {
   CreditCard, Check, Image as ImageIcon, Lock,
   ChevronLeft, Loader2, Star, Shield, Timer,
   TrendingUp, Wallet, CheckCircle, PlayCircle,
-  Target, Award, Sparkles, Mail, Phone
+  Target, Award, Sparkles
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { MomentSelector } from '../components/MomentSelector';
@@ -1692,59 +1692,25 @@ export function EventDetail() {
                 </p>
               </div>
               
-              {/* Contact Info */}
+              {/* Payment Actions */}
               <div className="mb-6">
-                <h3 className="font-semibold mb-4">Información de contacto</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
-                      Correo electrónico
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-                      <input
-                        type="email"
-                        placeholder="tu@email.com"
-                        className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
-                      Teléfono
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-                      <input
-                        type="tel"
-                        placeholder="+57 300 123 4567"
-                        className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <br/>
                 {loading ? (
-                  <div className="flex justify-center items-center">
-                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  <div className="flex justify-center items-center gap-3 p-8">
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
                     <p className="text-sm text-neutral-600">Procesando pago... no cierre la página</p>
                   </div>
                 ) : (
-                    
-                    <Button
-                      type="button"
-                      onClick={handlePaymentSuccess}
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      icon={ArrowRight}
-                      disabled={loading}
-                    >
-                      {loading ? 'Procesando...' : `Pagar ${totalPrice.toLocaleString('es-CO')} COP`}
-                    </Button>
-                 
+                  <Button
+                    type="button"
+                    onClick={handlePaymentSuccess}
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    icon={ArrowRight}
+                    disabled={loading}
+                  >
+                    {loading ? 'Procesando...' : `Pagar ${totalPrice.toLocaleString('es-CO')} COP`}
+                  </Button>
                 )}
               </div>
               
