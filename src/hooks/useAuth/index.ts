@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { RootState } from '../../store/store';
-import { login, register, logout, googleAuth } from '../../store/slices/authSlice';
+import { login, register, logout, googleAuth, forgotPassword, resetPassword } from '../../store/slices/authSlice';
 import type { AppDispatch } from '../../store/store';
 
 export function useAuth() {
@@ -150,6 +150,56 @@ export function useAuth() {
     }, 100);
   };
 
+  const handleForgotPassword = async (email: string) => {
+    try {
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+
+      const result = await dispatch(forgotPassword({ email })).unwrap();
+      return result;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+
+      if (typeof error.message === 'string') {
+        throw new Error(error.message);
+      }
+
+      throw new Error('Ha ocurrido un error inesperado al enviar el correo de recuperación. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  const handleResetPassword = async (token: string, newPassword: string, confirmPassword: string) => {
+    try {
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+
+      const result = await dispatch(resetPassword({ token, newPassword, confirmPassword })).unwrap();
+      return result;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+
+      if (typeof error.message === 'string') {
+        throw new Error(error.message);
+      }
+
+      throw new Error('Ha ocurrido un error inesperado al restablecer la contraseña. Por favor, inténtalo de nuevo.');
+    }
+  };
+
   return {
     user,
     isAuthenticated,
@@ -158,6 +208,8 @@ export function useAuth() {
     login: handleLogin,
     register: handleRegister,
     googleAuth: handleGoogleAuth,
-    logout: handleLogout
+    logout: handleLogout,
+    forgotPassword: handleForgotPassword,
+    resetPassword: handleResetPassword
   };
 }
