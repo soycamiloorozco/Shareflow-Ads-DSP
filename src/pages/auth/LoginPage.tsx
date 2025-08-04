@@ -156,7 +156,7 @@ export function LoginPage() {
               )}
             </div>
 
-            {/* <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -171,7 +171,7 @@ export function LoginPage() {
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-            </div> */}
+            </div>
         
 
             <Button
