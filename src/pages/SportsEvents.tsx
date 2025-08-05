@@ -251,12 +251,12 @@ const EventListItem = React.memo(({ event, onClick }: {
 
   return (
     <div 
-      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-gray-300"
+      className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-gray-300"
       onClick={onClick}
     >
-      <div className="flex items-center gap-4">
-        {/* Event Image */}
-        <div className="w-20 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+      <div className="flex items-start gap-3 sm:gap-4">
+        {/* Event Image - Más grande en móvil */}
+        <div className="w-16 h-12 sm:w-20 sm:h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
           <img 
             src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
             alt={event.stadiumName}
@@ -288,39 +288,44 @@ const EventListItem = React.memo(({ event, onClick }: {
         {/* Event Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-gray-900 truncate text-sm">
+            <h3 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight line-clamp-1 pr-2">
               {event.homeTeamName} vs {event.awayTeamName}
             </h3>
             {eventData.isPopular && (
-              <span className="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full flex items-center gap-1 flex-shrink-0">
+              <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full flex items-center gap-1 flex-shrink-0">
                 <TrendingUp className="w-3 h-3" />
-                Popular
+                <span className="hidden sm:inline">Popular</span>
               </span>
             )}
           </div>
           
-          <div className="flex items-center gap-4 text-xs text-gray-600 mb-2">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-600 mb-2">
             <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
+              <Calendar className="w-3 h-3 flex-shrink-0" />
               {new Date(event.eventDate).toLocaleDateString('es-CO', {
                 day: 'numeric',
                 month: 'short'
               })}
             </span>
             <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {event.eventTime || '8:00 PM'}
+              <Clock className="w-3 h-3 flex-shrink-0" />
+              {event.eventTime || '12:10'}
             </span>
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {event.stadiumName}
+            <span className="flex items-center gap-1 min-w-0">
+              <MapPin className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">
+                {event.stadiumName.length > 15 
+                  ? `${event.stadiumName.substring(0, 15)}...` 
+                  : event.stadiumName
+                }
+              </span>
             </span>
           </div>
           
-          <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs text-gray-500">
             <span className="flex items-center gap-1">
               <Users className="w-3 h-3" />
-              {event.estimatedAttendance?.toLocaleString() || 'N/A'}
+              {(event.estimatedAttendance / 1000).toFixed(0)}K
             </span>
             <span className="flex items-center gap-1">
               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
@@ -333,32 +338,28 @@ const EventListItem = React.memo(({ event, onClick }: {
           </div>
         </div>
 
-        {/* Price and Actions */}
-        <div className="text-right flex-shrink-0 flex items-center gap-3">
-          <div>
-            <p className="font-bold text-lg text-gray-900">
-              {eventData.priceDisplay}
+        {/* Price and Actions - Layout vertical en móvil */}
+        <div className="flex flex-col items-end justify-between flex-shrink-0 min-h-[60px]">
+          {/* Precio */}
+          <div className="text-right mb-2">
+            <p className="font-bold text-base sm:text-lg text-gray-900 leading-none">
+              ${(eventData.basePrice / 1000000).toFixed(1)}M
             </p>
-            <p className="text-xs text-gray-500">desde / momento</p>
+            <p className="text-xs text-gray-500 leading-none">desde / momento</p>
           </div>
           
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            {/* Favorite Button */}
-            <button
-              onClick={handleFavoriteClick}
-              className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-200 hover:border-gray-300 transition-colors"
-              aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-            >
-              <Heart 
-                className={`w-4 h-4 transition-colors ${
-                  isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-400'
-                }`} 
-              />
-            </button>
-          </div>
-          
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          {/* Botón de favorito */}
+          <button
+            onClick={handleFavoriteClick}
+            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-200 hover:border-gray-300 transition-colors touch-manipulation"
+            aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart 
+              className={`w-4 h-4 transition-colors ${
+                isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-400'
+              }`} 
+            />
+          </button>
         </div>
       </div>
     </div>
