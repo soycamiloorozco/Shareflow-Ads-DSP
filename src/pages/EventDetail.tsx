@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, Clock, Calendar, MapPin, Users, 
-  ChevronRight, Info, AlertTriangle, ArrowRight, 
+import {
+  ArrowLeft, Clock, Calendar, MapPin, Users,
+  ChevronRight, Info, AlertTriangle, ArrowRight,
   Trophy, Heart, BarChart3, Flame,
   ShoppingBag, Eye, Zap, Upload, X,
   CreditCard, Check, Image as ImageIcon, Lock,
@@ -88,7 +88,7 @@ const PaymentForm = ({ onSuccess, onError, amount, selectedMoments }: { onSucces
         amount,
         currency: 'cop'
       };
-      
+
       const { clientSecret } = await paymentApi.createPaymentIntent(data);
 
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
@@ -98,7 +98,7 @@ const PaymentForm = ({ onSuccess, onError, amount, selectedMoments }: { onSucces
             card: elements.getElement(CardElement)!,
             billing_details: {
               name: user?.username,
-              email:user?.email, 
+              email: user?.email,
             },
           },
         }
@@ -156,7 +156,7 @@ export function EventDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { event } = useSportEvents({ id });
-    const { purchaseMoments } = useMomentPurchases();
+  const { purchaseMoments } = useMomentPurchases();
   const [step, setStep] = useState(1);
   const [flowStep, setFlowStep] = useState<FlowStep>('select-moments');
   const [selectedMoments, setSelectedMoments] = useState<SelectedMomentDetails[]>([]);
@@ -164,11 +164,11 @@ export function EventDetail() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<GamePeriod>('FirstHalf');
-  const [recentPurchases, setRecentPurchases] = useState<{name: string, time: Date}[]>([]);
+  const [recentPurchases, setRecentPurchases] = useState<{ name: string, time: Date }[]>([]);
   const [countdownTime, setCountdownTime] = useState(600); // 10 minutes in seconds
   const [showPulse, setShowPulse] = useState(false);
   const [activeViewers, setActiveViewers] = useState(Math.floor(Math.random() * 20) + 30); // 30-50 viewers
-  
+
   // Creative upload state
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -197,7 +197,7 @@ export function EventDetail() {
   // UI state similar to ScreenDetail
   const [isSticky, setIsSticky] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
-  
+
   // Collapsible sections state
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isSpecsExpanded, setIsSpecsExpanded] = useState(false);
@@ -222,16 +222,16 @@ export function EventDetail() {
   // Simulate real-time purchases
   useEffect(() => {
     const names = [
-      "Juan P.", "María G.", "Carlos R.", "Ana M.", "David S.", 
+      "Juan P.", "María G.", "Carlos R.", "Ana M.", "David S.",
       "Laura T.", "Andrés V.", "Sofía L.", "Miguel A.", "Valentina Z."
     ];
-    
+
     // Add initial recent purchases
     setRecentPurchases([
       { name: names[Math.floor(Math.random() * names.length)], time: new Date(Date.now() - 1000 * 60 * 2) },
       { name: names[Math.floor(Math.random() * names.length)], time: new Date(Date.now() - 1000 * 60 * 5) }
     ]);
-    
+
     // Simulate new purchases every 20-40 seconds
     const purchaseInterval = setInterval(() => {
       if (remainingMoments > 1) {
@@ -239,16 +239,16 @@ export function EventDetail() {
           name: names[Math.floor(Math.random() * names.length)],
           time: new Date()
         };
-        
+
         setRecentPurchases(prev => [newPurchase, ...prev.slice(0, 4)]);
         setRemainingMoments(prev => prev - 1);
-        
+
         // Show pulse animation
         setShowPulse(true);
         setTimeout(() => setShowPulse(false), 2000);
       }
     }, Math.random() * 20000 + 20000);
-    
+
     // Update active viewers randomly
     const viewersInterval = setInterval(() => {
       setActiveViewers(prev => {
@@ -256,7 +256,7 @@ export function EventDetail() {
         return Math.max(30, Math.min(50, prev + change));
       });
     }, 5000);
-    
+
     // Countdown timer
     const countdownInterval = setInterval(() => {
       setCountdownTime(prev => {
@@ -264,7 +264,7 @@ export function EventDetail() {
         return prev - 1;
       });
     }, 1000);
-    
+
     return () => {
       clearInterval(purchaseInterval);
       clearInterval(viewersInterval);
@@ -276,26 +276,26 @@ export function EventDetail() {
   const handlePaymentSuccess = async () => {
     setLoading(true);
     const grouped = Object.values(
-        selectedMoments.reduce((acc: any, item: any) => {
-          if (!acc[item.id]) {
-            acc[item.id] = {
-              momentId: item.momentId,
-              minutes: [],
-              price: item.price
-            };
-          }
-          acc[item.id].minutes.push(item.minute);
-          return acc;
-        }, {})
+      selectedMoments.reduce((acc: any, item: any) => {
+        if (!acc[item.id]) {
+          acc[item.id] = {
+            momentId: item.momentId,
+            minutes: [],
+            price: item.price
+          };
+        }
+        acc[item.id].minutes.push(item.minute);
+        return acc;
+      }, {})
     );
-    
+
 
     const PurchaseDetails = grouped.map((item: any) => ({
       momentId: item.momentId,
       minutes: item.minutes.join(',')
     }));
 
-    
+
     const data = {
       sportEventId: id ?? "0",
       FilePath: fileBase64 ?? '',
@@ -311,7 +311,7 @@ export function EventDetail() {
     } catch (error) {
       alert(error);
       setLoading(false);
-     }
+    }
   };
 
 
@@ -327,7 +327,7 @@ export function EventDetail() {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
-    
+
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setIsDragging(false);
     }
@@ -337,19 +337,19 @@ export function EventDetail() {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
       video.preload = 'metadata';
-      
+
       video.onloadedmetadata = () => {
         const duration = video.duration;
         window.URL.revokeObjectURL(video.src);
         setVideoDuration(Math.min(duration, 15)); // Mostrar máximo 15 segundos
         resolve(duration);
       };
-      
+
       video.onerror = () => {
         window.URL.revokeObjectURL(video.src);
         reject(new Error('Error al cargar el video'));
       };
-      
+
       video.src = URL.createObjectURL(file);
     });
   };
@@ -389,7 +389,7 @@ export function EventDetail() {
       // Paso 2: Obtener duración del video
       updateProgress(25, processingSteps[1]);
       const duration = await getVideoDuration(file);
-      
+
       // Paso 3: Procesar según duración
       if (duration > 15) {
         updateProgress(40, processingSteps[2]);
@@ -439,7 +439,7 @@ export function EventDetail() {
         });
 
         const chunks: Blob[] = [];
-        
+
         mediaRecorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
             chunks.push(event.data);
@@ -465,19 +465,19 @@ export function EventDetail() {
 
         let startTime = Date.now();
         let lastProgressUpdate = 0;
-        
+
         const drawFrame = () => {
           const elapsed = (Date.now() - startTime) / 1000;
-          
+
           // Actualizar progreso del recorte (del 40% al 60%)
           const trimProgress = Math.min((elapsed / 15) * 20, 20); // 20% del progreso total
           const currentProgress = 40 + trimProgress;
-          
+
           if (currentProgress - lastProgressUpdate >= 2) {
             updateProgress(currentProgress, `${processingSteps[2]} (${elapsed.toFixed(1)}s/15s)`);
             lastProgressUpdate = currentProgress;
           }
-          
+
           if (elapsed >= 15) {
             video.pause();
             mediaRecorder.stop();
@@ -504,7 +504,7 @@ export function EventDetail() {
   const processVideoWithFFmpeg = async (file: File, wasTrimmed: boolean) => {
     return new Promise<void>((resolve, reject) => {
       const video = document.createElement('video');
-      
+
       video.onloadedmetadata = () => {
         // Paso 4: Ajustar dimensiones
         if (!wasTrimmed) {
@@ -529,14 +529,14 @@ export function EventDetail() {
         const aspectRatio = video.videoWidth / video.videoHeight;
         const targetAspectRatio = 1920 / 96; // 20:1
 
-        if (Math.abs(aspectRatio - targetAspectRatio) < 0.1 && 
-            video.videoWidth === 1920 && video.videoHeight === 96 &&
-            video.duration <= 15) {
+        if (Math.abs(aspectRatio - targetAspectRatio) < 0.1 &&
+          video.videoWidth === 1920 && video.videoHeight === 96 &&
+          video.duration <= 15) {
           // El video ya cumple con todos los requisitos
           updateProgress(100, 'Completado');
           setFile(file);
           setPreview(URL.createObjectURL(file));
-          
+
           // Convertir a base64
           convertFileToBase64(file).then(base64 => {
             setFileBase64(base64);
@@ -564,7 +564,7 @@ export function EventDetail() {
         });
 
         const chunks: Blob[] = [];
-        
+
         mediaRecorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
             chunks.push(event.data);
@@ -574,7 +574,7 @@ export function EventDetail() {
         mediaRecorder.onstop = () => {
           // Paso 6: Finalizar
           updateProgress(95, processingSteps[5]);
-          
+
           setTimeout(() => {
             const blob = new Blob(chunks, { type: 'video/webm' });
             const adjustedFile = new File([blob], `adjusted_${file.name}`, {
@@ -585,32 +585,32 @@ export function EventDetail() {
             updateProgress(100, 'Completado');
             setFile(adjustedFile);
             setPreview(URL.createObjectURL(adjustedFile));
-            
+
             // Convertir a base64
             convertFileToBase64(adjustedFile).then(base64 => {
               setFileBase64(base64);
-              
+
               // Limpiar estados de progreso después de un momento
               setTimeout(() => {
                 setLoading(false);
                 setUploadProgress(0);
                 setCurrentStep('');
               }, 500);
-              
+
               resolve();
             }).catch(error => {
               console.error('Error convirtiendo a base64:', error);
-              
+
               // Limpiar estados de progreso aunque falle la conversión
               setTimeout(() => {
                 setLoading(false);
                 setUploadProgress(0);
                 setCurrentStep('');
               }, 500);
-              
+
               resolve(); // Continuar aunque falle la conversión
             });
-            
+
           }, 500);
         };
 
@@ -621,20 +621,20 @@ export function EventDetail() {
 
         let startTime = Date.now();
         let lastProgressUpdate = 0;
-        
+
         const drawFrame = () => {
           const elapsed = (Date.now() - startTime) / 1000;
           const maxDuration = Math.min(video.duration, 15);
-          
+
           // Actualizar progreso de renderizado
           const renderProgress = Math.min((elapsed / maxDuration) * 15, 15); // 15% del progreso total para renderizado
           const currentProgress = 80 + renderProgress;
-          
+
           if (currentProgress - lastProgressUpdate >= 1) {
             updateProgress(Math.min(currentProgress, 95), processingSteps[4]);
             lastProgressUpdate = currentProgress;
           }
-          
+
           // Limitar a 15 segundos máximo
           if (elapsed >= maxDuration) {
             video.pause();
@@ -645,7 +645,7 @@ export function EventDetail() {
           // Limpiar canvas
           ctx.fillStyle = '#000000';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
+
           // Calcular dimensiones para mantener aspect ratio y centrar
           let drawWidth = canvas.width;
           let drawHeight = canvas.height;
@@ -679,7 +679,7 @@ export function EventDetail() {
           reject(new Error('Error al procesar el video'));
         };
       };
-      
+
       video.src = URL.createObjectURL(file);
     });
   };
@@ -694,7 +694,7 @@ export function EventDetail() {
       setFileReceived(true);
       setUploadError(null);
       setCurrentStep('Archivo recibido, validando...');
-      
+
       // Pequeña pausa para mostrar el feedback
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -726,7 +726,7 @@ export function EventDetail() {
       setFileReceived(true);
       setUploadError(null);
       setCurrentStep('Archivo seleccionado, validando...');
-      
+
       // Pequeña pausa para mostrar el feedback
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -803,19 +803,19 @@ export function EventDetail() {
   };
 
   const firstHalfCPM = formatCompactNumber(calculateCPM(
-    event ? event?.moments.find(item => item.moment === 'FirstHalf')?.price || 0 : 0, 
-    event.estimatedAttendance, 
+    event ? event?.moments.find(item => item.moment === 'FirstHalf')?.price || 0 : 0,
+    event.estimatedAttendance,
     event.estimatedAttendance || 0
   ));
-  
+
   const halftimeCPM = formatCompactNumber(calculateCPM(
-    event ? event?.moments.find(item => item.moment === 'Halftime')?.price || 0 : 0, 
+    event ? event?.moments.find(item => item.moment === 'Halftime')?.price || 0 : 0,
     event.estimatedAttendance
   ));
-  
+
   const secondHalfCPM = formatCompactNumber(calculateCPM(
-    event ? event?.moments.find(item => item.moment === 'SecondHalf')?.price || 0 : 0, 
-    event.estimatedAttendance, 
+    event ? event?.moments.find(item => item.moment === 'SecondHalf')?.price || 0 : 0,
+    event.estimatedAttendance,
     event.estimatedAttendance || 0
   ));
 
@@ -898,7 +898,7 @@ export function EventDetail() {
 
   const handleMinuteSelect = (index: number, minute: number) => {
     setSelectedMoments(
-      selectedMoments.map((moment, i) => 
+      selectedMoments.map((moment, i) =>
         i === index ? { ...moment, minute } : moment
       )
     );
@@ -918,7 +918,7 @@ export function EventDetail() {
         return acc;
       }, {})
     );
-    
+
     if (grouped.length > 0) {
       setFlowStep('upload-creative');
       setStep(2);
@@ -1048,17 +1048,16 @@ export function EventDetail() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-800 mb-4 sm:mb-6 flex items-center gap-2">
               <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              Selecciona tus momentos 
+              Selecciona tus momentos
             </h2>
 
             {/* Subtle Availability Alert */}
             <div className="bg-gradient-to-r from-slate-50 to-gray-50 border border-gray-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    remainingMoments <= 5 ? 'bg-red-500' : 
+                  <div className={`w-3 h-3 rounded-full ${remainingMoments <= 5 ? 'bg-red-500' :
                     remainingMoments <= 10 ? 'bg-amber-500' : 'bg-green-500'
-                  }`}></div>
+                    }`}></div>
                   <div>
                     <p className="text-sm font-medium text-gray-800">
                       {remainingMoments} momentos disponibles
@@ -1073,14 +1072,13 @@ export function EventDetail() {
                   <span className="font-mono">{formatTime(countdownTime)}</span>
                 </div>
               </div>
-              
+
               {/* Subtle progress bar */}
               <div className="mt-3 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <motion.div 
-                  className={`h-full ${
-                    remainingMoments <= 5 ? 'bg-red-500' : 
+                <motion.div
+                  className={`h-full ${remainingMoments <= 5 ? 'bg-red-500' :
                     remainingMoments <= 10 ? 'bg-amber-500' : 'bg-green-500'
-                  }`}
+                    }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${availabilityPercentage}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
@@ -1098,13 +1096,13 @@ export function EventDetail() {
                   <div>
                     <h3 className="font-semibold text-blue-900 mb-2">Selección de momentos publicitarios</h3>
                     <p className="text-blue-800 text-sm leading-relaxed">
-                      Elige los minutos específicos durante el partido donde aparecerá tu anuncio. 
+                      Elige los minutos específicos durante el partido donde aparecerá tu anuncio.
                       Cada momento dura 15 segundos y se reproduce en las pantallas LED del estadio.
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Refined Game Period Selection */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                 {gamePeriods.map((period) => (
@@ -1128,25 +1126,22 @@ export function EventDetail() {
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        selectedPeriod === period.id ? 'bg-primary-500' : 'bg-gray-100'
-                      }`}>
-                        <Clock className={`w-5 h-5 ${
-                          selectedPeriod === period.id ? 'text-white' : 'text-gray-600'
-                        }`} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedPeriod === period.id ? 'bg-primary-500' : 'bg-gray-100'
+                        }`}>
+                        <Clock className={`w-5 h-5 ${selectedPeriod === period.id ? 'text-white' : 'text-gray-600'
+                          }`} />
                       </div>
                       <div>
-                        <h4 className={`font-semibold ${
-                          selectedPeriod === period.id ? 'text-primary-800' : 'text-gray-800'
-                        }`}>
+                        <h4 className={`font-semibold ${selectedPeriod === period.id ? 'text-primary-800' : 'text-gray-800'
+                          }`}>
                           {period.name}
                         </h4>
                         <p className="text-sm text-gray-600">{period.description}</p>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Precio por momento</p>
@@ -1210,8 +1205,8 @@ export function EventDetail() {
                   selectedMinutes={filteredMoments.map(m => m.minute)}
                   onMinuteSelect={(index, minute) => {
                     const momentIndex = selectedMoments.findIndex(
-                      m => m.momentId === selectedPeriod && 
-                      m.minute === filteredMoments[index].minute
+                      m => m.momentId === selectedPeriod &&
+                        m.minute === filteredMoments[index].minute
                     );
                     if (momentIndex !== -1) {
                       handleMinuteSelect(momentIndex, minute);
@@ -1220,8 +1215,8 @@ export function EventDetail() {
                   onAddMoment={handleAddMoment}
                   onRemoveMoment={(index) => {
                     const momentIndex = selectedMoments.findIndex(
-                      m => m.momentId === selectedPeriod && 
-                      m.minute === filteredMoments[index].minute
+                      m => m.momentId === selectedPeriod &&
+                        m.minute === filteredMoments[index].minute
                     );
                     if (momentIndex !== -1) {
                       handleRemoveMoment(momentIndex);
@@ -1252,7 +1247,7 @@ export function EventDetail() {
             </div>
           </div>
         );
-      
+
       case 'upload-creative':
         return (
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
@@ -1260,13 +1255,13 @@ export function EventDetail() {
               <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               Sube tu pieza creativa
             </h2>
-            
+
             <div className="mb-4 sm:mb-6">
               <div className="flex items-center gap-2 mb-3 sm:mb-4">
                 <Info className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 <h3 className="text-base sm:text-lg font-semibold text-neutral-800">Especificaciones técnicas</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-neutral-50 p-4 rounded-xl">
                   <h4 className="font-medium mb-2">Dimensiones</h4>
@@ -1277,7 +1272,7 @@ export function EventDetail() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-neutral-50 p-4 rounded-xl">
                   <h4 className="font-medium mb-2">Formato</h4>
                   <div className="space-y-2">
@@ -1303,16 +1298,15 @@ export function EventDetail() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Upload Area */}
               <div
-                className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-                  isDragging
-                    ? 'border-primary bg-primary-50 scale-105 shadow-lg'
-                    : loading || fileReceived
+                className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${isDragging
+                  ? 'border-primary bg-primary-50 scale-105 shadow-lg'
+                  : loading || fileReceived
                     ? 'border-primary bg-primary-5'
                     : 'border-neutral-300 hover:border-neutral-400'
-                }`}
+                  }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -1351,7 +1345,7 @@ export function EventDetail() {
                           Sube tu video MP4
                         </p>
                         <p className="text-sm text-neutral-500 mb-4">
-                          Arrastra y suelta tu video MP4 aquí o haz clic para buscar<br/>
+                          Arrastra y suelta tu video MP4 aquí o haz clic para buscar<br />
                           <span className="text-xs text-neutral-400">Videos largos se cortarán automáticamente a 15 segundos • Se ajustará a 1920x96px</span>
                         </p>
                         <button
@@ -1437,12 +1431,12 @@ export function EventDetail() {
                         {/* Progress bar */}
                         <div className="w-full max-w-md">
                           <div className="w-full bg-neutral-200 rounded-full h-2 mb-4">
-                            <div 
+                            <div
                               className="bg-gradient-to-r from-primary to-primary-600 h-2 rounded-full transition-all duration-500 ease-out"
                               style={{ width: `${uploadProgress}%` }}
                             ></div>
                           </div>
-                          
+
                           {/* Steps indicator */}
                           <div className="flex justify-between text-xs text-neutral-500">
                             <span className={uploadProgress >= 15 ? 'text-primary font-medium' : ''}>
@@ -1538,12 +1532,12 @@ export function EventDetail() {
                 </p>
               )}
             </div>
-            
+
             {/* Creative Preview */}
             {preview && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-neutral-800 mb-4">Vista previa en estadio</h3>
-                
+
                 <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden">
                   <img
                     src={estadioImage}
@@ -1571,7 +1565,7 @@ export function EventDetail() {
                     <div className="absolute inset-0 bg-neutral-900/10" />
                   </div>
                 </div>
-                
+
                 <div className="mt-4 p-4 bg-primary-50 rounded-lg">
                   <div className="flex items-start gap-2">
                     <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -1589,7 +1583,7 @@ export function EventDetail() {
                 </div>
               </div>
             )}
-            
+
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
@@ -1599,7 +1593,7 @@ export function EventDetail() {
               >
                 Volver
               </Button>
-              
+
               <Button
                 variant="primary"
                 size="lg"
@@ -1612,7 +1606,7 @@ export function EventDetail() {
             </div>
           </div>
         );
-      
+
       case 'payment':
         return (
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
@@ -1620,15 +1614,15 @@ export function EventDetail() {
               <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               Detalles de pago
             </h2>
-            
+
             {/* Order Summary */}
             <div className="mb-6 p-4 bg-neutral-50 rounded-xl">
               <h3 className="font-semibold mb-4">Resumen del pedido</h3>
-              
+
               <div className="flex gap-3 mb-4">
                 <div className="w-[120px] h-[80px] bg-white rounded-lg overflow-hidden">
                   <img
-                     src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
+                    src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
                     alt={event.stadiumName}
                     className="w-full h-full object-cover"
                   />
@@ -1653,13 +1647,13 @@ export function EventDetail() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="border-t border-neutral-200 pt-4 mb-4">
                 <div className="space-y-2">
                   {gamePeriods.map(period => {
                     const periodMoments = selectedMoments.filter(m => m.momentId === period.id);
                     if (periodMoments.length === 0) return null;
-                    
+
                     return (
                       <div key={period.id} className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
@@ -1680,13 +1674,13 @@ export function EventDetail() {
                   })}
                 </div>
               </div>
-              
+
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
                 <span className="text-primary">${totalPrice.toLocaleString()} COP</span>
               </div>
             </div>
-            
+
             {/* Payment Methods */}
             <div className="mb-6">
               {/* <h3 className="font-semibold mb-4">Método de pago</h3>
@@ -1726,7 +1720,7 @@ export function EventDetail() {
                   ))}
                 </div>
               )} */}
-              
+
               {/* Security Info */}
               <div className="p-4 bg-neutral-50 rounded-lg mb-6">
                 <div className="flex items-center gap-2 mb-2">
@@ -1738,7 +1732,7 @@ export function EventDetail() {
                   No almacenamos los datos de tu tarjeta.
                 </p>
               </div>
-              
+
               {/* Payment Actions */}
               <div className="mb-6">
                 {loading ? (
@@ -1760,7 +1754,7 @@ export function EventDetail() {
                   </Button>
                 )}
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <Button
                   variant="outline"
@@ -1773,14 +1767,14 @@ export function EventDetail() {
                 >
                   Volver
                 </Button>
-                
+
                 {/* Payment Form */}
-                
+
               </div>
             </div>
           </div>
         );
-      
+
       case 'confirmation':
         return (
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
@@ -1793,34 +1787,34 @@ export function EventDetail() {
                 Hemos recibido tu pago correctamente. A continuación encontrarás los detalles de tu compra.
               </p>
             </div>
-            
+
             <div className="border border-neutral-200 rounded-xl overflow-hidden mb-6">
               <div className="p-4 bg-neutral-50 border-b border-neutral-200">
                 <h3 className="font-semibold">Detalles de la compra</h3>
               </div>
-              
+
               <div className="p-4">
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     {/* <span className="text-neutral-600">Número de orden</span> */}
                     {/* <span className="font-medium">ORD-{Date.now().toString().slice(-8)}</span> */}
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Fecha</span>
                     <span className="font-medium">{new Date().toLocaleDateString()}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Evento</span>
                     <span className="font-medium">{event.homeTeamName} vs {event.awayTeamName}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Estadio</span>
                     <span className="font-medium">{event.stadiumName}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Fecha del evento</span>
                     <span className="font-medium">
@@ -1831,12 +1825,12 @@ export function EventDetail() {
                       })}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Momentos comprados</span>
                     <span className="font-medium">{selectedMoments.length}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Total pagado</span>
                     <span className="font-semibold text-primary">${totalPrice.toLocaleString()} COP</span>
@@ -1844,7 +1838,7 @@ export function EventDetail() {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-4 bg-success-50 border border-success-100 rounded-xl mb-6">
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
@@ -1857,7 +1851,7 @@ export function EventDetail() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between">
               {/* <Button
                 variant="outline"
@@ -1866,7 +1860,7 @@ export function EventDetail() {
               >
                 Ver mis campañas
               </Button> */}
-              
+
               <Button
                 variant="primary"
                 size="lg"
@@ -1877,7 +1871,7 @@ export function EventDetail() {
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -1946,18 +1940,6 @@ export function EventDetail() {
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                     </svg>
                   </motion.button>
-
-                  <motion.button
-                    onClick={toggleFavorite}
-                    className="p-2 hover:bg-neutral-100 rounded-xl transition-colors relative touch-manipulation min-h-[44px] min-w-[44px]"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Heart 
-                      size={20} 
-                      className={isFavorite ? "text-red-500 fill-red-500" : "text-neutral-400"} 
-                    />
-                  </motion.button>
                 </div>
               </div>
             </div>
@@ -1972,27 +1954,16 @@ export function EventDetail() {
             <div className="lg:col-span-2">
               {/* Professional Event Header - Optimizado para móvil */}
               <div className="bg-white rounded-2xl border border-gray-200 mb-4 sm:mb-6 overflow-hidden shadow-sm">
-                <div className="relative h-[160px] sm:h-[200px] md:h-[240px] overflow-hidden">
+                <div className="relative h-[200px] sm:h-[250px] md:h-[300px] overflow-hidden">
                   <img
                     src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
                     alt={event.stadiumName}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  
-                  {/* Subtle Favorite Button - Más pequeño en móvil */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={toggleFavorite}
-                    className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2.5 bg-white/90 backdrop-blur-sm rounded-lg border border-white/50 transition-all duration-200 hover:bg-white"
-                  >
-                    <Heart 
-                      size={16} 
-                      className={`sm:w-[18px] sm:h-[18px] ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-600"}`} 
-                    />
-                  </motion.button>
-                  
+
+
+
                   {/* Clean Teams Display - Más compacto */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-6">
                     <div className="flex items-center justify-center mb-2 sm:mb-4">
@@ -2000,7 +1971,7 @@ export function EventDetail() {
                         {/* Home Team */}
                         <div className="flex flex-col items-center">
                           <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white/95 backdrop-blur-sm rounded-xl flex items-center justify-center mb-1 sm:mb-2 shadow-lg">
-                            <img 
+                            <img
                               src={`${constants.base_path}/${event.homeTeamImage}`}
                               alt={event.homeTeamName}
                               className="w-6 h-6 sm:w-10 sm:h-10 object-contain"
@@ -2010,7 +1981,7 @@ export function EventDetail() {
                             {event.homeTeamName}
                           </span>
                         </div>
-                        
+
                         {/* VS */}
                         <div className="flex flex-col items-center">
                           <div className="bg-white/10 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg mb-1 sm:mb-2">
@@ -2023,11 +1994,11 @@ export function EventDetail() {
                             })}
                           </span>
                         </div>
-                        
+
                         {/* Away Team */}
                         <div className="flex flex-col items-center">
                           <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white/95 backdrop-blur-sm rounded-xl flex items-center justify-center mb-1 sm:mb-2 shadow-lg">
-                            <img 
+                            <img
                               src={`${constants.base_path}/${event.awayTeamImage}`}
                               alt={event.awayTeamName}
                               className="w-6 h-6 sm:w-10 sm:h-10 object-contain"
@@ -2039,12 +2010,12 @@ export function EventDetail() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Event Title - Más pequeño en móvil */}
                     <h1 className="text-sm sm:text-xl md:text-2xl font-bold text-white text-center mb-1">
                       {event.homeTeamName} vs {event.awayTeamName}
                     </h1>
-                    
+
                     {/* Stadium Name - Más compacto */}
                     <div className="flex items-center justify-center gap-1 sm:gap-2 text-white/90">
                       <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -2053,64 +2024,7 @@ export function EventDetail() {
                   </div>
                 </div>
 
-                {/* Clean Event Details - Más compacto */}
-                <div className="p-3 sm:p-6">
-                  <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
-                    {/* Attendance */}
-                    <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-gray-50 rounded-xl">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                        <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Asistencia estimada</p>
-                        <p className="font-semibold text-gray-800 text-xs sm:text-base">
-                          {(event.estimatedAttendance / 1000).toFixed(0)}K espectadores
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* CPM */}
-                    <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-gray-50 rounded-xl">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">CPM promedio</p>
-                        <p className="font-semibold text-gray-800 text-xs sm:text-base">{firstHalfCPM}</p>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Subtle Flow Status - Más compacto */}
-                  <div className="flex items-center justify-center">
-                    <div className="flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-100 rounded-lg">
-                      {flowStep === 'select-moments' && (
-                        <>
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          <span className="text-xs sm:text-sm text-gray-700">Selección de momentos</span>
-                        </>
-                      )}
-                      {flowStep === 'upload-creative' && (
-                        <>
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="text-xs sm:text-sm text-gray-700">Subir creatividad</span>
-                        </>
-                      )}
-                      {flowStep === 'payment' && (
-                        <>
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-xs sm:text-sm text-gray-700">Confirmar pago</span>
-                        </>
-                      )}
-                      {flowStep === 'confirmation' && (
-                        <>
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-xs sm:text-sm text-gray-700">Compra completada</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Event Description and Context Section - Colapsable */}
@@ -2127,14 +2041,13 @@ export function EventDetail() {
                         </span>
                         Descripción del evento
                       </h2>
-                      <ChevronDown 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          isDescriptionExpanded ? 'rotate-180' : ''
-                        }`}
+                      <ChevronDown
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isDescriptionExpanded ? 'rotate-180' : ''
+                          }`}
                       />
                     </div>
                   </button>
-                  
+
                   <AnimatePresence>
                     {isDescriptionExpanded && (
                       <motion.div
@@ -2151,11 +2064,11 @@ export function EventDetail() {
                               day: 'numeric',
                               month: 'long',
                               year: 'numeric'
-                            })} a las {event.eventTime}</span>, aprovecha la emoción del fútbol para conectar con tu audiencia en <span className="font-bold text-primary">{event.stadiumName}</span>. 
-                            Durante el emocionante encuentro entre <span className="font-bold text-primary">{event.homeTeamName} y {event.awayTeamName}</span>, tu anuncio cobrará vida en las 
-                            pantallas LED perimetrales del estadio, capturando la atención de <span className="font-bold text-primary">{event.estimatedAttendance.toLocaleString()} 
-                            espectadores apasionados</span> en las gradas y miles más a través de la transmisión televisiva nacional. 
-                            Cada momento publicitario tiene una duración de <span className="font-bold text-primary">15 segundos</span> y se reproduce en formato panorámico de alta definición, 
+                            })} a las {event.eventTime}</span>, aprovecha la emoción del fútbol para conectar con tu audiencia en <span className="font-bold text-primary">{event.stadiumName}</span>.
+                            Durante el emocionante encuentro entre <span className="font-bold text-primary">{event.homeTeamName} y {event.awayTeamName}</span>, tu anuncio cobrará vida en las
+                            pantallas LED perimetrales del estadio, capturando la atención de <span className="font-bold text-primary">{event.estimatedAttendance.toLocaleString()}
+                              espectadores apasionados</span> en las gradas y miles más a través de la transmisión televisiva nacional.
+                            Cada momento publicitario tiene una duración de <span className="font-bold text-primary">15 segundos</span> y se reproduce en formato panorámico de alta definición,
                             garantizando máxima visibilidad y recordación durante los momentos más intensos e inolvidables del partido.
                           </p>
 
@@ -2206,14 +2119,13 @@ export function EventDetail() {
                         </span>
                         Especificaciones técnicas
                       </h2>
-                      <ChevronDown 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          isSpecsExpanded ? 'rotate-180' : ''
-                        }`}
+                      <ChevronDown
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isSpecsExpanded ? 'rotate-180' : ''
+                          }`}
                       />
                     </div>
                   </button>
-                  
+
                   <AnimatePresence>
                     {isSpecsExpanded && (
                       <motion.div
@@ -2224,41 +2136,93 @@ export function EventDetail() {
                         className="overflow-hidden"
                       >
                         <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
-                          {/* Especificaciones simplificadas en formato compacto */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                            {/* Dimensiones */}
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                          {/* Especificaciones técnicas completas */}
+                          <div className="space-y-6">
+                            {/* Dimensiones y Formato */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="bg-gray-50 p-4 rounded-xl">
+                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  </svg>
+                                  Dimensiones
+                                </h4>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Resolución:</span>
+                                    <span className="text-sm font-medium">1920 x 96 píxeles</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Aspecto:</span>
+                                    <span className="text-sm font-medium">20:1 (Panorámico)</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Orientación:</span>
+                                    <span className="text-sm font-medium">Horizontal</span>
+                                  </div>
+                                </div>
+                                <div className="mt-3 w-full h-8 bg-gray-200 rounded-lg relative overflow-hidden">
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-xs text-gray-600 font-medium">1920 x 96 px</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="bg-blue-50 p-4 rounded-xl">
+                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                  <PlayCircle className="w-5 h-5 text-blue-600" />
+                                  Formato de Video
+                                </h4>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Formato:</span>
+                                    <span className="text-sm font-medium">MP4</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Duración:</span>
+                                    <span className="text-sm font-medium">Máximo 15 segundos</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Tamaño:</span>
+                                    <span className="text-sm font-medium">Máximo 100MB</span>
+                                  </div>
+
+                                </div>
+                              </div>
+                            </div>
+
+
+
+                            {/* Recomendaciones de Diseño */}
+                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-800 text-sm">Dimensiones</h3>
-                                <p className="text-xs text-gray-600">1920 x 96 píxeles</p>
-                              </div>
-                            </div>
-
-                            {/* Formato */}
-                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <PlayCircle className="w-4 h-4 text-blue-600" />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-800 text-sm">Formato</h3>
-                                <p className="text-xs text-gray-600">MP4 • 15s • 100MB max</p>
-                              </div>
-                            </div>
-
-                            {/* Pantallas LED */}
-                            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Sparkles className="w-4 h-4 text-green-600" />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-800 text-sm">Pantallas LED</h3>
-                                <p className="text-xs text-gray-600">Alta definición • Perimetrales</p>
-                              </div>
+                                Recomendaciones de Diseño
+                              </h4>
+                              <ul className="space-y-2 text-sm text-gray-700">
+                                <li className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span>Usa colores vibrantes y alto contraste para mejor visibilidad</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span>Mantén el texto grande y legible (mínimo 48px de altura)</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span>Evita transiciones muy rápidas o efectos estroboscópicos</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span>Incluye tu logo y llamado a la acción claro</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span>El video se reproducirá en loop durante tu momento</span>
+                                </li>
+                              </ul>
                             </div>
                           </div>
 
@@ -2370,7 +2334,7 @@ export function EventDetail() {
                       >
                         Continuar
                       </Button>
-                      
+
                       {selectedMoments.length === 0 && (
                         <p className="text-center text-sm text-neutral-500">
                           Selecciona al menos un momento para continuar
@@ -2390,7 +2354,7 @@ export function EventDetail() {
                       >
                         Volver
                       </Button>
-                      
+
                       <Button
                         variant="primary"
                         size="lg"
@@ -2422,15 +2386,14 @@ export function EventDetail() {
                       {gamePeriods.map(period => {
                         const periodMoments = selectedMoments.filter(m => m.momentId === period.id);
                         if (periodMoments.length === 0) return null;
-                        
+
                         return (
                           <div key={period.id} className="p-3 bg-gray-50 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <div className={`w-3 h-3 rounded-full ${
-                                  period.id === 'FirstHalf' ? 'bg-blue-500' :
+                                <div className={`w-3 h-3 rounded-full ${period.id === 'FirstHalf' ? 'bg-blue-500' :
                                   period.id === 'Halftime' ? 'bg-amber-500' : 'bg-green-500'
-                                }`}></div>
+                                  }`}></div>
                                 <span className="font-medium text-gray-800">{period.name}</span>
                               </div>
                               <span className="text-sm text-gray-600">
@@ -2441,13 +2404,13 @@ export function EventDetail() {
                               {periodMoments
                                 .sort((a, b) => a.minute - b.minute)
                                 .map((moment, index) => (
-                                <span 
-                                  key={index}
-                                  className="inline-flex items-center px-2 py-1 bg-white rounded text-xs font-medium text-gray-700 border"
-                                >
-                                  Min {moment.minute}
-                                </span>
-                              ))}
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-2 py-1 bg-white rounded text-xs font-medium text-gray-700 border"
+                                  >
+                                    Min {moment.minute}
+                                  </span>
+                                ))}
                             </div>
                             <div className="mt-2 text-right">
                               <span className="text-sm font-semibold text-gray-800">
@@ -2465,20 +2428,19 @@ export function EventDetail() {
                       <div className="relative">
                         {/* Timeline line */}
                         <div className="absolute top-4 left-4 right-4 h-0.5 bg-gray-200"></div>
-                        
+
                         {/* Timeline periods */}
                         <div className="flex justify-between relative">
                           {gamePeriods.map((period, index) => {
                             const periodMoments = selectedMoments.filter(m => m.momentId === period.id);
                             const hasSelection = periodMoments.length > 0;
-                            
+
                             return (
                               <div key={period.id} className="flex flex-col items-center">
-                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                                  hasSelection 
-                                    ? 'bg-primary border-primary text-white' 
-                                    : 'bg-white border-gray-300 text-gray-400'
-                                }`}>
+                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${hasSelection
+                                  ? 'bg-primary border-primary text-white'
+                                  : 'bg-white border-gray-300 text-gray-400'
+                                  }`}>
                                   {periodMoments.length || '0'}
                                 </div>
                                 <div className="mt-1 text-center">
@@ -2535,7 +2497,7 @@ export function EventDetail() {
           </article>
         </div>
       </div>
-      
+
       {/* Mobile Bottom Bar - Optimizado con mejor espaciado */}
       {flowStep === 'select-moments' && (
         <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white border-t border-neutral-200 safe-bottom">

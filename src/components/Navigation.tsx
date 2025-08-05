@@ -16,6 +16,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import Logo from '../assets/logo.svg';
+import { CartIcon, CartIconCompact } from './cart/CartIcon';
 
 interface NavigationProps {
   isCollapsed: boolean;
@@ -289,6 +290,28 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           px-3 pb-4 ${isCollapsed ? 'px-2.5' : 'px-4'}
         `}>
           <NavGroup group={generalNavItems} />
+          
+          {/* Cart Icon - Only show on sports events page */}
+          {location.pathname === '/sports-events' && (
+            <div className="pt-2">
+              {!isCollapsed && (
+                <h3 className="px-3 mb-3 text-xs font-semibold uppercase text-neutral-400 dark:text-neutral-500 tracking-wider">
+                  Carrito
+                </h3>
+              )}
+              {isCollapsed && <div className="mb-4 border-t border-neutral-200/70 dark:border-neutral-700/50 mx-1.5"></div>}
+              <div className="px-3">
+                <CartIcon 
+                  className={`
+                    w-full justify-start
+                    ${isCollapsed ? 'px-0' : 'px-3'}
+                  `}
+                  size="md"
+                />
+              </div>
+            </div>
+          )}
+          
           {(hasRole(['Admin'])) && renderNavGroups(adminNavItems)}
         </nav>
 
@@ -500,25 +523,36 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
                       backdrop-blur-xl
                       border-b border-neutral-200/60 dark:border-neutral-800/80 
                       shadow-sm dark:shadow-neutral-900/20 z-50 
-                      flex items-center justify-center px-4">
-        {/* Logo centrado */}
+                      flex items-center justify-between px-4">
+        {/* Logo */}
         <Link to="/sports-events" className="flex items-center">
           <div className="h-8 flex items-center justify-center">
             <img src={Logo} alt="Shareflow Ads Logo" className="h-7 w-auto dark:filter dark:brightness-0 dark:invert" /> 
           </div>
         </Link>
         
-        {/* Menú hamburguesa en la esquina derecha */}
-        <button 
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="absolute right-4 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 
-                    text-neutral-700 dark:text-neutral-300 
-                    hover:bg-neutral-200 dark:hover:bg-neutral-700
-                    shadow-sm border border-neutral-200 dark:border-neutral-700
-                    transition-all duration-200 active:scale-95"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        {/* Cart and Menu Icons */}
+        <div className="flex items-center gap-2">
+          {/* Cart Icon - Only show on sports events page */}
+          {location.pathname === '/sports-events' && (
+            <CartIconCompact className="bg-neutral-100 dark:bg-neutral-800 
+                                      text-neutral-700 dark:text-neutral-300 
+                                      hover:bg-neutral-200 dark:hover:bg-neutral-700
+                                      shadow-sm border border-neutral-200 dark:border-neutral-700" />
+          )}
+          
+          {/* Menu hamburguesa */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 
+                      text-neutral-700 dark:text-neutral-300 
+                      hover:bg-neutral-200 dark:hover:bg-neutral-700
+                      shadow-sm border border-neutral-200 dark:border-neutral-700
+                      transition-all duration-200 active:scale-95"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Off-canvas Menu */}

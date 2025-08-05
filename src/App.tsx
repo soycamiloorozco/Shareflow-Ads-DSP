@@ -40,6 +40,7 @@ import { PartnerScreens } from './pages/partner/PartnerScreens';
 import { WalletCampaignManagement } from './pages/admin/BonusManagement';
 import PartnersRelations2 from './pages/admin/PartnersRelations2';
 import { CampaignProvider } from './contexts/CampaignContext';
+import { CartProvider } from './contexts/CartContext';
 import { ProfilePage } from './pages/ProfilePage';
 
 export default function App() {
@@ -48,7 +49,8 @@ export default function App() {
        <PersistGate loading={null} persistor={persistor}>
         <AuthProvider>
            <CampaignProvider>
-          <PermissionsProvider>
+            <CartProvider>
+              <PermissionsProvider>
             <Router>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
@@ -294,7 +296,8 @@ export default function App() {
               {/* <AIAssistant /> */}
               <Toaster position="top-right" />
             </Router>
-            </PermissionsProvider>
+              </PermissionsProvider>
+            </CartProvider>
             </CampaignProvider>
         </AuthProvider>
        </PersistGate>

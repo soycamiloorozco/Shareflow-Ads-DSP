@@ -14,23 +14,16 @@ import Select from 'react-select';
 import { useSportEvents } from '../hooks/useSportEvents';
 import { constants } from '../config/constants';
 import { SportsSearchHeader } from '../components/sports/SportsSearchHeader';
-import { useCart } from '../contexts/CartContext';
-import { CartIcon } from '../components/cart/CartIcon';
-import { ShoppingCart, Plus, Check } from 'lucide-react';
 import estadioImage from '../assets/estadio.png';
 
 // Memoized Event Card Component for Better Performance
-const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFromCart, isInCart }: {
+const EventCard = React.memo(({ event, index, onClick }: {
   event: any;
   index: number;
   onClick: () => void;
-  onAddToCart?: (event: any) => void;
-  onRemoveFromCart?: (event: any) => void;
-  isInCart?: boolean;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const eventData = useMemo(() => {
     const basePrice = event.moments[0]?.price || 2250000;
@@ -39,7 +32,7 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
     return {
       basePrice,
       isPopular: totalAudience > 100000,
-      priceDisplay: `${(basePrice / 1000000).toFixed(1)}M`
+      priceDisplay: `$${(basePrice / 1000000).toFixed(1)}M`
     };
   }, [event]);
 
@@ -51,31 +44,6 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
   const handleCardClick = useCallback(() => {
     onClick();
   }, [onClick]);
-
-  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onAddToCart && !isAddingToCart) {
-      setIsAddingToCart(true);
-      try {
-        await onAddToCart(event);
-      } catch (error) {
-        console.error('Error adding to cart:', error);
-      } finally {
-        setIsAddingToCart(false);
-      }
-    }
-  }, [onAddToCart, event, isAddingToCart]);
-
-  const handleRemoveFromCart = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onRemoveFromCart) {
-      try {
-        await onRemoveFromCart(event);
-      } catch (error) {
-        console.error('Error removing from cart:', error);
-      }
-    }
-  }, [onRemoveFromCart, event]);
 
   return (
     <motion.div
@@ -167,6 +135,8 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
               </div>
             </div>
           </div>
+
+
         </div>
 
         {/* Content section */}
@@ -218,6 +188,8 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
             </div>
           </div>
 
+
+
           {/* Price and CTA */}
           <div className="flex items-center justify-between">
             <div>
@@ -233,34 +205,6 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
-              {/* Cart Button */}
-              {isInCart ? (
-                <button
-                  onClick={handleRemoveFromCart}
-                  className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 touch-manipulation min-h-[44px]"
-                  aria-label={`Quitar ${event.homeTeamName} vs ${event.awayTeamName} del carrito`}
-                >
-                  <Check className="w-4 h-4" />
-                  <span className="hidden sm:inline">En carrito</span>
-                </button>
-              ) : (
-                <button
-                  onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
-                  aria-label={`Agregar ${event.homeTeamName} vs ${event.awayTeamName} al carrito`}
-                >
-                  {isAddingToCart ? (
-                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {isAddingToCart ? 'Agregando...' : 'Agregar'}
-                  </span>
-                </button>
-              )}
-
               {/* View Details Button */}
               <button
                 onClick={(e) => {
@@ -284,15 +228,11 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
 EventCard.displayName = 'EventCard';
 
 // Compact Event List Item Component
-const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCart, isInCart }: {
+const EventListItem = React.memo(({ event, onClick }: {
   event: any;
   onClick: () => void;
-  onAddToCart?: (event: any) => void;
-  onRemoveFromCart?: (event: any) => void;
-  isInCart?: boolean;
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const eventData = useMemo(() => {
     const basePrice = event.moments[0]?.price || 2250000;
@@ -301,7 +241,7 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
     return {
       basePrice,
       isPopular: totalAudience > 100000,
-      priceDisplay: `${(basePrice / 1000000).toFixed(1)}M`,
+      priceDisplay: `$${(basePrice / 1000000).toFixed(1)}M`,
       audienceDisplay: totalAudience > 0 ? `${(totalAudience / 1000).toFixed(0)}K` : 'N/A'
     };
   }, [event]);
@@ -311,38 +251,13 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
     setIsFavorite(!isFavorite);
   }, [isFavorite]);
 
-  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onAddToCart && !isAddingToCart) {
-      setIsAddingToCart(true);
-      try {
-        await onAddToCart(event);
-      } catch (error) {
-        console.error('Error adding to cart:', error);
-      } finally {
-        setIsAddingToCart(false);
-      }
-    }
-  }, [onAddToCart, event, isAddingToCart]);
-
-  const handleRemoveFromCart = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onRemoveFromCart) {
-      try {
-        await onRemoveFromCart(event);
-      } catch (error) {
-        console.error('Error removing from cart:', error);
-      }
-    }
-  }, [onRemoveFromCart, event]);
-
   return (
     <div 
       className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-gray-300"
       onClick={onClick}
     >
       <div className="flex items-start gap-3 sm:gap-4">
-        {/* Event Image */}
+        {/* Event Image - Más grande en móvil */}
         <div className="w-16 h-12 sm:w-20 sm:h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
           <img 
             src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
@@ -425,7 +340,7 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
           </div>
         </div>
 
-        {/* Price and Actions */}
+        {/* Price and Actions - Layout vertical en móvil */}
         <div className="flex flex-col items-end justify-between flex-shrink-0 min-h-[60px]">
           {/* Precio */}
           <div className="text-right mb-2">
@@ -435,45 +350,18 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
             <p className="text-xs text-gray-500 leading-none">desde / momento</p>
           </div>
           
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            {/* Cart Button */}
-            {isInCart ? (
-              <button
-                onClick={handleRemoveFromCart}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-green-100 text-green-600 hover:bg-green-200 transition-colors touch-manipulation"
-                aria-label={`Quitar ${event.homeTeamName} vs ${event.awayTeamName} del carrito`}
-              >
-                <Check className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={handleAddToCart}
-                disabled={isAddingToCart}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
-                aria-label={`Agregar ${event.homeTeamName} vs ${event.awayTeamName} al carrito`}
-              >
-                {isAddingToCart ? (
-                  <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-              </button>
-            )}
-
-            {/* Favorite Button */}
-            <button
-              onClick={handleFavoriteClick}
-              className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-200 hover:border-gray-300 transition-colors touch-manipulation"
-              aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-            >
-              <Heart 
-                className={`w-4 h-4 transition-colors ${
-                  isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-400'
-                }`} 
-              />
-            </button>
-          </div>
+          {/* Botón de favorito */}
+          <button
+            onClick={handleFavoriteClick}
+            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-200 hover:border-gray-300 transition-colors touch-manipulation"
+            aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart 
+              className={`w-4 h-4 transition-colors ${
+                isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-400'
+              }`} 
+            />
+          </button>
         </div>
       </div>
     </div>
@@ -481,6 +369,196 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
 });
 
 EventListItem.displayName = 'EventListItem';
+
+// Compact Mobile Event Card Component
+const MobileEventCard = React.memo(({ event, index, onClick }: {
+  event: any;
+  index: number;
+  onClick: () => void;
+}) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const eventData = useMemo(() => {
+    const basePrice = event.moments[0]?.price || 2250000;
+    const totalAudience = (event.estimatedAttendance || 0) + (event.estimatedAttendanceTv || 0);
+    
+    return {
+      basePrice,
+      isPopular: totalAudience > 100000,
+      priceDisplay: `$${(basePrice / 1000000).toFixed(1)}M`,
+      audienceDisplay: totalAudience > 0 ? `${(totalAudience / 1000).toFixed(0)}K` : 'N/A'
+    };
+  }, [event]);
+
+  const handleFavoriteClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+  }, [isFavorite]);
+
+
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+      className="cursor-pointer group"
+      onClick={onClick}
+    >
+      {/* Compact Mobile Card */}
+      <div className="relative bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200">
+        
+        {/* Compact Image with overlay info */}
+        <div className="relative aspect-[16/10] overflow-hidden">
+          <img
+            src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
+            alt={event.stadiumName}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+          
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex gap-1">
+            {eventData.isPopular && (
+              <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+                <TrendingUp className="w-2.5 h-2.5" />
+                Popular
+              </span>
+            )}
+            <span className="px-2 py-0.5 bg-black/40 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+              Fútbol
+            </span>
+          </div>
+          
+          {/* Favorite button */}
+          <button
+            onClick={handleFavoriteClick}
+            className="absolute top-2 right-2 w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm"
+            aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart 
+              className={`w-3.5 h-3.5 transition-colors ${
+                isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-600'
+              }`} 
+            />
+          </button>
+
+          {/* Teams VS section - compact */}
+          <div className="absolute bottom-2 left-2 right-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded flex items-center justify-center">
+                  <img 
+                    src={`${constants.base_path}/${event.homeTeamImage}`}
+                    alt={event.homeTeamName}
+                    className="w-4 h-4 object-contain"
+                  />
+                </div>
+                <span className="text-white text-xs font-medium hidden xs:block">
+                  {event.homeTeamName.split(' ')[0]}
+                </span>
+              </div>
+              
+              <div className="w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-white">VS</span>
+              </div>
+              
+              <div className="flex items-center gap-1.5">
+                <span className="text-white text-xs font-medium hidden xs:block">
+                  {event.awayTeamName.split(' ')[0]}
+                </span>
+                <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded flex items-center justify-center">
+                  <img 
+                    src={`${constants.base_path}/${event.awayTeamImage}`}
+                    alt={event.awayTeamName}
+                    className="w-4 h-4 object-contain"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Compact Content */}
+        <div className="p-3">
+          {/* Title and rating */}
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-1">
+                {event.homeTeamName} vs {event.awayTeamName}
+              </h3>
+            </div>
+            <div className="flex items-center gap-0.5 ml-2 flex-shrink-0">
+              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+              <span className="text-xs font-medium">4.8</span>
+            </div>
+          </div>
+
+          {/* Compact Event details */}
+          <div className="flex items-center gap-3 text-xs text-gray-600 mb-2">
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {new Date(event.eventDate).toLocaleDateString('es-CO', {
+                day: 'numeric',
+                month: 'short'
+              })}
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {event.eventTime || '8:00 PM'}
+            </span>
+          </div>
+
+          {/* Stadium and audience - very compact */}
+          <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+            <span className="flex items-center gap-1 line-clamp-1">
+              <MapPin className="w-3 h-3 flex-shrink-0" />
+              {event.stadiumName.split(' ').slice(0, 2).join(' ')}
+            </span>
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {eventData.audienceDisplay}
+            </span>
+          </div>
+
+          {/* Price and CTA - compact */}
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-baseline gap-1">
+                <span className="font-bold text-gray-900 text-base">
+                  {eventData.priceDisplay}
+                </span>
+                <span className="text-xs text-gray-600">COP</span>
+              </div>
+              <div className="text-xs text-gray-500">desde / momento</div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex items-center gap-2">
+              {/* View Details Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClick();
+                }}
+                className="px-3 py-1.5 bg-[#353FEF] hover:bg-[#2A32C5] text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1 hover:scale-105 active:scale-95 shadow-sm"
+                aria-label={`Ver detalles de ${event.homeTeamName} vs ${event.awayTeamName}`}
+              >
+                <span>Ver</span>
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+MobileEventCard.displayName = 'MobileEventCard';
 
 // Mobile Sports Events Interface
 const MobileSportsInterface = React.memo(({ 
@@ -490,10 +568,7 @@ const MobileSportsInterface = React.memo(({
   onSearchChange,
   viewMode,
   onViewModeChange,
-  filteredCount,
-  onAddToCart,
-  onRemoveFromCart,
-  isEventInCart
+  filteredCount 
 }: {
   events: any[];
   onEventClick: (eventId: string) => void;
@@ -502,9 +577,6 @@ const MobileSportsInterface = React.memo(({
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
   filteredCount: number;
-  onAddToCart: (event: any) => void;
-  onRemoveFromCart: (event: any) => void;
-  isEventInCart: (eventId: string) => boolean;
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -523,7 +595,7 @@ const MobileSportsInterface = React.memo(({
             />
           </div>
 
-          {/* View Mode, Stats and Cart */}
+          {/* View Mode and Stats */}
           <div className="flex items-center justify-between">
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
@@ -551,11 +623,8 @@ const MobileSportsInterface = React.memo(({
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-xs text-gray-500">
-                {filteredCount} evento{filteredCount !== 1 ? 's' : ''}
-              </div>
-              <CartIcon size="sm" />
+            <div className="text-xs text-gray-500">
+              {filteredCount} evento{filteredCount !== 1 ? 's' : ''}
             </div>
           </div>
         </div>
@@ -566,14 +635,11 @@ const MobileSportsInterface = React.memo(({
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {events.map((event, index) => (
-              <EventCard
+              <MobileEventCard
                 key={event.id}
                 event={event}
                 index={index}
                 onClick={() => onEventClick(event.id)}
-                onAddToCart={onAddToCart}
-                onRemoveFromCart={onRemoveFromCart}
-                isInCart={isEventInCart(event.id)}
               />
             ))}
           </div>
@@ -584,9 +650,6 @@ const MobileSportsInterface = React.memo(({
                 key={event.id}
                 event={event}
                 onClick={() => onEventClick(event.id)}
-                onAddToCart={onAddToCart}
-                onRemoveFromCart={onRemoveFromCart}
-                isInCart={isEventInCart(event.id)}
               />
             ))}
           </div>
@@ -608,11 +671,11 @@ const MobileSportsInterface = React.memo(({
   );
 });
 
-MobileSportsInterface.displayName = 'MobileSportsInterface';export 
-function SportsEvents() {
+MobileSportsInterface.displayName = 'MobileSportsInterface';
+
+export function SportsEvents() {
   const navigate = useNavigate();
   const { sportEvents } = useSportEvents();
-  const { addEvent, removeEvent, isEventInCart, getCartItemByEventId } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedStadium, setSelectedStadium] = useState<string | null>(null);
@@ -621,8 +684,8 @@ function SportsEvents() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const filteredEvents = useMemo(() => {
-    const filtered = sportEvents.filter(event => {
-      const matchesSearch = !searchQuery || 
+    return sportEvents.filter(event => {
+      const matchesSearch = 
         event.homeTeamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.awayTeamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.stadiumName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -633,15 +696,6 @@ function SportsEvents() {
       const matchesStatus = event.status === 'Active';
       return matchesSearch && matchesTeam && matchesStadium && matchesStatus;
     });
-    
-    // Debug log
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Search query:', searchQuery);
-      console.log('Total events:', sportEvents.length);
-      console.log('Filtered events:', filtered.length);
-    }
-    
-    return filtered;
   }, [sportEvents, searchQuery, selectedTeam, selectedStadium]);
 
   const handleEventClick = useCallback((eventId: string) => {
@@ -651,27 +705,6 @@ function SportsEvents() {
   const handleInfoClick = useCallback(() => {
     setIsInfoModalOpen(true);
   }, []);
-
-  const handleAddToCart = useCallback(async (event: any) => {
-    try {
-      await addEvent(event);
-    } catch (error) {
-      console.error('Error adding event to cart:', error);
-      // Aquí podrías mostrar un toast de error
-    }
-  }, [addEvent]);
-
-  const handleRemoveFromCart = useCallback(async (event: any) => {
-    try {
-      const cartItem = getCartItemByEventId(event.id);
-      if (cartItem) {
-        await removeEvent(cartItem.cartId);
-      }
-    } catch (error) {
-      console.error('Error removing event from cart:', error);
-      // Aquí podrías mostrar un toast de error
-    }
-  }, [removeEvent, getCartItemByEventId]);
 
   // SEO metadata
   const title = `Eventos Deportivos Colombia 2025 | Momentos Publicitarios | Shareflow.me`;
@@ -686,7 +719,6 @@ function SportsEvents() {
         <meta name="keywords" content="eventos deportivos Colombia, momentos publicitarios, fútbol en vivo, publicidad deportiva" />
         <link rel="canonical" href="https://shareflow.me/sports-events" />
       </Helmet>
-
       {/* Mobile Interface (< lg breakpoint) */}
       <div className="lg:hidden">
         <MobileSportsInterface
@@ -697,9 +729,6 @@ function SportsEvents() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           filteredCount={filteredEvents.length}
-          onAddToCart={handleAddToCart}
-          onRemoveFromCart={handleRemoveFromCart}
-          isEventInCart={isEventInCart}
         />
       </div>
 
@@ -714,8 +743,6 @@ function SportsEvents() {
           loading={false}
         />
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           {/* Results Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <div>
@@ -767,9 +794,6 @@ function SportsEvents() {
                     event={event}
                     index={index}
                     onClick={() => handleEventClick(event.id)}
-                    onAddToCart={handleAddToCart}
-                    onRemoveFromCart={handleRemoveFromCart}
-                    isInCart={isEventInCart(event.id)}
                   />
                 ))}
               </div>
@@ -785,9 +809,6 @@ function SportsEvents() {
                     <EventListItem
                       event={event}
                       onClick={() => handleEventClick(event.id)}
-                      onAddToCart={handleAddToCart}
-                      onRemoveFromCart={handleRemoveFromCart}
-                      isInCart={isEventInCart(event.id)}
                     />
                   </motion.div>
                 ))}
@@ -918,5 +939,315 @@ function SportsEvents() {
         )}
       </AnimatePresence>
     </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                Próximos partidos
+              </h2>
+              <p className="text-sm text-gray-600">
+                {filteredEvents.length} eventos encontrados
+              </p>
+            </div>
+            
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-[#353FEF] shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'list' 
+                    ? 'bg-white text-[#353FEF] shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Events Grid/List */}
+          {filteredEvents.length > 0 ? (
+            viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                {filteredEvents.map((event, index) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    index={index}
+                    onClick={() => handleEventClick(event.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredEvents.map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <EventListItem
+                      event={event}
+                      onClick={() => handleEventClick(event.id)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )
+          ) : (
+            <div className="text-center py-12 sm:py-16">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No se encontraron eventos</h3>
+              <p className="text-gray-600 max-w-md mx-auto">
+                No hay eventos que coincidan con tu búsqueda. Intenta con otros filtros o vuelve más tarde.
+              </p>
+            </div>
+          )}
+          
+          {/* Modern CTA Section */}
+          <div className="mt-12 md:mt-16">
+            <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-r from-[#353FEF] to-[#2A32C5]">
+              <div className="relative py-8 px-6 md:py-12 md:px-10 flex flex-col md:flex-row md:items-center md:justify-between">
+                <div className="mb-6 md:mb-0 md:max-w-md">
+                  <h2 className="text-xl md:text-3xl font-bold text-white mb-3">
+                    Lleva tu marca al siguiente nivel
+                  </h2>
+                  <p className="text-base md:text-lg text-white/90 leading-relaxed">
+                    Conecta con audiencias apasionadas en los momentos más emocionantes del deporte
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="!bg-white !text-[#353FEF] hover:!bg-white/90 h-14 px-8 text-base font-semibold shadow-lg"
+                  icon={ArrowRight}
+                  onClick={() => navigate('/create')}
+                >
+                  Crear campaña
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Filter Drawer */}
+      <AnimatePresence>
+        {isFilterOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 md:hidden"
+            onClick={() => setIsFilterOpen(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Filtros</h2>
+                  <button
+                    onClick={() => setIsFilterOpen(false)}
+                    className="p-3 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Equipo
+                  </label>
+                  <Select
+                    placeholder="Seleccionar equipo"
+                    options={[
+                      { value: 'Atlético Nacional', label: 'Atlético Nacional' },
+                      { value: 'Independiente Medellín', label: 'Independiente Medellín' },
+                      { value: 'Millonarios', label: 'Millonarios' },
+                      { value: 'América de Cali', label: 'América de Cali' }
+                    ]}
+                    onChange={(option) => setSelectedTeam(option?.value || null)}
+                    isClearable
+                    className="w-full text-base"
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: '48px',
+                        borderRadius: '12px'
+                      })
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Estadio
+                  </label>
+                  <Select
+                    placeholder="Seleccionar estadio"
+                    options={[
+                      { value: 'Estadio Atanasio Girardot', label: 'Atanasio Girardot' },
+                      { value: 'El Campín', label: 'El Campín' }
+                    ]}
+                    onChange={(option) => setSelectedStadium(option?.value || null)}
+                    isClearable
+                    className="w-full text-base"
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: '48px',
+                        borderRadius: '12px'
+                      })
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-gray-200">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  className="h-14 text-base bg-[#353FEF] hover:bg-[#2A32C5] rounded-xl"
+                  onClick={() => setIsFilterOpen(false)}
+                >
+                  Aplicar filtros
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Info Modal */}
+      <AnimatePresence>
+        {isInfoModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setIsInfoModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-4 md:p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg md:text-2xl font-semibold">¿Cómo funcionan los momentos deportivos?</h2>
+                  <button
+                    onClick={() => setIsInfoModalOpen(false)}
+                    className="p-3 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 md:p-6 max-h-[70vh] overflow-y-auto">
+                <div className="space-y-6">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 bg-[#353FEF]/10 rounded-full flex-shrink-0 flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-[#353FEF]" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Momentos de alto impacto</h3>
+                      <p className="text-gray-600">
+                        Los momentos deportivos son espacios publicitarios de 15 segundos que aparecen en las pantallas LED del estadio durante momentos específicos del partido.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="border border-gray-200">
+                      <Card.Body className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-[#353FEF]/10 rounded-lg flex items-center justify-center">
+                            <Calendar className="w-4 h-4 text-[#353FEF]" />
+                          </div>
+                          <h4 className="font-semibold">Pre-partido</h4>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          30 minutos antes del inicio, cuando los aficionados están llegando al estadio y la expectativa está en su punto máximo.
+                        </p>
+                      </Card.Body>
+                    </Card>
+                    
+                    <Card className="border border-gray-200">
+                      <Card.Body className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-[#353FEF]/10 rounded-lg flex items-center justify-center">
+                            <Clock className="w-4 h-4 text-[#353FEF]" />
+                          </div>
+                          <h4 className="font-semibold">Primer tiempo</h4>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Durante los primeros 45 minutos del partido, cuando la emoción está en su punto más alto.
+                        </p>
+                      </Card.Body>
+                    </Card>
+
+                    <Card className="border border-gray-200">
+                      <Card.Body className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-[#353FEF]/10 rounded-lg flex items-center justify-center">
+                            <Trophy className="w-4 h-4 text-[#353FEF]" />
+                          </div>
+                          <h4 className="font-semibold">Entre tiempo</h4>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          15 minutos de descanso donde los aficionados están más receptivos a los mensajes publicitarios.
+                        </p>
+                      </Card.Body>
+                    </Card>
+
+                    <Card className="border border-gray-200">
+                      <Card.Body className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-[#353FEF]/10 rounded-lg flex items-center justify-center">
+                            <Target className="w-4 h-4 text-[#353FEF]" />
+                          </div>
+                          <h4 className="font-semibold">Segundo tiempo</h4>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Los momentos finales del partido, cuando la tensión y la emoción alcanzan su clímax.
+                        </p>
+                      </Card.Body>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      </div>
+    </div>
+  );
+}    
+</div>
   );
 }
