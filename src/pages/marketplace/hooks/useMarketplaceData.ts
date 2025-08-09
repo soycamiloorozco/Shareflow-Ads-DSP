@@ -94,7 +94,7 @@ const generateRealSectionsFromScreens = (screens: Screen[]): MarketplaceSection[
       title: `Mejores en ${categoryName}`,
       subtitle: `Pantallas destacadas en la categoría ${categoryName}`,
       screens: largestCategoryScreens.slice(0, 6),
-      displayType: 'grid',
+      displayType: 'horizontal-scroll',
       priority: 2,
       metadata: {
         algorithm: 'geographic-popularity',
@@ -167,7 +167,7 @@ const generateRealSectionsFromScreens = (screens: Screen[]): MarketplaceSection[
       title: 'Precios Accesibles',
       subtitle: 'Pantallas de alta calidad a precios competitivos',
       screens: budgetScreens,
-      displayType: 'grid',
+      displayType: 'horizontal-scroll',
       priority: 4,
       metadata: {
         algorithm: 'content-based',
@@ -497,7 +497,7 @@ export const useMarketplaceData = ({
                 url: `https://api.shareflow.me${img.filePath}`,
                 alt: img.fileName
               })) || [],
-              image: apiScreen.images?.[0] ? `https://api.shareflow.me${apiScreen.images[0].filePath}` : 'https://via.placeholder.com/400x300/4F46E5/FFFFFF?text=Pantalla+Digital', // Add fallback image
+              image: apiScreen.images?.[0] ? `https://api.shareflow.me${apiScreen.images[0].filePath}` : '/placeholder-screen.svg', // Add fallback image
               locationDetails: {
                 address: apiScreen.address || '',
                 city: apiScreen.address?.split(',').pop()?.trim() || 'Colombia',

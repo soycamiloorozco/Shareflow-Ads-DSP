@@ -10,7 +10,7 @@ import { LayoutGrid, LayoutList, Map, Heart, Filter, Layers } from 'lucide-react
 
 // Refactored Components
 import { SearchHeader } from './components/search/SearchHeader';
-import { ModernFilterSystem } from './components/filters/ModernFilterSystem';
+import { SmartFilterSystem } from './components/filters/SmartFilterSystem';
 import { ScreenGrid } from './components/screens/ScreenGrid';
 import { ScreenList } from './components/screens/ScreenList';
 import { MarketplaceErrorBoundary } from './components/common/ErrorBoundary';
@@ -19,7 +19,10 @@ import { SectionedScreenGrid } from './components/sections/SectionedScreenGrid';
 
 // Hooks
 import { useMarketplaceData } from './hooks/useMarketplaceData';
+import { useFilteredMarketplaceData } from './hooks/useFilteredMarketplaceData';
+import { filterApiService } from './services/FilterApiService';
 import { useDebounce } from './hooks/useDebounce';
+import { useSmartFilters } from './hooks/useSmartFilters';
 
 // Types
 import { Screen, FilterState, ViewMode, FilterOptions } from './types';
@@ -144,18 +147,25 @@ const generateFilterOptions = (screens: Screen[]): FilterOptions => {
 export function MarketplaceRefactored() {
   const navigate = useNavigate();
   
-  // State management with custom hook
+  // Smart filters hook
+  const {
+    filters,
+    filterOptions,
+    updateFilters,
+    activeFilterCount,
+    hasActiveFilters,
+    clearAllFilters,
+    getFilterQuery
+  } = useSmartFilters();
+  
+  // Filtered marketplace data hook
   const {
     screens,
     filteredScreens,
-    filters,
     loading,
     error,
-    updateFilters,
-    updateScreens,
-    setLoading,
-    clearFilters,
-    activeFilterCount,
+    totalCount,
+    facets,
     // Sectioned data
     sections: hookSections,
     sectionsLoading: hookSectionsLoading,
@@ -163,8 +173,9 @@ export function MarketplaceRefactored() {
     loadSections,
     refreshSections: hookRefreshSections,
     totalScreensInSections
-  } = useMarketplaceData({
+  } = useFilteredMarketplaceData({
     initialScreens: allScreens,
+    filters: getFilterQuery()
   });
 
   // UI State
@@ -186,8 +197,7 @@ export function MarketplaceRefactored() {
     });
   }, [debouncedSearchQuery, updateFilters]);
 
-  // Filter options
-  const filterOptions = useMemo(() => generateFilterOptions(screens), [screens]);
+
 
   // Group screens by circuits
   const { circuits, individualScreens } = useMemo(() => {
@@ -236,9 +246,7 @@ export function MarketplaceRefactored() {
     setIsInfoModalOpen(true);
   }, []);
 
-  const handleFiltersChange = useCallback((newFilters: FilterState) => {
-    updateFilters(newFilters);
-  }, [updateFilters]);
+
 
   // SEO metadata
   const title = `Marketplace de Pantallas Digitales Colombia 2025 | Shareflow.me`;
@@ -267,11 +275,11 @@ export function MarketplaceRefactored() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           
-          {/* Modern Filter System */}
+          {/* Smart Filter System */}
           <div className="mb-8">
-            <ModernFilterSystem
+            <SmartFilterSystem
               filters={filters}
-              onFiltersChange={handleFiltersChange}
+              onFiltersChange={updateFilters}
               availableOptions={filterOptions}
               resultCount={filteredScreens.length}
             />

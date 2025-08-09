@@ -73,6 +73,11 @@ export const SportsSearchHeader = React.memo<SportsSearchHeaderProps>(({
                   className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#353FEF]/20 focus:border-[#353FEF] transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
                   aria-label="Buscar eventos deportivos"
                 />
+                {loading && (
+                  <div className="absolute inset-y-0 right-12 flex items-center">
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-[#353FEF] rounded-full animate-spin"></div>
+                  </div>
+                )}
                 {filteredCount > 0 && (
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <span className="text-sm text-gray-500">

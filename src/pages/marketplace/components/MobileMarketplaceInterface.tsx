@@ -7,7 +7,12 @@ import { ScreenGrid } from './screens/ScreenGrid';
 import { MapContainer } from './map/MapContainer';
 import { FilterState, FilterOptions } from '../types';
 import { MarketplaceSection } from '../types/intelligent-grouping.types';
-import { VenueUtils } from '../../../types/venue-categories';
+import { 
+  VENUE_CATEGORIES, 
+  CATEGORY_DISPLAY_NAMES, 
+  CATEGORY_ICONS, 
+  VenueUtils 
+} from '../../../types/venue-categories';
 
 interface MobileMarketplaceInterfaceProps {
   sections: MarketplaceSection[];

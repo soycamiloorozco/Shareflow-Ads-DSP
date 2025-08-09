@@ -26,26 +26,30 @@ export const CartValidationRules = {
       errors.push('El evento no está activo y no se puede agregar al carrito');
     }
 
-    // Check if event has moments available
+    // Check if event has moments available (warning instead of error to allow adding unconfigured events)
     if (!event.moments || event.moments.length === 0) {
-      errors.push('El evento no tiene momentos disponibles');
+      warnings.push('El evento necesita configuración de momentos antes del checkout');
     }
 
-    // Check if event has pricing
+    // Check if event has pricing (warning instead of error to allow adding unconfigured events)
     if (!event.momentPrices || event.momentPrices.length === 0) {
-      errors.push('El evento no tiene precios configurados');
+      warnings.push('El evento necesita configuración de precios antes del checkout');
     }
 
-    // Check if event date is in the future
+    // Check if event date is not too far in the past (allow events from last 365 days for analysis)
     const eventDate = new Date(event.eventDate);
     const now = new Date();
-    if (eventDate <= now) {
-      errors.push('El evento ya ha pasado o está en curso');
+    const oneYearAgo = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+    
+    if (eventDate < oneYearAgo) {
+      errors.push('El evento es demasiado antiguo para ser agregado al carrito');
+    } else if (eventDate <= now) {
+      warnings.push('Este evento ya ha pasado, pero puede ser útil para análisis');
     }
 
-    // Warning for events happening soon (within 24 hours)
-    const twentyFourHours = 24 * 60 * 60 * 1000;
-    if (eventDate.getTime() - now.getTime() < twentyFourHours) {
+    // Warning for events happening soon (within 12 hours)
+    const twelveHours = 12 * 60 * 60 * 1000;
+    if (eventDate.getTime() - now.getTime() < twelveHours && eventDate > now) {
       warnings.push('El evento es muy pronto, asegúrate de configurar los momentos rápidamente');
     }
 
@@ -85,16 +89,20 @@ export const CartValidationRules = {
 
     // Validate each moment
     moments.forEach((moment, index) => {
-      // Check if moment exists in event
-      const eventMoment = event.moments.find(m => m.moment === moment.moment);
-      if (!eventMoment) {
-        errors.push(`El momento "${moment.moment}" no está disponible para este evento`);
+      // Check if moment exists in event (only if event has moments array)
+      if (event.moments && Array.isArray(event.moments)) {
+        const eventMoment = event.moments.find(m => m.moment === moment.moment);
+        if (!eventMoment) {
+          errors.push(`El momento "${moment.moment}" no está disponible para este evento`);
+        }
       }
 
-      // Check if price matches
-      const eventPrice = event.momentPrices.find(p => p.moment === moment.moment);
-      if (!eventPrice || eventPrice.price !== moment.price) {
-        errors.push(`El precio del momento "${moment.moment}" no coincide con el precio actual`);
+      // Check if price matches (only if event has momentPrices array)
+      if (event.momentPrices && Array.isArray(event.momentPrices)) {
+        const eventPrice = event.momentPrices.find(p => p.moment === moment.moment);
+        if (!eventPrice || eventPrice.price !== moment.price) {
+          errors.push(`El precio del momento "${moment.moment}" no coincide con el precio actual`);
+        }
       }
 
       // Check quantity
@@ -320,15 +328,17 @@ export const CartCalculations = {
   },
 
   // Generate cart analytics
-  generateAnalytics: (items: CartEvent[]): { totalEvents: number; totalPrice: number; totalAudience: number; costPerImpression: number } => {
+  generateAnalytics: (items: CartEvent[]): { totalEvents: number; totalPrice: number; totalAudience: number; costPerImpression: number; averagePricePerEvent: number } => {
     const totalPrice = CartCalculations.calculateTotalPrice(items);
     const totalAudience = CartCalculations.calculateTotalAudience(items);
+    const averagePricePerEvent = items.length > 0 ? totalPrice / items.length : 0;
     
     return {
       totalEvents: items.length,
       totalPrice,
       totalAudience,
-      costPerImpression: CartCalculations.calculateCostPerImpression(totalPrice, totalAudience)
+      costPerImpression: CartCalculations.calculateCostPerImpression(totalPrice, totalAudience),
+      averagePricePerEvent
     };
   }
 };

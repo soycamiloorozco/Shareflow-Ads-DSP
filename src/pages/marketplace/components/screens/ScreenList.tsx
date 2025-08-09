@@ -24,6 +24,18 @@ export const ScreenList = React.memo<ScreenListProps>(({
   className = '',
   'aria-label': ariaLabel = 'List of available screens'
 }) => {
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📺 ScreenList render:', { 
+      screensCount: screens?.length || 0, 
+      loading,
+      firstScreen: screens?.[0] ? {
+        id: screens[0].id,
+        name: screens[0].name,
+        location: screens[0].location
+      } : null
+    });
+  }
   const handleScreenSelect = useCallback((screen: Screen) => {
     onScreenSelect(screen);
   }, [onScreenSelect]);
@@ -146,6 +158,15 @@ export const ScreenList = React.memo<ScreenListProps>(({
   }
 
   if (!screens || screens.length === 0) {
+    // Debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📺 ScreenList: No screens to display', { 
+        screens: screens?.length || 0, 
+        loading,
+        screensArray: screens 
+      });
+    }
+    
     return (
       <div className={`text-center py-20 ${className}`}>
         <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -199,7 +220,10 @@ export const ScreenList = React.memo<ScreenListProps>(({
                   loading="lazy"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder-screen.jpg';
+                    target.src = '/placeholder-screen.svg';
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('🖼️ Image load error for screen:', screen.id, 'Original src:', screen.image);
+                    }
                   }}
                 />
                 {/* Favorite button */}

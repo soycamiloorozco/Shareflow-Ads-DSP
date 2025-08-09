@@ -7,7 +7,12 @@ import {
   Heart
 } from 'lucide-react';
 import { FilterState, FilterOptions } from '../../types';
-import { VenueUtils } from '../../../../types/venue-categories';
+import { 
+  VENUE_CATEGORIES, 
+  CATEGORY_DISPLAY_NAMES, 
+  CATEGORY_ICONS, 
+  VenueUtils 
+} from '../../../../types/venue-categories';
 
 interface CompactMobileFilterProps {
   filters: FilterState;

@@ -17,7 +17,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Estadio Atanasio Girardot, Medellín',
     price: 1200000,
     availability: true,
-    image: '/screens_photos/9007-639a2c4721253.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'stadium')!,
     environment: 'outdoor',
     specs: {
@@ -60,7 +60,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Estadio El Campín, Bogotá',
     price: 1500000,
     availability: true,
-    image: '/screens_photos/1711-63233b19f0faf.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'stadium')!,
     environment: 'outdoor',
     specs: {
@@ -104,7 +104,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Zona Rosa, Bogotá',
     price: 1800000,
     availability: true,
-    image: '/screens_photos/976-5f4a82cd6c675.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'billboard') || mockCategories[0],
     environment: 'outdoor',
     specs: {
@@ -148,7 +148,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Av. El Dorado, Bogotá',
     price: 1650000,
     availability: true,
-    image: '/screens_photos/1711-63233b19f0faf.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'billboard')!,
     environment: 'outdoor',
     specs: {
@@ -194,7 +194,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Terminal Internacional, Aeropuerto El Dorado, Bogotá',
     price: 2200000,
     availability: true,
-    image: '/screens_photos/24147-6543ae2a3400f.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'airport') || mockCategories[0],
     environment: 'indoor',
     specs: {
@@ -236,7 +236,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Estación San Antonio, Metro de Medellín',
     price: 520000,
     availability: true,
-    image: '/screens_photos/3592-6526fc021ea36.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'transport') || mockCategories[0],
     environment: 'indoor',
     specs: {
@@ -280,7 +280,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Cra. 11 #82-71, Bogotá',
     price: 750000,
     availability: true,
-    image: '/screens_photos/4258-62449ffd66411.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'mall')!,
     environment: 'indoor',
     specs: {
@@ -324,7 +324,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Cra. 43A #7 Sur-170, Medellín',
     price: 680000,
     availability: true,
-    image: '/screens_photos/60585-667efb6b32fdf.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'mall')!,
     environment: 'indoor',
     specs: {
@@ -370,7 +370,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Av. Caracas con Calle 72, Bogotá',
     price: 950000,
     availability: true,
-    image: '/screens_photos/14373-6123414240662.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'billboard') || mockCategories[0],
     environment: 'outdoor',
     specs: {
@@ -413,7 +413,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Ciudad Universitaria, Bogotá',
     price: 420000,
     availability: true,
-    image: '/screens_photos/4259-6244acaed1384.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'university') || mockCategories[0],
     environment: 'outdoor',
     specs: {
@@ -456,7 +456,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Zona T, Bogotá',
     price: 850000,
     availability: true,
-    image: '/screens_photos/60604-667f135013727.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'restaurant') || mockCategories[0],
     environment: 'outdoor',
     specs: {
@@ -499,7 +499,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Chapinero, Bogotá',
     price: 320000,
     availability: true,
-    image: '/screens_photos/975-5f4a89759e479.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'gym') || mockCategories[0],
     environment: 'indoor',
     specs: {
@@ -543,7 +543,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Cra. 7 #40-62, Bogotá',
     price: 280000,
     availability: true,
-    image: '/screens_photos/1165-5f4a8a6115516.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'hospital') || mockCategories[0],
     environment: 'indoor',
     specs: {
@@ -586,7 +586,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Av. Boyacá con Calle 80, Bogotá',
     price: 1100000,
     availability: true,
-    image: '/screens_photos/24147-6543ae2a3400f.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'mall')!,
     environment: 'indoor',
     specs: {
@@ -629,7 +629,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Plaza de Bolívar, Bogotá',
     price: 1800000,
     availability: true,
-    image: '/screens_photos/3592-6526fc021ea36.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'public') || mockCategories[0],
     environment: 'outdoor',
     specs: {
@@ -672,7 +672,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Parque Lleras, El Poblado, Medellín',
     price: 1350000,
     availability: true,
-    image: '/screens_photos/976-5f4a82cd6c675.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'entertainment') || mockCategories[0],
     environment: 'outdoor',
     specs: {
@@ -715,7 +715,7 @@ export const demoScreens: ScreenWithCircuit[] = [
     location: 'Estación Poblado, Metro de Medellín',
     price: 580000,
     availability: true,
-    image: '/screens_photos/60604-667f135013727.jpg',
+    image: '/placeholder-screen.svg',
     category: mockCategories.find(c => c.id === 'transport')!,
     environment: 'indoor',
     specs: {

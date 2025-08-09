@@ -16,6 +16,7 @@ export interface SelectedCartMoment {
   price: number;                     // From existing momentPrices
   quantity: number;                  // How many of this moment type
   period?: 'FirstHalf' | 'SecondHalf' | 'Halftime';
+  creativities?: File[];             // Uploaded creative files
   creativeSpecs?: {
     format: 'image' | 'video';
     dimensions: string;
@@ -35,17 +36,7 @@ export interface CartState {
   lastUpdated: Date;
 }
 
-// Draft Model
-export interface CartDraft {
-  id: string;
-  name: string;
-  description?: string;
-  items: CartEvent[];
-  totalPrice: number;
-  createdAt: Date;
-  updatedAt: Date;
-  tags: string[];
-}
+
 
 // Cart Analytics Model
 export interface CartAnalytics {
@@ -75,7 +66,6 @@ export interface CheckoutValidation {
 export interface CheckoutResult {
   success: boolean;
   transactionId?: string;
-  draftId?: string;
   message: string;
   updatedBalance?: number;
 }
@@ -99,16 +89,13 @@ export interface CartPriceCalculation {
 
 export interface CartCheckoutRequest {
   cartItems: CartEvent[];
-  paymentMethod: 'wallet' | 'draft';
-  draftName?: string;
-  draftDescription?: string;
+  paymentMethod: 'wallet';
   totalAmount: number;
 }
 
 export interface CartCheckoutResponse {
   success: boolean;
   transactionId?: string;
-  draftId?: string;
   remainingBalance?: number;
   purchasedEvents: {
     eventId: string;

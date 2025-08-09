@@ -182,26 +182,7 @@ export const ScreenCard = React.memo<ScreenCardProps>(({
             />
           </button>
 
-          {/* Screen specs on hover - Responsive Layout */}
-          {isHovered && screen.specs && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3"
-            >
-              <div className="flex gap-1 sm:gap-2 flex-wrap">
-                <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-medium rounded-full shadow-sm">
-                  {screen.specs.resolution || 'HD'}
-                </span>
-                <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-medium rounded-full shadow-sm">
-                  {screen.specs.brightness || '7500 nits'}
-                </span>
-                <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-medium rounded-full shadow-sm">
-                  {screen.environment === 'indoor' ? 'Interior' : 'Exterior'}
-                </span>
-              </div>
-            </motion.div>
-          )}
+
         </div>
 
         {/* Content section - Enhanced Responsive Design */}

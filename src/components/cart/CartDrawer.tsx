@@ -1,10 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { X, ShoppingBag, Calendar, Clock, MapPin, Users, Trash2, Settings, ArrowRight } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { CartEvent } from '../../types/cart';
 import { constants } from '../../config/constants';
 import MomentConfigModal from './MomentConfigModal';
+import DirectCheckout from './DirectCheckout';
+
+import useKeyboardNavigation from '../../hooks/useKeyboardNavigation';
+import useScreenReader from '../../hooks/useScreenReader';
+import useCartExpiration from '../../hooks/useCartExpiration';
+import useCartTracking from '../../hooks/useCartTracking';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -12,9 +19,27 @@ interface CartDrawerProps {
   onConfigureMoments?: (event: CartEvent) => void;
 }
 
-export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onConfigureMoments }) => {
+export const CartDrawer: React.FC<CartDrawerProps> = ({ 
+  isOpen, 
+  onClose, 
+  onConfigureMoments
+}) => {
   const { cart, removeEvent, clearCart } = useCart();
+  const navigate = useNavigate();
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  // Accessibility hooks
+  const { containerRef } = useKeyboardNavigation({
+    isOpen,
+    onClose,
+    trapFocus: true,
+    autoFocus: true
+  });
+  const { announceCartAction, announceLoading } = useScreenReader();
+  
+  // Cart management hooks
+  const { getExpiringEvents, getTimeUntilExpiration } = useCartExpiration();
+  const { scheduleEmailNotifications } = useCartTracking();
 
   // Handle escape key
   useEffect(() => {
@@ -88,7 +113,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onConfi
 
           {/* Drawer */}
           <motion.div
-            ref={drawerRef}
+            ref={(node) => {
+              drawerRef.current = node;
+              if (containerRef.current !== node) {
+                containerRef.current = node;
+              }
+            }}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -97,6 +127,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onConfi
             role="dialog"
             aria-modal="true"
             aria-labelledby="cart-title"
+            aria-describedby="cart-description"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
@@ -108,8 +139,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onConfi
                   <h2 id="cart-title" className="text-lg font-semibold text-gray-900">
                     Carrito de Eventos
                   </h2>
-                  <p className="text-sm text-gray-600">
-                    {cart.totalItems} evento{cart.totalItems !== 1 ? 's' : ''}
+                  <p id="cart-description" className="text-sm text-gray-600">
+                    {cart.totalItems} evento{cart.totalItems !== 1 ? 's' : ''} seleccionado{cart.totalItems !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
@@ -132,7 +163,32 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onConfi
               ) : cart.items.length === 0 ? (
                 <EmptyCartState onClose={onClose} />
               ) : (
-                <CartItemList items={cart.items} onRemoveItem={removeEvent} />
+                <div>
+                  {/* Expiring Events Warning */}
+                  {(() => {
+                    const expiringEvents = getExpiringEvents();
+                    if (expiringEvents.length > 0) {
+                      return (
+                        <div className="p-3 bg-amber-50 border-b border-amber-200">
+                          <div className="flex items-center gap-2 text-amber-800">
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">
+                              {expiringEvents.length} evento{expiringEvents.length !== 1 ? 's' : ''} expira{expiringEvents.length === 1 ? '' : 'n'} pronto
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Events Display */}
+                  <div className="flex-1">
+                    <CartItemList items={cart.items} onRemoveItem={removeEvent} />
+                  </div>
+
+
+                </div>
               )}
             </div>
 
@@ -143,6 +199,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onConfi
                 totalItems={cart.totalItems}
                 onClearCart={clearCart}
                 onClose={onClose}
+                onConfigureMoments={onConfigureMoments}
               />
             )}
 
@@ -153,6 +210,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onConfi
               </div>
             )}
           </motion.div>
+
+
         </>
       )}
     </AnimatePresence>
@@ -345,19 +404,23 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, index, onRemove }) =>
   );
 };
 
+// Direct checkout component is now imported from separate file
+
 // Cart Footer Component
 interface CartFooterProps {
   totalPrice: number;
   totalItems: number;
   onClearCart: () => void;
   onClose: () => void;
+  onConfigureMoments?: (event: CartEvent) => void;
 }
 
 const CartFooter: React.FC<CartFooterProps> = ({ 
   totalPrice, 
   totalItems, 
   onClearCart, 
-  onClose 
+  onClose,
+  onConfigureMoments
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -369,7 +432,11 @@ const CartFooter: React.FC<CartFooterProps> = ({
 
   const handleClearCart = async () => {
     if (window.confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
-      await onClearCart();
+      try {
+        onClearCart();
+      } catch (error) {
+        console.error('Error clearing cart:', error);
+      }
     }
   };
 
@@ -390,14 +457,16 @@ const CartFooter: React.FC<CartFooterProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="space-y-2">
-        <button
-          onClick={onClose}
-          className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
-        >
-          Continuar Configurando
-          <ArrowRight className="w-4 h-4" />
-        </button>
+      <div className="space-y-3">
+        <DirectCheckout 
+          onClose={onClose}
+          onConfigureMoments={onConfigureMoments}
+          onRechargeWallet={() => {
+            // Navegar a la página de recarga de wallet
+            onClose();
+            window.open('/wallet', '_blank');
+          }}
+        />
         
         <button
           onClick={handleClearCart}
@@ -409,7 +478,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
 
       {/* Note */}
       <p className="text-xs text-gray-500 text-center">
-        Configura los momentos de cada evento antes de proceder al checkout
+        Los eventos permanecen en tu carrito hasta que los compres o los elimines
       </p>
     </div>
   );
@@ -417,7 +486,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
 
 // Add MomentConfigModal to the CartDrawer component
 const CartDrawerWithModal: React.FC<CartDrawerProps> = (props) => {
-  const { cart, configureMoments } = useCart();
+  const { configureMoments } = useCart();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [selectedEventForConfig, setSelectedEventForConfig] = useState<CartEvent | null>(null);
 
@@ -445,7 +514,10 @@ const CartDrawerWithModal: React.FC<CartDrawerProps> = (props) => {
 
   return (
     <>
-      <CartDrawer {...props} onConfigureMoments={handleConfigureMoments} />
+      <CartDrawer 
+        {...props} 
+        onConfigureMoments={handleConfigureMoments}
+      />
       
       {/* Moment Configuration Modal */}
       {selectedEventForConfig && (

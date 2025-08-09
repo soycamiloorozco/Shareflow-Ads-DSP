@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { CartDrawer } from './CartDrawer';
+import CartDrawerWithModal from './CartDrawer';
 
 interface CartIconProps {
   className?: string;
@@ -109,7 +109,7 @@ export const CartIcon: React.FC<CartIconProps> = ({
       </button>
 
       {/* Cart Drawer */}
-      <CartDrawer 
+      <CartDrawerWithModal 
         isOpen={cart.isOpen} 
         onClose={() => toggleCart()} 
       />

@@ -16,7 +16,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import Logo from '../assets/logo.svg';
-import { CartIcon, CartIconCompact } from './cart/CartIcon';
+
 
 interface NavigationProps {
   isCollapsed: boolean;
@@ -291,26 +291,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
         `}>
           <NavGroup group={generalNavItems} />
           
-          {/* Cart Icon - Only show on sports events page */}
-          {location.pathname === '/sports-events' && (
-            <div className="pt-2">
-              {!isCollapsed && (
-                <h3 className="px-3 mb-3 text-xs font-semibold uppercase text-neutral-400 dark:text-neutral-500 tracking-wider">
-                  Carrito
-                </h3>
-              )}
-              {isCollapsed && <div className="mb-4 border-t border-neutral-200/70 dark:border-neutral-700/50 mx-1.5"></div>}
-              <div className="px-3">
-                <CartIcon 
-                  className={`
-                    w-full justify-start
-                    ${isCollapsed ? 'px-0' : 'px-3'}
-                  `}
-                  size="md"
-                />
-              </div>
-            </div>
-          )}
+
           
           {(hasRole(['Admin'])) && renderNavGroups(adminNavItems)}
         </nav>
@@ -531,16 +512,8 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           </div>
         </Link>
         
-        {/* Cart and Menu Icons */}
+        {/* Menu Icons */}
         <div className="flex items-center gap-2">
-          {/* Cart Icon - Only show on sports events page */}
-          {location.pathname === '/sports-events' && (
-            <CartIconCompact className="bg-neutral-100 dark:bg-neutral-800 
-                                      text-neutral-700 dark:text-neutral-300 
-                                      hover:bg-neutral-200 dark:hover:bg-neutral-700
-                                      shadow-sm border border-neutral-200 dark:border-neutral-700" />
-          )}
-          
           {/* Menu hamburguesa */}
           <button 
             onClick={() => setIsMobileMenuOpen(true)}

@@ -32,23 +32,39 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
   'aria-label': ariaLabel = 'Smart search input for marketplace',
   availableScreens = [] // Nueva prop con default vacío
 }) => {
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 SmartSearchInput render:', { value, loading });
+  }
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Generate smart suggestions based on API data
+  // Generate smart suggestions based on API data + recent/personalized grouped by type
   const smartSuggestions = useMemo(() => {
+    // Read recent searches from localStorage
+    let recent: SearchSuggestion[] = [];
+    try {
+      const raw = localStorage.getItem('sf_marketplace_recent_searches');
+      const parsed = raw ? (JSON.parse(raw) as Array<{ q: string; ts: number }>) : [];
+      recent = parsed
+        .sort((a, b) => b.ts - a.ts)
+        .slice(0, 3)
+        .map((r, idx) => ({ id: `recent-${idx}-${r.q}`, text: r.q, type: 'recent', icon: '🕘' }));
+    } catch {}
+
     if (!value.trim() || value.length < 2) {
       // Generar sugerencias populares basadas en datos reales de pantallas
       if (availableScreens.length === 0) {
-        return []; // Retornar array vacío si no hay pantallas disponibles
+        return recent; // Mostrar recientes aunque no haya pantallas
       }
 
       // Obtener ciudades más populares de los datos reales
       const cityCount = new Map<string, number>();
       const categoryCount = new Map<string, { name: string; count: number }>();
+      let featuresMoments = 0;
       
       availableScreens.forEach(screen => {
         // Extraer ciudad de la ubicación
@@ -70,6 +86,9 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
             });
           }
         }
+
+        // Características (ej: momentos)
+        if (screen.pricing?.allowMoments) featuresMoments++;
       });
 
       const popularSuggestions: SearchSuggestion[] = [];
@@ -104,31 +123,54 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
         });
       });
 
-      // Pantallas con momentos si están disponibles
-      const screensWithMoments = availableScreens.filter(screen => screen.pricing?.allowMoments);
-      if (screensWithMoments.length > 0) {
+      // Característica destacada: Momentos
+      if (featuresMoments > 0) {
         popularSuggestions.push({
           id: 'moments-feature',
           text: 'Pantallas con Momentos (15s)',
           type: 'venue',
-          count: screensWithMoments.length,
+          count: featuresMoments,
           icon: '⚡'
         });
       }
 
-      return popularSuggestions.slice(0, 5);
+      // Personalized suggestion based on previously clicked categories (stored in localStorage)
+      try {
+        const raw = localStorage.getItem('sf_marketplace_fav_categories');
+        const favs = raw ? (JSON.parse(raw) as Array<{ id: string; name: string; score: number }>) : [];
+        const top = favs.sort((a, b) => b.score - a.score)[0];
+        if (top) {
+          popularSuggestions.unshift({ id: `personalized-cat-${top.id}`, text: top.name, type: 'personalized', icon: '✨' });
+        }
+      } catch {}
+
+      // Merge recents at the top
+      return [...recent, ...popularSuggestions].slice(0, 6);
     }
 
     const query = value.toLowerCase().trim();
     const filtered: SearchSuggestion[] = [];
 
-    // Buscar ubicaciones reales
+    // Buscar ubicaciones reales con lógica más precisa
     const locationMatches = new Map<string, number>();
+    const queryWords = query.split(/\s+/).filter(Boolean);
+    
     availableScreens.forEach(screen => {
       const locationParts = screen.location.split(',');
       locationParts.forEach(part => {
         const location = part.trim();
-        if (location.toLowerCase().includes(query) && location !== 'Colombia') {
+        const locationLower = location.toLowerCase();
+        
+        // Solo incluir si hay una coincidencia exacta de palabra o si la ubicación contiene la query completa
+        const hasExactWordMatch = queryWords.some(queryWord => 
+          locationLower.split(/\s+/).some(locationWord => 
+            locationWord === queryWord || locationWord.startsWith(queryWord)
+          )
+        );
+        
+        const hasPartialMatch = locationLower.includes(query);
+        
+        if ((hasExactWordMatch || hasPartialMatch) && location !== 'Colombia' && locationLower !== 'colombia') {
           locationMatches.set(location, (locationMatches.get(location) || 0) + 1);
         }
       });
@@ -148,18 +190,30 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
         });
       });
 
-    // Buscar categorías reales
+    // Buscar categorías reales con lógica más precisa
     const categoryMatches = new Map<string, { name: string; count: number }>();
     availableScreens.forEach(screen => {
-      if (screen.category?.name?.toLowerCase().includes(query)) {
-        const existing = categoryMatches.get(screen.category.id);
-        if (existing) {
-          existing.count++;
-        } else {
-          categoryMatches.set(screen.category.id, {
-            name: screen.category.name,
-            count: 1
-          });
+      if (screen.category?.name) {
+        const categoryName = screen.category.name.toLowerCase();
+        const categoryWords = categoryName.split(/\s+/);
+        
+        // Buscar coincidencias exactas de palabras o coincidencias parciales
+        const hasMatch = queryWords.some(queryWord => 
+          categoryWords.some(categoryWord => 
+            categoryWord === queryWord || categoryWord.includes(queryWord)
+          )
+        ) || categoryName.includes(query);
+        
+        if (hasMatch) {
+          const existing = categoryMatches.get(screen.category.id);
+          if (existing) {
+            existing.count++;
+          } else {
+            categoryMatches.set(screen.category.id, {
+              name: screen.category.name,
+              count: 1
+            });
+          }
         }
       }
     });
@@ -194,13 +248,13 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
 
     // Sugerencias de características especiales
     if (query.includes('momento') || query.includes('15') || query.includes('segundo')) {
-      const screensWithMoments = availableScreens.filter(screen => screen.pricing?.allowMoments);
-      if (screensWithMoments.length > 0) {
+      const count = availableScreens.filter(screen => screen.pricing?.allowMoments).length;
+      if (count > 0) {
         filtered.push({
           id: 'moments-feature',
           text: 'Pantallas con Momentos (15s)',
           type: 'venue',
-          count: screensWithMoments.length,
+          count,
           icon: '⚡'
         });
       }
@@ -225,28 +279,50 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
       }
     }
 
+    // Merge recent at bottom if not duplicating
+    const dedup = new Set(filtered.map(s => `${s.type}-${s.text.toLowerCase()}`));
+    recent.forEach(r => {
+      const key = `${r.type}-${r.text.toLowerCase()}`;
+      if (!dedup.has(key)) filtered.push(r);
+    });
     return filtered.slice(0, 6); // Limitar a 6 sugerencias
   }, [value, availableScreens]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     onChange(newValue);
-    setShowSuggestions(true);
+    
+    // Only show suggestions if there's meaningful input or if field is focused and empty
+    if (newValue.trim().length > 0 || (newValue === '' && isFocused)) {
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+    
     setSelectedSuggestionIndex(-1);
-  }, [onChange]);
+  }, [onChange, isFocused]);
 
   const handleInputFocus = useCallback(() => {
     setIsFocused(true);
-    setShowSuggestions(true);
-  }, []);
+    // Only show suggestions if there's content or if we want to show popular suggestions
+    if (value.trim().length > 0 || smartSuggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  }, [value, smartSuggestions.length]);
 
-  const handleInputBlur = useCallback(() => {
+  const handleInputBlur = useCallback((e: React.FocusEvent) => {
+    // Only hide suggestions if focus is not moving to suggestions container
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (relatedTarget && suggestionsRef.current?.contains(relatedTarget)) {
+      return; // Don't hide if focus is moving to suggestions
+    }
+    
     // Delay hiding suggestions to allow for clicks
     setTimeout(() => {
       setIsFocused(false);
       setShowSuggestions(false);
       setSelectedSuggestionIndex(-1);
-    }, 200);
+    }, 150);
   }, []);
 
   const handleClear = useCallback(() => {
@@ -260,18 +336,37 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
     if (query.trim()) {
       onSearch(query.trim());
       setShowSuggestions(false);
+      // Persist recent search (best-effort, non-blocking)
+      try {
+        const raw = localStorage.getItem('sf_marketplace_recent_searches');
+        const list = raw ? (JSON.parse(raw) as Array<{ q: string; ts: number }>) : [];
+        const now = Date.now();
+        const filtered = [{ q: query.trim(), ts: now }, ...list.filter(i => i.q.toLowerCase() !== query.trim().toLowerCase())].slice(0, 10);
+        localStorage.setItem('sf_marketplace_recent_searches', JSON.stringify(filtered));
+      } catch {}
     }
   }, [value, onSearch]);
 
   const handleSuggestionSelect = useCallback((suggestion: SearchSuggestion) => {
     onChange(suggestion.text);
     onSuggestionClick?.(suggestion);
+    // Store preference for categories to personalize in future sessions
+    try {
+      if (suggestion.type === 'category') {
+        const raw = localStorage.getItem('sf_marketplace_fav_categories');
+        const list = raw ? (JSON.parse(raw) as Array<{ id: string; name: string; score: number }>) : [];
+        const existing = list.find(i => i.id === suggestion.id.replace('category-', ''));
+        if (existing) existing.score += 1; else list.push({ id: suggestion.id.replace('category-', ''), name: suggestion.text, score: 1 });
+        localStorage.setItem('sf_marketplace_fav_categories', JSON.stringify(list));
+      }
+    } catch {}
     handleSearch(suggestion.text);
     setShowSuggestions(false);
     inputRef.current?.blur();
   }, [onChange, onSuggestionClick, handleSearch]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Allow normal typing when suggestions are not shown or no suggestions available
     if (!showSuggestions || smartSuggestions.length === 0) {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -280,6 +375,7 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
       return;
     }
 
+    // Only handle navigation keys when suggestions are visible
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -302,9 +398,20 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
         }
         break;
       case 'Escape':
+        e.preventDefault();
         setShowSuggestions(false);
         setSelectedSuggestionIndex(-1);
-        inputRef.current?.blur();
+        break;
+      case 'Tab':
+        // Allow tab to work normally, but hide suggestions
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+      default:
+        // For any other key (typing), reset selection but keep suggestions open
+        if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete') {
+          setSelectedSuggestionIndex(-1);
+        }
         break;
     }
   }, [showSuggestions, smartSuggestions, selectedSuggestionIndex, handleSuggestionSelect, handleSearch]);
@@ -318,6 +425,7 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
         !inputRef.current?.contains(event.target as Node)
       ) {
         setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
       }
     };
 
@@ -353,6 +461,8 @@ export const SmartSearchInput = React.memo<SmartSearchInputProps>(({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             className="flex-1 px-4 py-4 sm:py-5 text-gray-900 placeholder-gray-500 bg-transparent border-none outline-none text-base sm:text-lg font-medium"
+            autoComplete="off"
+            spellCheck="false"
             aria-label={ariaLabel}
             aria-expanded={showSuggestions}
             aria-haspopup="listbox"

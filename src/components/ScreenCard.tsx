@@ -73,7 +73,7 @@ export function ScreenCard({ screen, onClick }: ScreenCardProps) {
               size="sm"
               icon={ChevronRight}
             >
-              Ver detalles
+              Ver
             </Button>
           </div>
         </Card.Body>

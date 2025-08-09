@@ -125,7 +125,7 @@ export const PRICE_RANGES: readonly PriceRange[] = [
 export interface SearchSuggestion {
   readonly id: string;
   readonly text: string;
-  readonly type: 'location' | 'category' | 'screen' | 'venue';
+  readonly type: 'location' | 'category' | 'screen' | 'venue' | 'recent' | 'personalized';
   readonly count?: number;
   readonly icon?: string;
   readonly metadata?: Record<string, unknown>;

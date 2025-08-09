@@ -1,4 +1,4 @@
-import { CartState, CartEvent, SelectedCartMoment, CartDraft } from '../types/cart';
+import { CartState, CartEvent, SelectedCartMoment } from '../types/cart';
 import { CartCalculations } from '../utils/cartValidation';
 
 // Cart Action Types
@@ -21,11 +21,7 @@ export enum CartActionType {
   
   // Cart State
   LOAD_CART = 'LOAD_CART',
-  REFRESH_TOTALS = 'REFRESH_TOTALS',
-  
-  // Draft Management
-  LOAD_DRAFT = 'LOAD_DRAFT',
-  SAVE_DRAFT_SUCCESS = 'SAVE_DRAFT_SUCCESS'
+  REFRESH_TOTALS = 'REFRESH_TOTALS'
 }
 
 // Cart Actions
@@ -41,9 +37,7 @@ export type CartAction =
   | { type: CartActionType.CONFIGURE_MOMENTS; payload: { cartId: string; moments: SelectedCartMoment[] } }
   | { type: CartActionType.UPDATE_MOMENTS; payload: { cartId: string; moments: SelectedCartMoment[] } }
   | { type: CartActionType.LOAD_CART; payload: CartEvent[] }
-  | { type: CartActionType.REFRESH_TOTALS }
-  | { type: CartActionType.LOAD_DRAFT; payload: CartEvent[] }
-  | { type: CartActionType.SAVE_DRAFT_SUCCESS; payload: string }; // draftId
+  | { type: CartActionType.REFRESH_TOTALS };
 
 // Initial Cart State
 export const initialCartState: CartState = {
@@ -242,27 +236,7 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
       };
     }
 
-    case CartActionType.LOAD_DRAFT: {
-      const draftItems = action.payload;
-      const totals = calculateTotals(draftItems);
 
-      return {
-        ...state,
-        items: draftItems,
-        ...totals,
-        lastUpdated: new Date(),
-        loading: false,
-        error: null
-      };
-    }
-
-    case CartActionType.SAVE_DRAFT_SUCCESS: {
-      return {
-        ...state,
-        loading: false,
-        error: null
-      };
-    }
 
     default:
       return state;
@@ -325,15 +299,5 @@ export const cartActions = {
 
   refreshTotals: (): CartAction => ({
     type: CartActionType.REFRESH_TOTALS
-  }),
-
-  loadDraft: (items: CartEvent[]): CartAction => ({
-    type: CartActionType.LOAD_DRAFT,
-    payload: items
-  }),
-
-  saveDraftSuccess: (draftId: string): CartAction => ({
-    type: CartActionType.SAVE_DRAFT_SUCCESS,
-    payload: draftId
   })
 };

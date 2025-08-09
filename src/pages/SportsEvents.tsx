@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -15,6 +15,7 @@ import { useSportEvents } from '../hooks/useSportEvents';
 import { constants } from '../config/constants';
 import { SportsSearchHeader } from '../components/sports/SportsSearchHeader';
 import { useCart } from '../contexts/CartContext';
+import { CartFloatingButton } from '../components/cart/CartFloatingButton';
 import { CartIcon } from '../components/cart/CartIcon';
 import { ShoppingCart, Plus, Check } from 'lucide-react';
 import estadioImage from '../assets/estadio.png';
@@ -247,17 +248,14 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
                 <button
                   onClick={handleAddToCart}
                   disabled={isAddingToCart}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
                   aria-label={`Agregar ${event.homeTeamName} vs ${event.awayTeamName} al carrito`}
                 >
                   {isAddingToCart ? (
                     <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-5 h-5" />
                   )}
-                  <span className="hidden sm:inline">
-                    {isAddingToCart ? 'Agregando...' : 'Agregar'}
-                  </span>
                 </button>
               )}
 
@@ -268,9 +266,9 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
                   onClick();
                 }}
                 className="px-3 py-2 sm:px-4 sm:py-2.5 bg-[#353FEF] hover:bg-[#2A32C5] text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 shadow-sm touch-manipulation min-h-[44px]"
-                aria-label={`Ver detalles de ${event.homeTeamName} vs ${event.awayTeamName}`}
+                aria-label={`Ver ${event.homeTeamName} vs ${event.awayTeamName}`}
               >
-                <span>Ver detalles</span>
+                <span>Ver</span>
                 <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
@@ -450,7 +448,7 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
               <button
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                 aria-label={`Agregar ${event.homeTeamName} vs ${event.awayTeamName} al carrito`}
               >
                 {isAddingToCart ? (
@@ -493,7 +491,8 @@ const MobileSportsInterface = React.memo(({
   filteredCount,
   onAddToCart,
   onRemoveFromCart,
-  isEventInCart
+  isEventInCart,
+  loading
 }: {
   events: any[];
   onEventClick: (eventId: string) => void;
@@ -505,6 +504,7 @@ const MobileSportsInterface = React.memo(({
   onAddToCart: (event: any) => void;
   onRemoveFromCart: (event: any) => void;
   isEventInCart: (eventId: string) => boolean;
+  loading: boolean;
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -592,15 +592,26 @@ const MobileSportsInterface = React.memo(({
           </div>
         )}
 
-        {events.length === 0 && (
+        {events.length === 0 && !loading && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-lg font-semibold mb-2">No se encontraron eventos</h3>
             <p className="text-gray-600 text-sm">
-              Intenta con otros filtros o vuelve más tarde.
+              {searchQuery 
+                ? `No hay eventos que coincidan con "${searchQuery}". Intenta con otros términos de búsqueda.`
+                : 'Intenta con otros filtros o vuelve más tarde.'
+              }
             </p>
+            {searchQuery && (
+              <button
+                onClick={() => onSearchChange('')}
+                className="mt-3 text-[#353FEF] hover:text-[#2A32C5] text-sm font-medium"
+              >
+                Limpiar búsqueda
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -608,41 +619,96 @@ const MobileSportsInterface = React.memo(({
   );
 });
 
-MobileSportsInterface.displayName = 'MobileSportsInterface';export 
-function SportsEvents() {
+MobileSportsInterface.displayName = 'MobileSportsInterface';
+
+export function SportsEvents() {
   const navigate = useNavigate();
-  const { sportEvents } = useSportEvents();
+  const { sportEvents, loading, error } = useSportEvents();
   const { addEvent, removeEvent, isEventInCart, getCartItemByEventId } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedStadium, setSelectedStadium] = useState<string | null>(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const filteredEvents = useMemo(() => {
+    if (!sportEvents || sportEvents.length === 0) {
+      return [];
+    }
+
     const filtered = sportEvents.filter(event => {
-      const matchesSearch = !searchQuery || 
-        event.homeTeamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.awayTeamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.stadiumName.toLowerCase().includes(searchQuery.toLowerCase());
+      // Normalize search query - use debounced version
+      const normalizedQuery = debouncedSearchQuery?.trim().toLowerCase() || '';
+      
+      // Search matching - more robust
+      const matchesSearch = !normalizedQuery || [
+        event.homeTeamName,
+        event.awayTeamName,
+        event.stadiumName,
+        `${event.homeTeamName} vs ${event.awayTeamName}`,
+        `${event.awayTeamName} vs ${event.homeTeamName}`
+      ].some(field => 
+        field?.toLowerCase().includes(normalizedQuery)
+      );
+      
       const matchesTeam = !selectedTeam || 
         event.homeTeamName === selectedTeam || 
         event.awayTeamName === selectedTeam;
       const matchesStadium = !selectedStadium || event.stadiumName === selectedStadium;
-      const matchesStatus = event.status === 'Active';
+      // Handle different status formats (string vs number)
+      const matchesStatus = event.status === 'Active' || event.status === 1;
+      
+      // Debug individual event filtering
+      if (normalizedQuery && process.env.NODE_ENV === 'development') {
+        console.log(`Event ${event.id}:`, {
+          homeTeam: event.homeTeamName,
+          awayTeam: event.awayTeamName,
+          stadium: event.stadiumName,
+          status: event.status,
+          searchQuery: normalizedQuery,
+          matchesSearch,
+          matchesTeam,
+          matchesStadium,
+          matchesStatus,
+          finalMatch: matchesSearch && matchesTeam && matchesStadium && matchesStatus
+        });
+      }
+      
       return matchesSearch && matchesTeam && matchesStadium && matchesStatus;
     });
     
     // Debug log
     if (process.env.NODE_ENV === 'development') {
+      console.log('=== SEARCH DEBUG ===');
       console.log('Search query:', searchQuery);
+      console.log('Debounced query:', debouncedSearchQuery);
+      console.log('Normalized query:', debouncedSearchQuery?.trim().toLowerCase());
       console.log('Total events:', sportEvents.length);
+      console.log('Active events:', sportEvents.filter(e => e.status === 'Active').length);
       console.log('Filtered events:', filtered.length);
+      console.log('Selected team:', selectedTeam);
+      console.log('Selected stadium:', selectedStadium);
+      
+      if (debouncedSearchQuery && filtered.length === 0 && sportEvents.length > 0) {
+        console.log('No results found. Sample event data:');
+        console.log(sportEvents[0]);
+        console.log('Available team names:', sportEvents.map(e => `${e.homeTeamName} vs ${e.awayTeamName}`));
+      }
     }
     
     return filtered;
-  }, [sportEvents, searchQuery, selectedTeam, selectedStadium]);
+  }, [sportEvents, debouncedSearchQuery, selectedTeam, selectedStadium]);
 
   const handleEventClick = useCallback((eventId: string) => {
     navigate(`/event/${eventId}`);
@@ -654,7 +720,9 @@ function SportsEvents() {
 
   const handleAddToCart = useCallback(async (event: any) => {
     try {
+      console.log('Attempting to add event to cart:', event);
       await addEvent(event);
+      console.log('Event added successfully to cart');
     } catch (error) {
       console.error('Error adding event to cart:', error);
       // Aquí podrías mostrar un toast de error
@@ -700,6 +768,7 @@ function SportsEvents() {
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
           isEventInCart={isEventInCart}
+          loading={loading}
         />
       </div>
 
@@ -716,24 +785,82 @@ function SportsEvents() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          {/* Results Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Eventos disponibles
-              </h2>
-              <p className="text-gray-600 mt-1">
-                {filteredEvents.length} evento{filteredEvents.length !== 1 ? 's' : ''} encontrado{filteredEvents.length !== 1 ? 's' : ''}
-                {(selectedTeam || selectedStadium) && (
-                  <span className="text-blue-600">
-                    {' '}con filtros aplicados
-                  </span>
-                )}
-              </p>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 border-2 border-[#353FEF] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-gray-600">Cargando eventos...</span>
+              </div>
             </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">!</span>
+                </div>
+                <span className="text-red-700 font-medium">Error al cargar eventos</span>
+              </div>
+              <p className="text-red-600 text-sm mt-1">{error}</p>
+            </div>
+          )}
+
+          {/* Results Header */}
+          {!loading && !error && (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Eventos disponibles
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  {filteredEvents.length} evento{filteredEvents.length !== 1 ? 's' : ''} encontrado{filteredEvents.length !== 1 ? 's' : ''}
+                  {(selectedTeam || selectedStadium) && (
+                    <span className="text-blue-600">
+                      {' '}con filtros aplicados
+                    </span>
+                  )}
+                  {searchQuery && (
+                    <span className="text-blue-600">
+                      {' '}para "{searchQuery}"
+                    </span>
+                  )}
+                </p>
+                {/* Debug info - remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-500 mt-1 space-y-1">
+                    <div>
+                      Debug: {sportEvents.length} total, {sportEvents.filter(e => e.status === 'Active' || e.status === 1).length} activos
+                      {sportEvents.length > 0 && (
+                        <span className="ml-2">
+                          (Estados: {[...new Set(sportEvents.map(e => e.status))].join(', ')})
+                        </span>
+                      )}
+                    </div>
+                    {sportEvents.length > 0 && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => console.log('Sample event:', sportEvents[0])}
+                          className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"
+                        >
+                          Log Sample Event
+                        </button>
+                        <button
+                          onClick={() => setSearchQuery(sportEvents[0]?.homeTeamName || '')}
+                          className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
+                        >
+                          Test Search
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             
-            {/* View Mode Selector */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              {/* View Mode Selector */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
                 className={`px-4 py-2 rounded-md text-sm flex items-center gap-1.5 transition-all min-h-[44px] ${
                   viewMode === 'grid' ? 'bg-white shadow text-indigo-600' : 'text-gray-600'
@@ -754,8 +881,9 @@ function SportsEvents() {
                 <LayoutList className="w-4 h-4" />
                 <span className="hidden sm:inline">Lista</span>
               </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Events Grid/List */}
           {filteredEvents.length > 0 ? (
@@ -799,9 +927,20 @@ function SportsEvents() {
                 <Calendar className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold mb-2">No se encontraron eventos</h3>
-              <p className="text-gray-600 max-w-md mx-auto">
-                No hay eventos que coincidan con tu búsqueda. Intenta con otros filtros o vuelve más tarde.
+              <p className="text-gray-600 max-w-md mx-auto mb-4">
+                {searchQuery 
+                  ? `No hay eventos que coincidan con "${searchQuery}". Intenta con otros términos de búsqueda.`
+                  : 'No hay eventos que coincidan con tu búsqueda. Intenta con otros filtros o vuelve más tarde.'
+                }
               </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-[#353FEF] hover:text-[#2A32C5] font-medium transition-colors"
+                >
+                  Limpiar búsqueda
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -917,6 +1056,9 @@ function SportsEvents() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating Cart Button */}
+      <CartFloatingButton />
     </div>
   );
 }

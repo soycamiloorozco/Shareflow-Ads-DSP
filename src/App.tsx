@@ -42,6 +42,7 @@ import PartnersRelations2 from './pages/admin/PartnersRelations2';
 import { CampaignProvider } from './contexts/CampaignContext';
 import { CartProvider } from './contexts/CartContext';
 import { ProfilePage } from './pages/ProfilePage';
+import { Checkout } from './pages/Checkout';
 
 export default function App() {
   return (
@@ -71,6 +72,11 @@ export default function App() {
                   <Route path="/event/:id" element={<EventDetail />} />
                   <Route path="/screens/:id" element={<ScreenDetail />} />
                   <Route path="/payments" element={<Payments />} />
+                  <Route path="/checkout" element={
+                    <RequireAuth>
+                      <Checkout />
+                    </RequireAuth>
+                  } />
                    <Route path="/my-campaigns" element={<MisCampanas />} />
                   
                   {/* Protected Routes */}

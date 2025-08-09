@@ -1,8 +1,7 @@
-import { CartEvent, CartDraft, CartState } from '../types/cart';
+import { CartEvent, CartState } from '../types/cart';
 
 // Storage Keys
 const CART_STORAGE_KEY = 'shareflow_sports_cart';
-const DRAFTS_STORAGE_KEY = 'shareflow_sports_drafts';
 const CART_SESSION_KEY = 'shareflow_cart_session';
 
 // Storage Schema
@@ -13,10 +12,8 @@ interface CartStorageSchema {
     metadata: {
       createdAt: Date;
       updatedAt: Date;
-      expiresAt: Date;
     };
   };
-  drafts: CartDraft[];
   preferences: {
     autoSave: boolean;
     notifications: boolean;
@@ -33,7 +30,6 @@ interface SessionCartData {
 
 class CartStorageService {
   private static readonly STORAGE_VERSION = '1.0.0';
-  private static readonly CART_EXPIRY_DAYS = 30;
 
   // Initialize storage with default values
   static initializeStorage(): void {
@@ -46,11 +42,9 @@ class CartStorageService {
             items: [],
             metadata: {
               createdAt: new Date(),
-              updatedAt: new Date(),
-              expiresAt: new Date(Date.now() + this.CART_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
+              updatedAt: new Date()
             }
           },
-          drafts: [],
           preferences: {
             autoSave: true,
             notifications: true,
@@ -83,7 +77,7 @@ class CartStorageService {
   static loadCartItems(): CartEvent[] {
     try {
       const data = this.getStorageData();
-      if (data && this.isDataValid(data)) {
+      if (data) {
         // Convert date strings back to Date objects
         return data.cart.items.map(item => ({
           ...item,
@@ -94,61 +88,6 @@ class CartStorageService {
     } catch (error) {
       console.error('Error loading cart items:', error);
       return [];
-    }
-  }
-
-  // Save draft to localStorage
-  static saveDraft(draft: CartDraft): void {
-    try {
-      const data = this.getStorageData();
-      if (data) {
-        const existingIndex = data.drafts.findIndex(d => d.id === draft.id);
-        if (existingIndex >= 0) {
-          data.drafts[existingIndex] = draft;
-        } else {
-          data.drafts.push(draft);
-        }
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data));
-      }
-    } catch (error) {
-      console.error('Error saving draft:', error);
-      throw new Error('Failed to save draft');
-    }
-  }
-
-  // Load all drafts
-  static loadDrafts(): CartDraft[] {
-    try {
-      const data = this.getStorageData();
-      if (data) {
-        return data.drafts.map(draft => ({
-          ...draft,
-          createdAt: new Date(draft.createdAt),
-          updatedAt: new Date(draft.updatedAt),
-          items: draft.items.map(item => ({
-            ...item,
-            addedAt: new Date(item.addedAt)
-          }))
-        }));
-      }
-      return [];
-    } catch (error) {
-      console.error('Error loading drafts:', error);
-      return [];
-    }
-  }
-
-  // Delete draft
-  static deleteDraft(draftId: string): void {
-    try {
-      const data = this.getStorageData();
-      if (data) {
-        data.drafts = data.drafts.filter(d => d.id !== draftId);
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data));
-      }
-    } catch (error) {
-      console.error('Error deleting draft:', error);
-      throw new Error('Failed to delete draft');
     }
   }
 
@@ -205,30 +144,6 @@ class CartStorageService {
     }
   }
 
-  private static isDataValid(data: CartStorageSchema): boolean {
-    try {
-      // Check version compatibility
-      if (data.version !== this.STORAGE_VERSION) {
-        console.warn('Storage version mismatch, clearing data');
-        this.clearStorage();
-        return false;
-      }
-
-      // Check expiry
-      const expiryDate = new Date(data.cart.metadata.expiresAt);
-      if (expiryDate < new Date()) {
-        console.warn('Cart data expired, clearing');
-        this.clearStorage();
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error validating storage data:', error);
-      return false;
-    }
-  }
-
   private static clearStorage(): void {
     try {
       localStorage.removeItem(CART_STORAGE_KEY);
@@ -249,20 +164,38 @@ class CartStorageService {
     }
   }
 
-  static optimizeStorage(): void {
+  // Get cart statistics
+  static getCartStatistics(): {
+    totalItems: number;
+    storageSize: number;
+    createdAt: Date | null;
+    updatedAt: Date | null;
+  } {
     try {
       const data = this.getStorageData();
-      if (data) {
-        // Remove expired drafts (older than 90 days)
-        const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-        data.drafts = data.drafts.filter(draft => 
-          new Date(draft.updatedAt) > ninetyDaysAgo
-        );
-        
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data));
+      if (!data) {
+        return {
+          totalItems: 0,
+          storageSize: 0,
+          createdAt: null,
+          updatedAt: null
+        };
       }
+
+      return {
+        totalItems: data.cart.items.length,
+        storageSize: this.getStorageSize(),
+        createdAt: new Date(data.cart.metadata.createdAt),
+        updatedAt: new Date(data.cart.metadata.updatedAt)
+      };
     } catch (error) {
-      console.error('Error optimizing storage:', error);
+      console.error('Error getting cart statistics:', error);
+      return {
+        totalItems: 0,
+        storageSize: 0,
+        createdAt: null,
+        updatedAt: null
+      };
     }
   }
 }

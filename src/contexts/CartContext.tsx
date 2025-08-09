@@ -4,21 +4,19 @@ import {
   CartState, 
   CartEvent, 
   SelectedCartMoment, 
-  CartDraft, 
   CartAnalytics,
   CheckoutValidation,
-  CheckoutResult,
-  CartErrorType
+  CheckoutResult
 } from '../types/cart';
 import { cartReducer, initialCartState, cartActions } from './cartReducer';
 import CartStorageService from '../utils/cartStorage';
 import { CartValidationRules, CartErrorHandler, CartCalculations } from '../utils/cartValidation';
+import useRetry from '../hooks/useRetry';
 
 // Cart Context Interface
 interface CartContextType {
   // State
   cart: CartState;
-  drafts: CartDraft[];
   
   // Cart Operations
   addEvent: (event: SportEvents) => Promise<void>;
@@ -33,12 +31,8 @@ interface CartContextType {
   // Cart Management
   toggleCart: () => void;
   refreshCart: () => Promise<void>;
-  
-  // Draft Operations
-  saveDraft: (name: string, description?: string) => Promise<string>;
-  loadDraft: (draftId: string) => Promise<void>;
-  deleteDraft: (draftId: string) => Promise<void>;
-  refreshDrafts: () => Promise<void>;
+  updateItemQuantity: (cartId: string, momentType: string, newQuantity: number) => Promise<void>;
+  resolveCartConflicts: () => Promise<void>;
   
   // Checkout
   validateCheckout: (walletBalance: number) => Promise<CheckoutValidation>;
@@ -72,7 +66,15 @@ interface CartProviderProps {
 // Cart Provider Component
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, dispatch] = useReducer(cartReducer, initialCartState);
-  const [drafts, setDrafts] = React.useState<CartDraft[]>([]);
+  
+  // Retry functionality for failed operations
+  const { executeWithRetry } = useRetry({
+    maxRetries: 3,
+    retryDelay: 1000,
+    onRetry: (attempt) => {
+      console.log(`Retrying cart operation, attempt ${attempt}`);
+    }
+  });
 
   // Initialize storage and load cart data on mount
   useEffect(() => {
@@ -86,10 +88,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         // Load cart items
         const savedItems = CartStorageService.loadCartItems();
         dispatch(cartActions.loadCart(savedItems));
-        
-        // Load drafts
-        const savedDrafts = CartStorageService.loadDrafts();
-        setDrafts(savedDrafts);
         
       } catch (error) {
         console.error('Error initializing cart:', error);
@@ -118,44 +116,46 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   // Add event to cart
   const addEvent = useCallback(async (event: SportEvents): Promise<void> => {
-    try {
-      dispatch(cartActions.setLoading(true));
-      dispatch(cartActions.clearError());
+    return executeWithRetry(async () => {
+      try {
+        dispatch(cartActions.setLoading(true));
+        dispatch(cartActions.clearError());
 
-      // Validate event
-      const eventValidation = CartValidationRules.validateEvent(event);
-      if (!eventValidation.isValid) {
-        throw new Error(eventValidation.errors[0]);
+        // Validate event
+        const eventValidation = CartValidationRules.validateEvent(event);
+        if (!eventValidation.isValid) {
+          throw new Error(eventValidation.errors[0]);
+        }
+
+        // Validate cart limits
+        const limitsValidation = CartValidationRules.validateCartLimits(cart.items, event);
+        if (!limitsValidation.isValid) {
+          throw new Error(limitsValidation.errors[0]);
+        }
+
+        // Create cart event
+        const cartEvent: CartEvent = {
+          ...event,
+          cartId: `cart-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          addedAt: new Date(),
+          selectedMoments: [],
+          isConfigured: false,
+          estimatedPrice: event.moments?.[0]?.price || event.momentPrices?.[0]?.price || 0,
+          finalPrice: undefined
+        };
+
+        dispatch(cartActions.addEvent(cartEvent));
+
+      } catch (error) {
+        console.error('Error adding event to cart:', error);
+        const handledError = CartErrorHandler.handle(error, 'addEvent');
+        dispatch(cartActions.setError(handledError.message));
+        throw error;
+      } finally {
+        dispatch(cartActions.setLoading(false));
       }
-
-      // Validate cart limits
-      const limitsValidation = CartValidationRules.validateCartLimits(cart.items, event);
-      if (!limitsValidation.isValid) {
-        throw new Error(limitsValidation.errors[0]);
-      }
-
-      // Create cart event
-      const cartEvent: CartEvent = {
-        ...event,
-        cartId: `cart-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        addedAt: new Date(),
-        selectedMoments: [],
-        isConfigured: false,
-        estimatedPrice: event.moments[0]?.price || 0,
-        finalPrice: undefined
-      };
-
-      dispatch(cartActions.addEvent(cartEvent));
-
-    } catch (error) {
-      console.error('Error adding event to cart:', error);
-      const handledError = CartErrorHandler.handle(error, 'addEvent');
-      dispatch(cartActions.setError(handledError.message));
-      throw error;
-    } finally {
-      dispatch(cartActions.setLoading(false));
-    }
-  }, [cart.items]);
+    });
+  }, [cart.items, executeWithRetry]);
 
   // Remove event from cart
   const removeEvent = useCallback(async (cartId: string): Promise<void> => {
@@ -284,97 +284,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
   }, []);
 
-  // Save cart as draft
-  const saveDraft = useCallback(async (name: string, description?: string): Promise<string> => {
-    try {
-      dispatch(cartActions.setLoading(true));
-      dispatch(cartActions.clearError());
 
-      if (cart.items.length === 0) {
-        throw new Error('No se puede guardar un carrito vacío como borrador');
-      }
-
-      const draft: CartDraft = {
-        id: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        name,
-        description,
-        items: cart.items,
-        totalPrice: cart.totalPrice,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: []
-      };
-
-      CartStorageService.saveDraft(draft);
-      setDrafts(prev => [...prev, draft]);
-      
-      dispatch(cartActions.saveDraftSuccess(draft.id));
-      
-      return draft.id;
-
-    } catch (error) {
-      console.error('Error saving draft:', error);
-      const handledError = CartErrorHandler.handle(error, 'saveDraft');
-      dispatch(cartActions.setError(handledError.message));
-      throw error;
-    } finally {
-      dispatch(cartActions.setLoading(false));
-    }
-  }, [cart.items, cart.totalPrice]);
-
-  // Load draft into cart
-  const loadDraft = useCallback(async (draftId: string): Promise<void> => {
-    try {
-      dispatch(cartActions.setLoading(true));
-      dispatch(cartActions.clearError());
-
-      const draft = drafts.find(d => d.id === draftId);
-      if (!draft) {
-        throw new Error('Borrador no encontrado');
-      }
-
-      dispatch(cartActions.loadDraft(draft.items));
-
-    } catch (error) {
-      console.error('Error loading draft:', error);
-      const handledError = CartErrorHandler.handle(error, 'loadDraft');
-      dispatch(cartActions.setError(handledError.message));
-      throw error;
-    } finally {
-      dispatch(cartActions.setLoading(false));
-    }
-  }, [drafts]);
-
-  // Delete draft
-  const deleteDraft = useCallback(async (draftId: string): Promise<void> => {
-    try {
-      dispatch(cartActions.setLoading(true));
-      dispatch(cartActions.clearError());
-
-      CartStorageService.deleteDraft(draftId);
-      setDrafts(prev => prev.filter(d => d.id !== draftId));
-
-    } catch (error) {
-      console.error('Error deleting draft:', error);
-      const handledError = CartErrorHandler.handle(error, 'deleteDraft');
-      dispatch(cartActions.setError(handledError.message));
-      throw error;
-    } finally {
-      dispatch(cartActions.setLoading(false));
-    }
-  }, []);
-
-  // Refresh drafts
-  const refreshDrafts = useCallback(async (): Promise<void> => {
-    try {
-      const savedDrafts = CartStorageService.loadDrafts();
-      setDrafts(savedDrafts);
-    } catch (error) {
-      console.error('Error refreshing drafts:', error);
-      const handledError = CartErrorHandler.handle(error, 'refreshDrafts');
-      dispatch(cartActions.setError(handledError.message));
-    }
-  }, []);
 
   // Validate checkout
   const validateCheckout = useCallback(async (walletBalance: number): Promise<CheckoutValidation> => {
@@ -400,6 +310,69 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       };
     }
   }, [cart]);
+
+  // Update item quantity in cart
+  const updateItemQuantity = useCallback(async (cartId: string, momentType: string, newQuantity: number): Promise<void> => {
+    try {
+      dispatch(cartActions.setLoading(true));
+      dispatch(cartActions.clearError());
+
+      const cartItem = cart.items.find(item => item.cartId === cartId);
+      if (!cartItem) {
+        throw new Error('Item not found in cart');
+      }
+
+      const updatedMoments = cartItem.selectedMoments?.map(moment => 
+        moment.moment === momentType 
+          ? { ...moment, quantity: Math.max(1, newQuantity) }
+          : moment
+      ) || [];
+
+      const finalPrice = updatedMoments.reduce((sum, moment) => sum + (moment.price * moment.quantity), 0);
+
+      dispatch(cartActions.updateEvent(cartId, { 
+        selectedMoments: updatedMoments,
+        finalPrice
+      }));
+
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
+      const handledError = CartErrorHandler.handle(error, 'updateQuantity');
+      dispatch(cartActions.setError(handledError.message));
+      throw error;
+    } finally {
+      dispatch(cartActions.setLoading(false));
+    }
+  }, [cart.items]);
+
+  // Check for cart conflicts and resolve them
+  const resolveCartConflicts = useCallback(async (): Promise<void> => {
+    try {
+      const storedItems = CartStorageService.loadCartItems();
+      const currentItems = cart.items;
+
+      // Simple conflict resolution: merge and keep most recent
+      const mergedItems = [...currentItems];
+      
+      storedItems.forEach(storedItem => {
+        const existingIndex = mergedItems.findIndex(item => item.id === storedItem.id);
+        if (existingIndex >= 0) {
+          // Keep the most recently updated item
+          if (new Date(storedItem.addedAt) > new Date(mergedItems[existingIndex].addedAt)) {
+            mergedItems[existingIndex] = storedItem;
+          }
+        } else {
+          mergedItems.push(storedItem);
+        }
+      });
+
+      dispatch(cartActions.loadCart(mergedItems));
+      await CartStorageService.saveCartItems(mergedItems);
+
+    } catch (error) {
+      console.error('Error resolving cart conflicts:', error);
+    }
+  }, [cart.items]);
 
   // Process checkout (placeholder - would integrate with actual payment system)
   const processCheckout = useCallback(async (walletBalance: number): Promise<CheckoutResult> => {
@@ -473,7 +446,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const contextValue: CartContextType = {
     // State
     cart,
-    drafts,
     
     // Cart Operations
     addEvent,
@@ -488,12 +460,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     // Cart Management
     toggleCart,
     refreshCart,
-    
-    // Draft Operations
-    saveDraft,
-    loadDraft,
-    deleteDraft,
-    refreshDrafts,
+    updateItemQuantity,
+    resolveCartConflicts,
     
     // Checkout
     validateCheckout,

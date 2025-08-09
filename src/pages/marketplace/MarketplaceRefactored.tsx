@@ -3,14 +3,14 @@
  * Modular, performant, and accessible marketplace for digital screens
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { LayoutList, Map, Filter, Layers } from 'lucide-react';
+import { LayoutList, Map, Filter, Layers, Monitor } from 'lucide-react';
 
 // Refactored Components
 import { SearchHeader } from './components/search/SearchHeader';
-import { ModernFilterSystem } from './components/filters/ModernFilterSystem';
+import { SmartFilterSystem } from './components/filters/SmartFilterSystem';
 import { MobileMarketplaceInterface } from './components/MobileMarketplaceInterface';
 import { ScreenList } from './components/screens/ScreenList';
 import { MarketplaceErrorBoundary } from './components/common/ErrorBoundary';
@@ -21,6 +21,7 @@ import { MapContainer } from './components/map/MapContainer';
 import { useMarketplaceData } from './hooks/useMarketplaceData';
 import { useDebounce } from './hooks/useDebounce';
 import { useSSPInventory } from './hooks/useSSPInventory';
+import { useSmartFilters } from './hooks/useSmartFilters';
 
 // Types
 import { Screen, FilterState, ViewMode, FilterOptions } from './types';
@@ -164,6 +165,17 @@ export function MarketplaceRefactored() {
     initializeApiServices();
   }, []);
   
+  // Smart filters hook
+  const {
+    filters: smartFilters,
+    filterOptions: smartFilterOptions,
+    updateFilters: updateSmartFilters,
+    activeFilterCount: smartActiveFilterCount,
+    hasActiveFilters,
+    clearAllFilters,
+    getFilterQuery
+  } = useSmartFilters();
+
   // SSP Inventory Hook
   const { sspScreens, loading: sspLoading, totalSSPScreens, inventoryStats } = useSSPInventory();
   
@@ -194,6 +206,7 @@ export function MarketplaceRefactored() {
     loading,
     error,
     updateFilters,
+    updateScreens,
     activeFilterCount,
     // API methods
     fetchScreens,
@@ -211,46 +224,32 @@ export function MarketplaceRefactored() {
     // initialScreens: convertedInitialScreens // Commented out to use real API
   });
 
-  // Load real screens from API on mount
+  // Load real screens from API on mount with fallback to demo data
   useEffect(() => {
-    // console.log('🚀 Loading screens from real API endpoint: api/Screens/all on component mount');
-    
-    // Test the endpoint directly first
-    const testEndpoint = async () => {
+    const loadScreensWithFallback = async () => {
       try {
-        // console.log('🧪 Testing endpoint directly: /api/Screens/all');
-        const response = await fetch('/api/Screens/all');
-        // console.log('📡 Direct endpoint test:', {
-        //   status: response.status,
-        //   statusText: response.statusText,
-        //   ok: response.ok
-        // });
-        
-        if (response.ok) {
-          const data = await response.json();
-          // console.log('✅ Direct endpoint data:', {
-          //   dataType: typeof data,
-          //   isArray: Array.isArray(data),
-          //   length: Array.isArray(data) ? data.length : 'N/A',
-          //   sampleIds: Array.isArray(data) ? data.slice(0, 3).map((item: any) => item.id) : 'N/A'
-          // });
-        } else {
-          const errorText = await response.text();
-          // console.error('❌ Direct endpoint error:', errorText);
-        }
+        // Try to fetch from API first
+        await fetchScreens();
       } catch (error) {
-        // console.error('❌ Direct endpoint fetch failed:', error);
+        console.warn('⚠️ API not available, using demo data as fallback:', error);
+        
+        // If API fails, use demo data as fallback
+        const fallbackScreens = convertDemoScreensToScreens(demoScreens);
+        
+        // Update the marketplace data hook with fallback data
+        updateScreens(fallbackScreens);
+        
+        console.log('✅ Loaded fallback demo data:', {
+          screensCount: fallbackScreens.length,
+          sampleScreens: fallbackScreens.slice(0, 3).map(s => ({ id: s.id, name: s.name }))
+        });
       }
     };
 
-    testEndpoint();
-    
-    // Always fetch from real API since we're not using initial screens
-    // console.log('🔄 Fetching screens from real API...');
-    fetchScreens().catch(error => {
-      // console.error('❌ Failed to load real screens from API:', error);
-      // console.log('💡 Check if backend is running and https://api.shareflow.me/api/Screens/all endpoint exists');
-    });
+    // Only load if we don't have screens yet
+    if (screens.length === 0 && !loading) {
+      loadScreensWithFallback();
+    }
   }, []); // Only run once on mount
 
   // Combine API screens with SSP inventory
@@ -276,76 +275,192 @@ export function MarketplaceRefactored() {
   const [viewMode, setViewMode] = useState<ViewMode>('sectioned');
   const [showCircuits, setShowCircuits] = useState(false); // Changed to false so API screens are shown by default
 
-  // Estado local para el input de búsqueda (separado de los filtros)
-  const [searchQuery, setSearchQuery] = useState(filters.search.query);
+  // Estado local para el input de búsqueda (completamente independiente)
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Debounced search para actualizar los filtros sin afectar el input
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
+  // Ref para evitar ciclos infinitos
+  const isUpdatingFiltersRef = useRef(false);
+
   // Actualizar filtros solo cuando el debounced query cambie
   useEffect(() => {
-    if (debouncedSearchQuery !== filters.search.query) {
-      // Crear nuevo objeto de filtros con la query actualizada
+    // Evitar ciclos infinitos
+    if (isUpdatingFiltersRef.current) return;
+    
+    // Solo actualizar si realmente cambió
+    if (debouncedSearchQuery !== smartFilters.search.query) {
+      isUpdatingFiltersRef.current = true;
       const newFilters = {
-        ...filters,
-        search: { ...filters.search, query: debouncedSearchQuery }
+        ...smartFilters,
+        search: { ...smartFilters.search, query: debouncedSearchQuery }
       };
-      updateFilters(newFilters);
+      updateSmartFilters(newFilters);
+      
+      // Reset flag after a short delay
+      setTimeout(() => {
+        isUpdatingFiltersRef.current = false;
+      }, 50);
     }
-  }, [debouncedSearchQuery]); // Solo depender del debounced query para evitar ciclos
+  }, [debouncedSearchQuery]); // Solo depender del debounced query
 
-  // Sincronizar el estado local cuando los filtros cambien externamente (por ejemplo, al limpiar filtros)
+  // Auto-switch to list view when there's an active search or filters
   useEffect(() => {
-    // Solo sincronizar si el cambio viene de fuera (no del debounce actual)
-    if (filters.search.query !== searchQuery && filters.search.query !== debouncedSearchQuery) {
-      setSearchQuery(filters.search.query);
+    if ((smartFilters.search.query || hasActiveFilters) && viewMode === 'sectioned') {
+      setViewMode('compact');
     }
-  }, [filters.search.query, searchQuery, debouncedSearchQuery]);
+  }, [smartFilters.search.query, hasActiveFilters, viewMode]);
 
   // Filter options based on combined screens
   const filterOptions = useMemo(() => generateFilterOptions(allCombinedScreens), [allCombinedScreens]);
 
   // Use combined screens for filtering
   const combinedFilteredScreens = useMemo(() => {
-    // Apply the same filtering logic to combined screens
+    // Helper: normalize text
+    const normalizeText = (text: string | undefined | null): string =>
+      (text ?? '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+    // Helper: aliases for common spellings without diacritics
+    const applyAliases = (text: string): string =>
+      text
+        .replace(/\bitagu[ui]\b/g, 'itagui')
+        .replace(/\bmedellin\b/g, 'medellin')
+        .replace(/\bbogota\b/g, 'bogota');
+
+    // Source of truth: debounced query to avoid stale filter sync
+    const effectiveQueryRaw = debouncedSearchQuery || smartFilters.search.query || '';
+    const effectiveQuery = applyAliases(normalizeText(effectiveQueryRaw));
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Filtering screens:', {
+        searchQuery: effectiveQueryRaw,
+        totalScreens: allCombinedScreens.length,
+        sampleScreenNames: allCombinedScreens.slice(0, 3).map(s => s.name)
+      });
+    }
+
+    const queryTokens = effectiveQuery
+      .split(/\s+/)
+      .filter(token => token.length >= 2);
+
     return allCombinedScreens.filter(screen => {
-      // Apply search filter
-      if (filters.search.query) {
-        const query = filters.search.query.toLowerCase();
-        const matchesSearch = screen.name.toLowerCase().includes(query) ||
-          screen.location.toLowerCase().includes(query) ||
-          screen.category?.name?.toLowerCase().includes(query);
-        if (!matchesSearch) return false;
+      // Text search across name, location, category
+      if (queryTokens.length > 0) {
+        const nameText = normalizeText(screen.name);
+        const locationText = applyAliases(normalizeText(screen.location));
+        const categoryText = normalizeText(screen.category?.name || '');
+
+        const locationWords = locationText
+          .split(/[\,\s]+/)
+          .map(word => word.trim())
+          .filter(Boolean);
+
+        // AND across tokens: each token must match at least one field
+        const allTokensMatch = queryTokens.every(token => {
+          const locationMatch = locationWords.some(word =>
+            word === token || (token.length >= 3 && word.startsWith(token))
+          );
+          const nameMatch = token.length >= 3 && nameText.includes(token);
+          const categoryMatch = token.length >= 3 && categoryText.includes(token);
+          return locationMatch || nameMatch || categoryMatch;
+        });
+
+        if (!allTokensMatch) return false;
       }
 
       // Apply location filters
-      if (filters.location.cities.length > 0) {
-        const matchesLocation = filters.location.cities.some(city =>
-          screen.location.toLowerCase().includes(city.toLowerCase())
+      if (smartFilters.location.cities.length > 0) {
+        const matchesLocation = smartFilters.location.cities.some(city =>
+          normalizeText(screen.location).includes(normalizeText(city))
         );
         if (!matchesLocation) return false;
       }
 
       // Apply category filters
-      if (filters.category.categories.length > 0) {
-        const matchesCategory = filters.category.categories.includes(screen.category?.id || '');
+      if (smartFilters.category.categories.length > 0) {
+        const matchesCategory = smartFilters.category.categories.includes(screen.category?.id || '');
         if (!matchesCategory) return false;
       }
 
       // Apply feature filters
-      if (filters.features.allowsMoments !== null) {
-        const matchesMoments = screen.pricing?.allowMoments === filters.features.allowsMoments;
+      if (smartFilters.features.allowsMoments !== null) {
+        const matchesMoments = screen.pricing?.allowMoments === smartFilters.features.allowsMoments;
         if (!matchesMoments) return false;
       }
 
-      if (filters.features.rating !== null) {
-        const matchesRating = screen.rating >= (filters.features.rating || 0);
+      if (smartFilters.features.rating !== null) {
+        const matchesRating = screen.rating >= (smartFilters.features.rating || 0);
         if (!matchesRating) return false;
       }
 
       return true;
     });
-  }, [allCombinedScreens, filters]);
+  }, [allCombinedScreens, debouncedSearchQuery, smartFilters]);
+
+  // Debug logging for filtered results
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🎯 Filter Results:', {
+        searchQuery: smartFilters.search.query,
+        inputQuery: searchQuery,
+        debouncedQuery: debouncedSearchQuery,
+        totalScreens: allCombinedScreens.length,
+        filteredScreens: combinedFilteredScreens.length,
+        filteredScreenNames: combinedFilteredScreens.slice(0, 5).map(s => s.name),
+        filteredScreenLocations: combinedFilteredScreens.slice(0, 5).map(s => s.location),
+        hasResults: combinedFilteredScreens.length > 0,
+        isLoading: loading || sspLoading,
+        viewMode,
+        hasActiveFilters,
+        shouldShowSections: viewMode === 'sectioned' && !smartFilters.search.query && !hasActiveFilters
+      });
+      
+      // Test específico para búsquedas
+      if (smartFilters.search.query.toLowerCase().includes('medellin')) {
+        const medellinScreens = allCombinedScreens.filter(screen => 
+          screen.location.toLowerCase().includes('medellín') || 
+          screen.location.toLowerCase().includes('medellin')
+        );
+        console.log('🏙️ Medellín Test:', {
+          totalMedellinScreens: medellinScreens.length,
+          medellinScreenNames: medellinScreens.map(s => s.name),
+          medellinScreenLocations: medellinScreens.map(s => s.location),
+          filteredMedellinScreens: combinedFilteredScreens.filter(screen => 
+            screen.location.toLowerCase().includes('medellín') || 
+            screen.location.toLowerCase().includes('medellin')
+          ).length
+        });
+      }
+      
+      // Test específico para búsqueda de Metro
+      if (smartFilters.search.query.toLowerCase().includes('metro')) {
+        const metroScreens = allCombinedScreens.filter(screen => 
+          screen.name.toLowerCase().includes('metro') || 
+          screen.location.toLowerCase().includes('metro')
+        );
+        console.log('🚇 Metro Test:', {
+          totalMetroScreens: metroScreens.length,
+          metroScreenNames: metroScreens.map(s => s.name),
+          metroScreenLocations: metroScreens.map(s => s.location),
+          filteredMetroScreens: combinedFilteredScreens.filter(screen => 
+            screen.name.toLowerCase().includes('metro') || 
+            screen.location.toLowerCase().includes('metro')
+          ).length,
+          shouldShow: 2, // Solo deberían mostrarse 2 pantallas
+          isCorrect: combinedFilteredScreens.filter(screen => 
+            screen.name.toLowerCase().includes('metro') || 
+            screen.location.toLowerCase().includes('metro')
+          ).length === 2
+        });
+      }
+    }
+  }, [smartFilters.search.query, searchQuery, debouncedSearchQuery, allCombinedScreens.length, combinedFilteredScreens.length, loading, sspLoading, viewMode, hasActiveFilters, allCombinedScreens]);
 
   // Group screens by circuits (for list view only)
   const { individualScreens } = useMemo(() => {
@@ -389,7 +504,7 @@ export function MarketplaceRefactored() {
   useEffect(() => {
     if (viewMode === 'sectioned') {
       const userId = undefined; // For now, no user ID for anonymous users
-      const location = filters.location.cities.length > 0 ? filters.location.cities[0] : undefined;
+      const location = smartFilters.location.cities.length > 0 ? smartFilters.location.cities[0] : undefined;
       
       loadSections({
         userId,
@@ -398,7 +513,7 @@ export function MarketplaceRefactored() {
         forceRefresh: false
       });
     }
-  }, [viewMode, filters, debouncedSearchQuery, loadSections]);
+  }, [viewMode, smartFilters, debouncedSearchQuery, loadSections]);
 
   // Refresh sections handler
   const handleRefreshSections = useCallback(async () => {
@@ -436,11 +551,26 @@ export function MarketplaceRefactored() {
   //   }
   // }, [viewMode, combinedFilteredScreens, screens, sspScreens, allCombinedScreens]);
 
+  // Simple debug logging
+  const logSearchDebug = useCallback((query: string) => {
+    if (process.env.NODE_ENV === 'development' && query.length >= 3) {
+      console.log(`🔍 Searching for: "${query}"`);
+      console.log(`Results: ${combinedFilteredScreens.length} screens found`);
+    }
+  }, [combinedFilteredScreens.length]);
+
   // Event handlers
   const handleSearchChange = useCallback((query: string) => {
+    // Debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Search query changed:', query);
+    }
     // Actualizar solo el estado local, los filtros se actualizarán via debounce
     setSearchQuery(query);
-  }, []);
+    
+    // Log search results after a short delay
+    setTimeout(() => logSearchDebug(query), 500);
+  }, [searchQuery, logSearchDebug]);
 
   const handleScreenSelect = useCallback((screen: Screen) => {
     const targetPath = `/screens/${screen.id}`;
@@ -485,8 +615,12 @@ export function MarketplaceRefactored() {
   }, []);
 
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
-    updateFilters(newFilters);
-  }, [updateFilters]);
+    // Si los filtros se están limpiando completamente, también limpiar el input local
+    if (newFilters.search.query === '' && searchQuery !== '') {
+      setSearchQuery('');
+    }
+    updateSmartFilters(newFilters);
+  }, [updateSmartFilters]);
 
 
 
@@ -510,7 +644,7 @@ export function MarketplaceRefactored() {
           <MobileMarketplaceInterface
             sections={hookSections}
             screens={combinedFilteredScreens}
-            filters={filters}
+            filters={smartFilters}
             onFiltersChange={handleFiltersChange}
             onScreenSelect={handleScreenSelect}
             onFavoriteChange={handleFavoriteChange}
@@ -526,7 +660,7 @@ export function MarketplaceRefactored() {
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
             onInfoClick={handleInfoClick}
-            filteredCount={filteredScreens.length}
+            filteredCount={combinedFilteredScreens.length}
             loading={loading}
             availableScreens={screens}
           />
@@ -534,6 +668,24 @@ export function MarketplaceRefactored() {
           {/* Main Content */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           
+          {/* Connection Status Indicator */}
+          {screens.length > 0 && screens.length === convertedInitialScreens.length && (
+            <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="flex items-center gap-2 text-sm text-amber-700">
+                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+                <span>
+                  Usando datos de demostración - API no disponible temporalmente
+                </span>
+                <button
+                  onClick={() => fetchScreens().catch(() => {})}
+                  className="text-xs text-amber-600 hover:text-amber-800 underline ml-2"
+                >
+                  Reintentar conexión
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* SSP Inventory Indicator */}
           {totalSSPScreens > 0 && (
             <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -549,13 +701,13 @@ export function MarketplaceRefactored() {
             </div>
           )}
 
-          {/* Compact Filter System */}
+          {/* Smart Filter System */}
           <div className="mb-4">
-            <ModernFilterSystem
-              filters={filters}
+            <SmartFilterSystem
+              filters={smartFilters}
               onFiltersChange={handleFiltersChange}
-              availableOptions={filterOptions}
-              resultCount={filteredScreens.length}
+              availableOptions={smartFilterOptions}
+              resultCount={combinedFilteredScreens.length}
             />
           </div>
 
@@ -563,17 +715,22 @@ export function MarketplaceRefactored() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {viewMode === 'sectioned' ? 'Secciones personalizadas' : 'Pantallas disponibles'}
+                {viewMode === 'sectioned' && !smartFilters.search.query && !hasActiveFilters ? 'Secciones personalizadas' : 'Pantallas disponibles'}
               </h2>
               <p className="text-gray-600 mt-1">
-                {viewMode === 'sectioned' ? (
+                {viewMode === 'sectioned' && !smartFilters.search.query && !hasActiveFilters ? (
                   <>
-                    {activeFilterCount > 0 && `${activeFilterCount} ${activeFilterCount === 1 ? 'filtro aplicado' : 'filtros aplicados'}`}
+                    Contenido personalizado basado en tus preferencias
                   </>
                 ) : (
                   <>
-                    {filteredScreens.length} {filteredScreens.length === 1 ? 'pantalla encontrada' : 'pantallas encontradas'}
-                    {activeFilterCount > 0 && ` con ${activeFilterCount} ${activeFilterCount === 1 ? 'filtro' : 'filtros'}`}
+                    {combinedFilteredScreens.length} {combinedFilteredScreens.length === 1 ? 'pantalla encontrada' : 'pantallas encontradas'}
+                    {smartFilters.search.query && (
+                      <span className="text-blue-600">
+                        {' '}para "{smartFilters.search.query}"
+                      </span>
+                    )}
+                    {smartActiveFilterCount > 0 && ` con ${smartActiveFilterCount} ${smartActiveFilterCount === 1 ? 'filtro' : 'filtros'}`}
                     {totalSSPScreens > 0 && (
                       <span className="text-blue-600">
                         {' '}(incluyendo {totalSSPScreens} via SSPs)
@@ -630,13 +787,55 @@ export function MarketplaceRefactored() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Error al cargar pantallas</h3>
               <p className="text-gray-600 mb-6">{typeof error === 'string' ? error : error?.message || 'Error desconocido'}</p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  // Try to refetch screens
+                  fetchScreens().catch(() => {
+                    // If refetch fails, reload page
+                    window.location.reload();
+                  });
+                }}
                 className="px-6 py-3 bg-[#353FEF] text-white rounded-lg font-medium hover:bg-[#2A32C5] transition-colors"
               >
                 Reintentar
               </button>
             </div>
-          ) : viewMode === 'sectioned' ? (
+          ) : (loading || sspLoading) && allCombinedScreens.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <Monitor className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Cargando pantallas...</h3>
+              <p className="text-gray-600">Obteniendo las mejores opciones para ti</p>
+            </div>
+          ) : combinedFilteredScreens.length === 0 && !loading && !sspLoading ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Filter className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron pantallas</h3>
+              <p className="text-gray-600 mb-6">
+                {smartFilters.search.query ? (
+                  <>
+                    No encontramos pantallas que coincidan con "{smartFilters.search.query}".
+                    <br />
+                    <span className="text-sm text-gray-500 mt-2 block">
+                      Intenta buscar por ciudad (ej: Bogotá, Medellín), categoría o nombre de pantalla.
+                    </span>
+                  </>
+                ) : (
+                  <>No hay pantallas disponibles con los filtros seleccionados</>
+                )}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="px-6 py-3 bg-[#353FEF] text-white rounded-lg font-medium hover:bg-[#2A32C5] transition-colors"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+          ) : viewMode === 'sectioned' && !smartFilters.search.query && !hasActiveFilters ? (
             <SectionedScreenGrid
               sections={hookSections}
               onScreenSelect={handleScreenSelect}
@@ -656,12 +855,30 @@ export function MarketplaceRefactored() {
               />
             </div>
           ) : (
-            <ScreenList
-              screens={finalScreens}
-              onScreenSelect={handleScreenSelect}
-              onFavoriteChange={handleFavoriteChange}
-              loading={loading || sspLoading}
-            />
+            <>
+              {/* Debug info for development */}
+              {process.env.NODE_ENV === 'development' && smartFilters.search.query && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="text-sm text-yellow-800">
+                    <strong>Debug - Búsqueda "{smartFilters.search.query}":</strong>
+                    <br />
+                    Pantallas filtradas: {combinedFilteredScreens.length}
+                    <br />
+                    Pantallas finales: {finalScreens.length}
+                    <br />
+                    Nombres: {finalScreens.slice(0, 3).map(s => s.name).join(', ')}
+                    {finalScreens.length > 3 && '...'}
+                  </div>
+                </div>
+              )}
+              
+              <ScreenList
+                screens={finalScreens}
+                onScreenSelect={handleScreenSelect}
+                onFavoriteChange={handleFavoriteChange}
+                loading={loading || sspLoading}
+              />
+            </>
           )}
           
           {/* Debug info for list view */}
