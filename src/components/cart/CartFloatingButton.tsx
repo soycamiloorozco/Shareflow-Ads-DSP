@@ -38,7 +38,7 @@ export const CartFloatingButton: React.FC<CartFloatingButtonProps> = ({
           onClick={toggleCart}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-[#353FEF] hover:bg-[#2A32C5] text-white rounded-2xl shadow-[0_8px_32px_rgba(53,63,239,0.25)] hover:shadow-[0_12px_40px_rgba(53,63,239,0.35)] transition-all duration-200 p-4 flex items-center gap-3 min-w-[200px] backdrop-blur-sm"
+          className="bg-[#353FEF] hover:bg-[#2A32C5] text-white rounded-2xl shadow-[0_8px_32px_rgba(53,63,239,0.25)] hover:shadow-[0_12px_40px_rgba(53,63,239,0.35)] transition-all duration-200 p-3 sm:p-4 flex items-center gap-3 sm:min-w-[200px] backdrop-blur-sm"
           aria-label={`Abrir carrito (${cart.totalItems} eventos)`}
         >
           {/* Cart Icon with Badge */}
@@ -54,8 +54,8 @@ export const CartFloatingButton: React.FC<CartFloatingButtonProps> = ({
             </motion.div>
           </div>
 
-          {/* Cart Summary */}
-          <div className="flex flex-col items-start">
+          {/* Cart Summary (hidden on mobile) */}
+          <div className="hidden sm:flex flex-col items-start">
             <span className="text-sm font-medium">
               {cart.totalItems} evento{cart.totalItems !== 1 ? 's' : ''}
             </span>

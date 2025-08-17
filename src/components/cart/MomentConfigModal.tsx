@@ -873,7 +873,7 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
         onClick={onClose}
       >
         <motion.div
@@ -881,11 +881,16 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.15)] w-full max-w-6xl max-h-[90vh] overflow-hidden border-0"
+          className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.15)] w-full sm:max-w-6xl h-[90vh] overflow-hidden border-0 flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Drag handle (mobile) */}
+          <div className="sm:hidden flex justify-center pt-2">
+            <div className="w-10 h-1.5 rounded-full bg-neutral-300" />
+          </div>
+
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#353FEF] via-[#4C5EF7] to-[#2A32C5] text-white p-6">
+          <div className="bg-gradient-to-r from-[#353FEF] via-[#4C5EF7] to-[#2A32C5] text-white p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
@@ -897,7 +902,7 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-2xl font-bold">
+                    <h2 className="text-xl sm:text-2xl font-bold leading-tight">
                     {event.homeTeamName} vs {event.awayTeamName}
                   </h2>
                     {initialMoments && initialMoments.length > 0 && (
@@ -907,7 +912,7 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-white/80 text-sm">
+                  <div className="flex items-center gap-3 sm:gap-4 text-white/80 text-xs sm:text-sm">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       {new Date(event.eventDate).toLocaleDateString('es-CO')}
@@ -935,7 +940,7 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex flex-col lg:flex-row max-h-[calc(90vh-200px)]">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto">
             {/* Step Indicator */}
             <div className="px-6 py-4 bg-white/50 backdrop-blur-sm lg:hidden">
               <div className="flex items-center justify-center space-x-4">
@@ -958,7 +963,7 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1">
               {currentStep === 'moments' ? (
                 <div className="h-full flex flex-col">
                   {/* Period Selector */}
@@ -1515,7 +1520,7 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-2 sm:static sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm pt-3">
                 {currentStep === 'creativities' && (
                   <button
                     onClick={() => setCurrentStep('moments')}
