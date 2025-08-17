@@ -127,18 +127,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white/95 backdrop-blur-xl shadow-[0_16px_64px_rgba(0,0,0,0.15)] z-50 flex flex-col"
+            className="fixed right-0 top-0 h-full w-full max-w-[420px] bg-white/95 backdrop-blur-xl shadow-[0_16px_64px_rgba(0,0,0,0.15)] z-50 flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-labelledby="cart-title"
             aria-describedby="cart-description"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between px-4 py-3 bg-white/50 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center shadow-sm">
-                  <ShoppingBag className="w-5 h-5 text-white" />
-                </div>
                 <div>
                   <h2 id="cart-title" className="text-lg font-semibold text-gray-900">
                     Carrito de Eventos
@@ -151,7 +148,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-white/50 rounded-lg transition-colors backdrop-blur-sm"
+                className="p-2 hover:bg-white/70 rounded-xl transition-colors backdrop-blur-sm"
                 aria-label="Cerrar carrito"
               >
                 <X className="w-5 h-5 text-gray-600" />
@@ -251,7 +248,7 @@ interface CartItemListProps {
 }
 
 const CartItemList: React.FC<CartItemListProps> = ({ items, onRemoveItem, onConfigureMoments }) => (
-  <div className="p-4 space-y-4">
+  <div className="p-3 space-y-3">
     {items.map((item, index) => (
       <CartItemCard 
         key={item.cartId} 
@@ -300,11 +297,11 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, index, onRemove, onCo
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="bg-white/80 backdrop-blur-sm rounded-xl p-4 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+      className="bg-white/80 backdrop-blur-sm rounded-xl p-3 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
     >
       {/* Event Header */}
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-16 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+        <div className="w-14 h-11 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
           <img 
             src={`${constants.base_path}/${item.stadiumPhotos[0]}`}
             alt={item.stadiumName}
@@ -484,19 +481,11 @@ const CartFooter: React.FC<CartFooterProps> = ({
   };
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm p-4 space-y-4">
-      {/* Summary */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600">Total eventos:</span>
-          <span className="font-medium">{totalItems}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600">Total estimado:</span>
-          <span className="text-lg font-bold text-gray-900">
-            {formatPrice(totalPrice)}
-          </span>
-        </div>
+    <div className="bg-white/70 backdrop-blur-sm p-4 space-y-4 shadow-[0_-10px_30px_rgba(0,0,0,0.06)]">
+      {/* Compact summary */}
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-gray-600">Carrito</span>
+        <span className="font-semibold text-gray-900">{totalItems} · {formatPrice(totalPrice)}</span>
       </div>
 
       {/* Actions */}
@@ -520,7 +509,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
       </div>
 
       {/* Note */}
-      <p className="text-xs text-gray-500 text-center">
+      <p className="text-[10px] text-gray-500 text-center mt-1">
         Los eventos permanecen en tu carrito hasta que los compres o los elimines
       </p>
     </div>

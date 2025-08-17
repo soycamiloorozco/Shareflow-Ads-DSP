@@ -20,7 +20,7 @@ export interface DepositResponse {
 export interface Transaction {
   id: string;
   amount: number;
-  type: 'Deposit';
+  type: 'Deposit' | 'bonus' | 'Ad Spend';
   status: 'Completed' | 'Pending' | 'Failed';
   paymentReference: string;
   description: string;

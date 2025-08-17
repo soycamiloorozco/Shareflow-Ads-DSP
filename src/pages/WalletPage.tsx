@@ -76,7 +76,7 @@ const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: (id: any) => v
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="p-3 bg-white border border-gray-200 rounded-lg focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
+      <div className="p-3 bg-white/80 backdrop-blur-sm rounded-xl focus-within:ring-2 focus-within:ring-[#353FEF]/20 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]">
         <CardElement
           options={{
             style: {
@@ -163,7 +163,7 @@ const CreditTooltip: React.FC<CreditTooltipProps> = memo(({ children, content, s
             ? 'bottom-full left-1/2 transform -translate-x-1/2 mb-3' 
             : 'bottom-full left-1/2 transform -translate-x-1/2 mb-3'
         }`}>
-          <div className="bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm rounded-2xl px-5 py-4 shadow-2xl border border-neutral-700 dark:border-neutral-300 max-w-xs backdrop-blur-sm">
+          <div className="bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm rounded-2xl px-5 py-4 shadow-2xl max-w-xs backdrop-blur-sm">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-7 h-7 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center shadow-md">
                 <span className="text-sm font-bold">💰</span>
@@ -272,7 +272,7 @@ const MotivationalBanner: React.FC<{ userType: string; bonusPercentage: number }
   }, []);
 
   return (
-    <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 border border-yellow-200 rounded-xl p-4 mb-6">
+    <div className="bg-gradient-to-r from-yellow-50/80 via-orange-50/80 to-red-50/80 rounded-xl p-4 mb-6 backdrop-blur-sm shadow-[0_2px_8px_rgba(245,158,11,0.08)]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="text-2xl">🎉</div>
@@ -871,7 +871,7 @@ const LevelsModalComponent: React.FC<LevelsModalProps> = memo(({ isOpen, onClose
           </div>
 
           {/* Current Level Preview - Disabled */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 opacity-60">
+          <div className="bg-gray-50/80 rounded-xl p-4 opacity-60 backdrop-blur-sm">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
                 <span className="text-lg opacity-50">{currentLevel.icon}</span>
@@ -906,7 +906,7 @@ const LevelsModalComponent: React.FC<LevelsModalProps> = memo(({ isOpen, onClose
               { icon: "🚀", title: "Soporte prioritario", desc: "Atención personalizada" },
               { icon: "💎", title: "Descuentos especiales", desc: "Precios preferenciales" }
             ].map((feature, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg opacity-60">
+              <div key={index} className="flex items-center gap-3 p-3 bg-white/80 rounded-xl opacity-60 backdrop-blur-sm">
                 <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                   <span className="text-sm opacity-50">{feature.icon}</span>
                 </div>
@@ -1042,10 +1042,14 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = memo(({ isOpen, 
   const IconComponent = transactionType.icon;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-neutral-800 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white dark:bg-neutral-800 w-full md:max-w-sm rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden safe-area-inset-bottom">
+        {/* Drag handle (mobile) */}
+        <div className="md:hidden flex justify-center py-2">
+          <div className="w-10 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+        </div>
         {/* Clean Header */}
-        <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-neutral-200 dark:border-neutral-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Transaction Details</h3>
           <button
             onClick={onClose}
@@ -1055,17 +1059,17 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = memo(({ isOpen, 
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {/* Amount Display - TikTok Style */}
           <div className="text-center mb-6">
-            <div className={`text-4xl font-bold mb-3 ${
+            <div className={`text-3xl md:text-4xl font-bold mb-3 ${
               transaction.amount > 0 
                 ? 'text-emerald-600 dark:text-emerald-400' 
                 : 'text-red-600 dark:text-red-400'
             }`}>
               {transaction.amount > 0 ? '+' : '-'}{formatCreditsText(Math.abs(transaction.amount))}
             </div>
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium ${
               transactionType.color === 'emerald' 
                 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' :
               transactionType.color === 'blue' 
@@ -1079,7 +1083,7 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = memo(({ isOpen, 
 
           {/* Clean Details */}
           <div className="space-y-4">
-          <div className="space-y-3">
+            <div className="space-y-3">
               <div className="flex justify-between items-start">
                 <span className="text-neutral-600 dark:text-neutral-400 text-sm">Description:</span>
                 <span className="text-neutral-900 dark:text-neutral-100 text-sm text-right max-w-56 font-medium">
@@ -1148,9 +1152,9 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = memo(({ isOpen, 
             {/* Simple Close Button */}
           <button
             onClick={onClose}
-              className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-xl font-medium text-sm transition-colors"
+            className="w-full sticky bottom-0 md:relative mt-4 px-4 py-3 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-sm font-medium transition-colors"
           >
-              Close
+            Close
           </button>
           </div>
         </div>
@@ -1427,47 +1431,46 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
           </div>
           <button
             onClick={() => setIsRechargeModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center gap-2"
+              className="bg-[#353FEF] hover:bg-[#2A32C5] text-white px-5 py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
           >
-              <Zap className="w-4 h-4" />
-              Recargar Saldo
+              Recargar
           </button>
           </div>
         </div>
 
         {/* Professional Tab Navigation */}
         <div className="mb-8">
-          <div className="border-b border-neutral-200 dark:border-neutral-700">
-            <nav className="flex space-x-8">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                  activeTab === 'dashboard'
-                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                    : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <BarChart2 className="w-4 h-4" />
-                  Dashboard
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('transactions')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                  activeTab === 'transactions'
-                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                    : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  Transacciones
-                </div>
-              </button>
-            </nav>
-          </div>
-        </div>
+          <div className="border-b border-neutral-200 dark:border-neutral-700 sticky top-0 z-20 bg-white/90 dark:bg-neutral-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-neutral-900/60">
+             <nav className="flex space-x-8">
+               <button
+                 onClick={() => setActiveTab('dashboard')}
+                 className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                   activeTab === 'dashboard'
+                     ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                     : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
+                 }`}
+               >
+                 <div className="flex items-center gap-2">
+                   <BarChart2 className="w-4 h-4" />
+                   Dashboard
+                 </div>
+               </button>
+               <button
+                 onClick={() => setActiveTab('transactions')}
+                 className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                   activeTab === 'transactions'
+                     ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                     : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
+                 }`}
+               >
+                 <div className="flex items-center gap-2">
+                   <Activity className="w-4 h-4" />
+                   Transacciones
+                 </div>
+               </button>
+             </nav>
+           </div>
+         </div>
 
         {/* Tab Content */}
         {activeTab === 'dashboard' && (
@@ -1475,24 +1478,24 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
             {/* Campaign Banner - Professional and elegant */}
         {activeBonus && (
           <div className="mb-8">
-            <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 rounded-2xl p-6 overflow-hidden">
-              {/* Subtle background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-16 -translate-y-16"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full transform -translate-x-12 translate-y-12"></div>
-              
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-xl backdrop-blur-sm">
+            <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 rounded-xl md:rounded-2xl p-4 md:p-6 overflow-hidden">
+              {/* Subtle background decoration (hidden on mobile) */}
+              <div className="hidden md:block absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-16 -translate-y-16"></div>
+              <div className="hidden md:block absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full transform -translate-x-12 translate-y-12"></div>
+
+              <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center text-xl backdrop-blur-sm">
                     {activeBonus.icon}
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold text-lg mb-1">
+                    <h3 className="text-white font-semibold text-base md:text-lg mb-1">
                         {activeBonus.name}
                       </h3>
-                    <p className="text-blue-100 text-sm mb-3 max-w-md">
+                    <p className="text-blue-100 text-xs md:text-sm mb-2 md:mb-3 max-w-md">
                       {activeBonus.description}
                     </p>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3">
                       <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
                         <Timer className="w-3 h-3" />
                         {timeLeft} días restantes
@@ -1505,7 +1508,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                   </div>
                 <button
                   onClick={() => setIsRechargeModalOpen(true)}
-                  className="bg-white text-blue-600 hover:bg-blue-50 px-5 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center gap-2"
+                  className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 md:px-5 md:py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
                 >
                   <Zap className="w-4 h-4" />
                   Aprovechar
@@ -1522,7 +1525,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
           <div className="lg:col-span-3 space-y-6">
             
             {/* Balance Card - Clean design */}
-            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6">
+            <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-neutral-600 dark:text-neutral-400 text-sm font-medium mb-2">Saldo Disponible</p>
@@ -1538,28 +1541,32 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                 </div>
               </div>
               
-              {/* Monthly Stats - Professional cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-neutral-50 dark:bg-neutral-700/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-600">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
-                      <ArrowUpRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              {/* Monthly Stats - Modern borderless pills */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-white/70 dark:bg-neutral-700/50 backdrop-blur-sm rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="inline-flex items-center gap-2 text-neutral-700 dark:text-neutral-300 text-sm font-medium">
+                      <span className="w-7 h-7 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                        <ArrowUpRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      </span>
+                      Recargado este mes
+                    </span>
                   </div>
-                    <span className="text-neutral-700 dark:text-neutral-300 text-sm font-medium">Recargado este mes</span>
-                  </div>
-                  <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                  <p className="text-xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
                     {formatBalance(monthlyRecharged)}
                   </p>
-                  </div>
-                
-                <div className="bg-neutral-50 dark:bg-neutral-700/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-600">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-red-100 dark:bg-red-900/50 rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-4 h-4 text-red-600 dark:text-red-400" />
                 </div>
-                    <span className="text-neutral-700 dark:text-neutral-300 text-sm font-medium">Gastado este mes</span>
+                
+                <div className="bg-white/70 dark:bg-neutral-700/50 backdrop-blur-sm rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="inline-flex items-center gap-2 text-neutral-700 dark:text-neutral-300 text-sm font-medium">
+                      <span className="w-7 h-7 rounded-xl bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                        <DollarSign className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      </span>
+                      Gastado este mes
+                    </span>
                   </div>
-                  <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                  <p className="text-xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
                     {formatBalance(totalDebits)}
                   </p>
                 </div>
@@ -1568,7 +1575,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
 
             {/* Credits Info Banner - Dismissible */}
             {showCreditsBanner && (
-              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
+              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 backdrop-blur-sm shadow-[0_1px_6px_rgba(53,63,239,0.08)]">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Zap className="w-4 h-4 text-white" />
@@ -1598,7 +1605,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
             {/* User Level Card - Clean and professional */}
             <div 
               onClick={() => setIsLevelsModalOpen(true)}
-              className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group"
+              className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-2xl p-6 cursor-pointer transition-all duration-200 group shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Nivel actual</span>
@@ -1652,7 +1659,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
         {activeTab === 'transactions' && (
           <div className="space-y-6">
             {/* Filters and Search Bar - TikTok Style */}
-            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+            <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div className="flex flex-col sm:flex-row gap-3 flex-1">
                   {/* Search Input */}
@@ -1663,7 +1670,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                       placeholder="Search transactions..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="w-full pl-10 pr-4 py-2 bg-white/80 dark:bg-neutral-700/70 backdrop-blur-sm rounded-xl text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-2 focus:ring-[#353FEF]/30 focus:border-transparent text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]"
                     />
                   </div>
                   
@@ -1671,7 +1678,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                   <select 
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className="px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-3 py-2 bg-white/80 dark:bg-neutral-700/70 backdrop-blur-sm rounded-xl text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-[#353FEF]/30 focus:border-transparent"
                   >
                     <option value="">All types</option>
                     <option value="Add Credits">Add Credits</option>
@@ -1683,7 +1690,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                   <select 
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-3 py-2 bg-white/80 dark:bg-neutral-700/70 backdrop-blur-sm rounded-xl text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-[#353FEF]/30 focus:border-transparent"
                   >
                     <option value="">All statuses</option>
                     <option value="Completed">Success</option>
@@ -1695,7 +1702,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                 <div className="flex gap-2">
             <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`px-4 py-2 border border-neutral-200 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                    className={`px-4 py-2 bg-white/70 dark:bg-neutral-700/50 backdrop-blur-sm text-neutral-700 dark:text-neutral-300 hover:bg-white/90 dark:hover:bg-neutral-600/70 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 ${
                       showFilters ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300' : ''
                     }`}
                   >
@@ -1718,13 +1725,13 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
                           type="date"
                           value={dateRange.start}
                           onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                          className="flex-1 px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="flex-1 px-3 py-2 bg-white/80 dark:bg-neutral-700/70 backdrop-blur-sm rounded-xl text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <input
                           type="date"
                           value={dateRange.end}
                           onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                          className="flex-1 px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="flex-1 px-3 py-2 bg-white/80 dark:bg-neutral-700/70 backdrop-blur-sm rounded-xl text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                 </div>
                 </div>
@@ -1778,8 +1785,8 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
             </div>
 
             {/* Professional Table - TikTok Style */}
-            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+            <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <div className="px-6 py-4 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                       Transactions
@@ -1823,150 +1830,142 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
           </div>
               ) : (
                 <>
-                  {/* Table Header */}
-                  <div className="bg-neutral-50 dark:bg-neutral-700/50 px-6 py-3 border-b border-neutral-200 dark:border-neutral-600">
-                    <div className="grid grid-cols-12 gap-4 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                      <div className="col-span-2">Date</div>
-                      <div className="col-span-2">Type</div>
-                      <div className="col-span-3">Transaction ID</div>
-                      <div className="col-span-3">Description</div>
-                      <div className="col-span-1">Status</div>
-                      <div className="col-span-1 text-right">Amount</div>
-                    </div>
-            </div>
-            
-                  {/* Table Body */}
-                  <div className="divide-y divide-neutral-200 dark:divide-neutral-600">
-                    {filteredTransactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                onClick={() => handleTransactionClick(transaction)}
-                        className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 cursor-pointer transition-colors group"
-                      >
-                        {/* Date */}
-                        <div className="col-span-2 flex items-center">
-                          <div className="text-sm text-neutral-900 dark:text-neutral-100">
-                            <p className="font-medium">
-                              {new Date(transaction.createdAt).toLocaleDateString('es-CO', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </p>
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                              {new Date(transaction.createdAt).toLocaleTimeString('es-CO', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                          </div>
-                        </div>
+                  {/* Mobile Cards removed (we keep single table). Keep container hidden to preserve code context */}
+                  <div className="hidden">
+                     {filteredTransactions.map((t) => (
+                       <button
+                         key={t.id}
+                         onClick={() => handleTransactionClick(t)}
+                         className="w-full text-left px-4 py-3 focus:bg-neutral-50 dark:focus:bg-neutral-700/50 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors"
+                       >
+                         <div className="flex items-start justify-between gap-3">
+                           {/* Left: icon + type/description */}
+                           <div className="flex-1 min-w-0">
+                             <div className="flex items-center gap-2 mb-1">
+                               <div className={`p-1.5 rounded-md ${
+                                 t.type === 'Deposit' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' :
+                                 t.type === 'bonus' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
+                                 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                               }`}>
+                                 {t.type === 'Deposit' ? <ArrowUpRight className="w-3.5 h-3.5" /> : t.type === 'bonus' ? <Gift className="w-3.5 h-3.5" /> : <Package2 className="w-3.5 h-3.5" />}
+                               </div>
+                               <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                 {t.type === 'Deposit' ? 'Add Credits' : t.type === 'bonus' ? 'Bonus' : 'Ad Spend'}
+                               </span>
+                               <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                 t.status === 'Completed' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                               }`}>
+                                 <span className={`w-1.5 h-1.5 rounded-full ${t.status === 'Completed' ? 'bg-emerald-500' : 'bg-yellow-500'}`}></span>
+                                 {t.status === 'Completed' ? 'Success' : 'Pending'}
+                               </span>
+                             </div>
+                             <p className="text-[13px] text-neutral-700 dark:text-neutral-300 truncate">{t.description}</p>
+                             <div className="mt-1 flex items-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400">
+                               <span className="font-mono">{t.id.slice(0, 10)}…</span>
+                               <span>•</span>
+                               <span>{new Date(t.createdAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                               <span>•</span>
+                               <span>{new Date(t.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</span>
+                             </div>
+                           </div>
 
-                        {/* Transaction Type - TikTok Style */}
-                        <div className="col-span-2 flex items-center">
-                          <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-lg flex-shrink-0 ${
-                              transaction.type === 'Deposit' 
-                                ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400' :
-                              transaction.type === 'bonus' 
-                                ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                                : 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400'
-                  }`}>
-                    {transaction.type === 'Deposit' ? (
-                                <ArrowUpRight className="w-3 h-3" />
-                    ) : transaction.type === 'bonus' ? (
-                                <Gift className="w-3 h-3" />
-                              ) : (
-                                <Package2 className="w-3 h-3" />
-                              )}
+                           {/* Right: amount */}
+                           <div className="flex flex-col items-end">
+                             <span className={`text-sm font-semibold ${t.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{t.amount > 0 ? '+' : '-'}{formatCreditsText(Math.abs(t.amount))}</span>
+                             <span className="text-[11px] text-neutral-500 dark:text-neutral-400">{t.type === 'Deposit' ? 'Cash' : t.type === 'bonus' ? 'Bonus' : 'Credits'}</span>
+                           </div>
+                         </div>
+                       </button>
+                     ))}
+                   </div>
+
+                  {/* Responsive table with horizontal scroll on mobile */}
+                  <div className="overflow-x-auto block">
+                    {/* Table Header */}
+                    <div className="min-w-[920px] bg-neutral-50 dark:bg-neutral-700/50 px-6 py-3 border-b border-neutral-200 dark:border-neutral-600">
+                      <div className="grid grid-cols-12 gap-4 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                        <div className="col-span-2">Date</div>
+                        <div className="col-span-2">Type</div>
+                        <div className="col-span-3">Transaction ID</div>
+                        <div className="col-span-3">Description</div>
+                        <div className="col-span-1">Status</div>
+                        <div className="col-span-1 text-right">Amount</div>
+                      </div>
+                    </div>
+                    {/* Table Body */}
+                    <div className="min-w-[920px] divide-y divide-neutral-200 dark:divide-neutral-600">
+                      {filteredTransactions.map((transaction) => (
+                        <div
+                          key={transaction.id}
+                          onClick={() => handleTransactionClick(transaction)}
+                          className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 cursor-pointer transition-colors group"
+                        >
+                          {/* Date */}
+                          <div className="col-span-2 flex items-center">
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              <p className="font-medium">
+                                {new Date(transaction.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </p>
+                              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                {new Date(transaction.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
                             </div>
-                            <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                              {transaction.type === 'Deposit' ? 'Add Credits' : 
-                               transaction.type === 'bonus' ? 'Bonus' : 'Ad Spend'}
+                          </div>
+                          {/* Type */}
+                          <div className="col-span-2 flex items-center">
+                            <div className="flex items-center gap-2">
+                              <div className={`p-1.5 rounded-lg flex-shrink-0 ${transaction.type === 'Deposit' ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400' : transaction.type === 'bonus' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400'}`}>
+                                {transaction.type === 'Deposit' ? <ArrowUpRight className="w-3 h-3" /> : transaction.type === 'bonus' ? <Gift className="w-3 h-3" /> : <Package2 className="w-3 h-3" />}
+                              </div>
+                              <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{transaction.type === 'Deposit' ? 'Add Credits' : transaction.type === 'bonus' ? 'Bonus' : 'Ad Spend'}</span>
+                            </div>
+                          </div>
+                          {/* Transaction ID */}
+                          <div className="col-span-3 flex items-center">
+                            <div className="min-w-0">
+                              <p className="text-sm font-mono text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{transaction.id.slice(0, 16)}...</p>
+                              <p className="text-xs text-neutral-500 dark:text-neutral-400">Shareflow LLC0916</p>
+                            </div>
+                          </div>
+                          {/* Description */}
+                          <div className="col-span-3 flex items-center">
+                            <p className="text-sm text-neutral-900 dark:text-neutral-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{transaction.description}</p>
+                          </div>
+                          {/* Status */}
+                          <div className="col-span-1 flex items-center">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${transaction.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'}`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${transaction.status === 'Completed' ? 'bg-emerald-500' : 'bg-yellow-500'}`} />
+                              {transaction.status === 'Completed' ? 'Success' : 'Pending'}
                             </span>
                           </div>
-                  </div>
-                  
-                        {/* Transaction ID */}
-                        <div className="col-span-3 flex items-center">
-                          <div className="min-w-0">
-                            <p className="text-sm font-mono text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                              {transaction.id.slice(0, 16)}...
-                            </p>
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                              Shareflow LLC0916
-                            </p>
+                          {/* Amount */}
+                          <div className="col-span-1 flex items-center justify-end">
+                            <div className="text-right">
+                              <p className={`text-sm font-semibold ${transaction.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{transaction.amount > 0 ? '+' : '-'}{formatCreditsText(Math.abs(transaction.amount))}</p>
+                              <p className="text-xs text-neutral-500 dark:text-neutral-400">{transaction.type === 'Deposit' ? 'Cash' : transaction.type === 'bonus' ? 'Bonus' : 'Credits'}</p>
+                            </div>
                           </div>
                         </div>
+                      ))}
+                    </div>
 
-                        {/* Description */}
-                        <div className="col-span-3 flex items-center">
-                          <p className="text-sm text-neutral-900 dark:text-neutral-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {transaction.description}
-                          </p>
+                    {/* Pagination - TikTok Style */}
+                    <div className="bg-neutral-50 dark:bg-neutral-700/50 px-6 py-3 border-t border-neutral-200 dark:border-neutral-600">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-neutral-600 dark:text-neutral-400">Showing <strong>{filteredTransactions.length}</strong> of <strong>{transactions.length}</strong> transactions{(searchTerm || selectedType || selectedStatus || dateRange.start || dateRange.end) && (<span className="ml-2 text-blue-600 dark:text-blue-400">(filtered)</span>)}</span>
+                        <div className="flex items-center gap-2">
+                          <button className="px-3 py-1 bg-white/70 dark:bg-neutral-700/50 backdrop-blur-sm text-neutral-600 dark:text-neutral-300 hover:bg-white/90 dark:hover:bg-neutral-600/70 rounded text-sm transition-colors">Previous</button>
+                          <span className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium">1</span>
+                          <button className="px-3 py-1 bg-white/70 dark:bg-neutral-700/50 backdrop-blur-sm text-neutral-600 dark:text-neutral-300 hover:bg-white/90 dark:hover:bg-neutral-600/70 rounded text-sm transition-colors">Next</button>
                         </div>
-
-                        {/* Status */}
-                        <div className="col-span-1 flex items-center">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                        transaction.status === 'Completed' 
-                              ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' 
-                              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                          }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${
-                              transaction.status === 'Completed' 
-                                ? 'bg-emerald-500' 
-                                : 'bg-yellow-500'
-                            }`} />
-                            {transaction.status === 'Completed' ? 'Success' : 'Pending'}
-                      </span>
-                </div>
-                
-                        {/* Amount */}
-                        <div className="col-span-1 flex items-center justify-end">
-                  <div className="text-right">
-                            <p className={`text-sm font-semibold ${
-                              transaction.amount > 0 
-                                ? 'text-emerald-600 dark:text-emerald-400' 
-                                : 'text-red-600 dark:text-red-400'
-                            }`}>
-                              {transaction.amount > 0 ? '+' : '-'}{formatCreditsText(Math.abs(transaction.amount))}
-                            </p>
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                              {transaction.type === 'Deposit' ? 'Cash' : 
-                               transaction.type === 'bonus' ? 'Bonus' : 'Credits'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-                  </div>
-
-                  {/* Pagination - TikTok Style */}
-                  <div className="bg-neutral-50 dark:bg-neutral-700/50 px-6 py-3 border-t border-neutral-200 dark:border-neutral-600">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-neutral-600 dark:text-neutral-400">
-                        Showing <strong>{filteredTransactions.length}</strong> of <strong>{transactions.length}</strong> transactions
-                        {(searchTerm || selectedType || selectedStatus || dateRange.start || dateRange.end) && (
-                          <span className="ml-2 text-blue-600 dark:text-blue-400">(filtered)</span>
-                        )}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button className="px-3 py-1 border border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-600 rounded text-sm transition-colors">
-                          Previous
-                        </button>
-                        <span className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium">1</span>
-                        <button className="px-3 py-1 border border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-600 rounded text-sm transition-colors">
-                          Next
-                </button>
-              </div>
+                      </div>
                     </div>
                   </div>
                 </>
-            )}
-          </div>
-        </div>
-        )}
+              )}
+             </div>
+           </div>
+         )}
 
 
 
@@ -1977,7 +1976,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
           onClose={() => setIsRechargeModalOpen(false)}
           onRecharge={handleRecharge}
           currentBalance={wallet.balance}
-          currentCampaign={activeBonus}
+          currentCampaign={activeBonus ? { name: activeBonus.name, description: activeBonus.description, value: activeBonus.value, icon: activeBonus.icon, minAmount: activeBonus.minRecharge ?? 0, bonusPercentage: activeBonus.value } : null}
           currentLevel={currentLevel}
           userType={userType}
           timeLeft={timeLeft}
@@ -2072,7 +2071,7 @@ const CelebrationPage: React.FC<CelebrationPageProps> = memo(({ isOpen, onClose,
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.8, opacity: 0, y: 30 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 text-center border border-gray-200"
+        className="relative bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_48px_rgba(0,0,0,0.2)] max-w-md w-full mx-4 p-6 text-center"
       >
         {/* Close button */}
         <button

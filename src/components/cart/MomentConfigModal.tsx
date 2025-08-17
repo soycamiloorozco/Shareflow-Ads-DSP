@@ -898,8 +898,8 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold">
-                      {event.homeTeamName} vs {event.awayTeamName}
-                    </h2>
+                    {event.homeTeamName} vs {event.awayTeamName}
+                  </h2>
                     {initialMoments && initialMoments.length > 0 && (
                       <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg">
                         <Settings className="w-4 h-4" />
@@ -1173,7 +1173,7 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                         <div className="text-center">
                           <div className="w-16 h-16 bg-[#353FEF] rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                             <Upload className="w-8 h-8 text-white" />
-                          </div>
+                        </div>
                           <p className="text-lg font-bold text-[#353FEF]">
                             ¡Suelta tu video aquí!
                           </p>
@@ -1205,22 +1205,22 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                             <p className="text-sm text-neutral-500 mb-4">
                               Arrastra y suelta tu video MP4 aquí o haz clic para buscar<br />
                               <span className="text-xs text-neutral-400">Videos largos se cortarán automáticamente a 15 segundos • Se ajustará a 1920x96px</span>
-                            </p>
-                            <button
+                        </p>
+                        <button
                               type="button"
                               onClick={() => fileInputRef.current?.click()}
                               className="px-4 py-2 bg-[#353FEF] hover:bg-[#2A32C5] text-white rounded-lg font-medium transition-colors touch-manipulation min-h-[40px] text-sm"
                             >
                               Seleccionar archivo
-                            </button>
-                          </div>
-                        ) : (
+                        </button>
+                </div>
+              ) : (
                           /* Feedback inmediato cuando se recibe el archivo */
                           <div className="flex flex-col items-center py-8">
                             <div className="relative mb-4">
                               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
                                 <Upload className="w-8 h-8 text-primary" />
-                              </div>
+                  </div>
                               {/* Animación de pulso */}
                               <div className="absolute inset-0 w-16 h-16 bg-primary-200 rounded-full animate-ping opacity-30"></div>
                             </div>
@@ -1272,9 +1272,9 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <span className="text-base font-bold text-[#353FEF]"> 
                                   {Math.round(uploadProgress)}%
-                                </span>
-                              </div>
+                              </span>
                             </div>
+                          </div>
 
                             {/* Current step */}
                             <div className="text-center mb-3"> {/* Reducido mb-4 a mb-3 */}
@@ -1293,13 +1293,13 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                                   className="bg-gradient-to-r from-[#353FEF] to-[#2A32C5] h-1.5 rounded-full transition-all duration-200 ease-out" 
                                   style={{ width: `${uploadProgress}%` }}
                                 ></div>
-                              </div>
+                                    </div>
 
                               {/* Steps indicator - Más compacto */}
                               <div className="flex justify-between text-xs text-neutral-500"> {/* Reducido de text-xs */}
                                 <span className={uploadProgress >= 20 ? 'text-[#353FEF] font-medium' : ''}> 
                                   Análisis
-                                </span>
+                                    </span>
                                 <span className={uploadProgress >= 50 ? 'text-[#353FEF] font-medium' : ''}> 
                                   {videoDuration > 15 ? 'Recorte' : 'Validación'}
                                 </span>
@@ -1308,9 +1308,9 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                                 </span>
                                 <span className={uploadProgress >= 95 ? 'text-[#353FEF] font-medium' : ''}> 
                                   Finalización
-                                </span>
+                                  </span>
                               </div>
-                            </div>
+                                </div>
 
                             {/* Animated dots - Más rápidos */}
                             <div className="flex space-x-1 mt-4"> {/* Reducido mt-6 a mt-4 */}
@@ -1423,11 +1423,11 @@ export const MomentConfigModal: React.FC<MomentConfigModalProps> = ({
                               </div>
                               <div className="text-xs text-gray-600">
                                 Minutos: {momentsInPeriod.map(m => m.minute).sort((a, b) => a - b).join(', ')}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                     </div>
                   )}
                 </div>

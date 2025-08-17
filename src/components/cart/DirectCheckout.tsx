@@ -98,101 +98,76 @@ export const DirectCheckout: React.FC<DirectCheckoutProps> = ({
   return (
     <div className="space-y-4">
       {/* Wallet Balance Display - Subtle */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="flex items-center justify-between p-3 bg-white/70 rounded-xl backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <Wallet className="w-4 h-4 text-gray-600" />
-          <span className="text-sm text-gray-600">Saldo disponible</span>
+          <span className="text-sm text-gray-600">Saldo</span>
           <span className="font-semibold text-gray-900">
             {walletLoading ? 'Cargando...' : formatBalance()}
           </span>
         </div>
         <button
           onClick={onRechargeWallet}
-          className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+          className="text-[#353FEF] hover:text-[#2A32C5] text-sm font-medium flex items-center gap-1"
         >
           <Plus className="w-3 h-3" />
           Recargar
         </button>
       </div>
-
-      {/* Purchase Summary */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex justify-between items-center mb-3">
-          <span className="font-medium text-gray-900">Total de la compra:</span>
+ 
+      {/* Purchase Summary - compact */}
+      <div className="bg-white/80 rounded-2xl p-4 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="flex justify-between items-center">
+          <span className="font-medium text-gray-900">Total</span>
           <span className="text-xl font-bold text-gray-900">
             {formatBalance(cart.totalPrice)}
           </span>
         </div>
-        
-        <div className="text-sm text-gray-600 space-y-1">
-          <div className="flex justify-between">
-            <span>Eventos:</span>
-            <span>{cart.items.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Configurados:</span>
-            <span>{cart.items.filter(item => item.isConfigured).length}/{cart.items.length}</span>
-          </div>
+        <div className="mt-2 text-xs text-gray-600 flex justify-between">
+          <span>Eventos</span>
+          <span>{cart.items.length} · {cart.items.filter(item => item.isConfigured).length}/{cart.items.length} config.</span>
         </div>
       </div>
-
-      {/* Status Messages */}
+ 
+      {/* Status Messages - single line chips */}
       <AnimatePresence>
         {!allConfigured && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-amber-50 border border-amber-200 rounded-lg p-3"
+            className="px-3 py-2 rounded-full bg-amber-50/80 text-amber-900 text-xs font-medium flex items-center gap-2"
           >
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-amber-900">Configuración pendiente</p>
-                <p className="text-amber-700">
-                  {cart.items.filter(item => !item.isConfigured).length} evento(s) necesitan configuración de momentos
-                </p>
-              </div>
-            </div>
+            <AlertTriangle className="w-3.5 h-3.5" />
+            {cart.items.filter(item => !item.isConfigured).length} evento(s) pendientes de configuración
           </motion.div>
         )}
-
+ 
         {allConfigured && insufficientFunds && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-red-50 border border-red-200 rounded-lg p-3"
+            className="px-3 py-2 rounded-full bg-red-50/80 text-red-700 text-xs font-medium flex items-center gap-2"
           >
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-red-900">Fondos insuficientes</p>
-                <p className="text-red-700">
-                  Te faltan {formatBalance(shortfall)} para completar la compra
-                </p>
-              </div>
-            </div>
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Te faltan {formatBalance(shortfall)}
           </motion.div>
         )}
-
+ 
         {canProceedWithPayment && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-green-50 border border-green-200 rounded-lg p-3"
+            className="px-3 py-2 rounded-full bg-green-50/80 text-green-700 text-xs font-medium flex items-center gap-2"
           >
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-600" />
-              <p className="text-sm font-medium text-green-900">
-                Todo listo para procesar el pago
-              </p>
-            </div>
+            <Check className="w-3.5 h-3.5" />
+            Todo listo para pagar
           </motion.div>
         )}
       </AnimatePresence>
-
+ 
       {/* Action Buttons */}
       <div className="space-y-3">
         {!allConfigured ? (
@@ -203,7 +178,7 @@ export const DirectCheckout: React.FC<DirectCheckoutProps> = ({
             fullWidth
             icon={ArrowRight}
           >
-            Configurar eventos ({cart.items.filter(item => !item.isConfigured).length} pendientes)
+            Configurar eventos ({cart.items.filter(item => !item.isConfigured).length})
           </Button>
         ) : canProceedWithPayment ? (
           <Button
@@ -215,7 +190,7 @@ export const DirectCheckout: React.FC<DirectCheckoutProps> = ({
             disabled={isProcessing}
             className={isProcessing ? 'animate-pulse' : ''}
           >
-            {isProcessing ? 'Procesando pago...' : `Pagar ${formatBalance(cart.totalPrice)}`}
+            {isProcessing ? 'Procesando...' : `Pagar ${formatBalance(cart.totalPrice)}`}
           </Button>
         ) : (
           <Button
@@ -229,18 +204,8 @@ export const DirectCheckout: React.FC<DirectCheckoutProps> = ({
           </Button>
         )}
       </div>
-
-      {/* Additional Info */}
-      <div className="text-center">
-        <p className="text-xs text-gray-500">
-          {canProceedWithPayment 
-            ? 'El pago se procesará inmediatamente desde tu wallet'
-            : insufficientFunds 
-              ? 'Recarga tu wallet para completar la compra'
-              : 'Configura todos los eventos para continuar'
-          }
-        </p>
-      </div>
+ 
+      {/* Additional Info removed to reduce density */}
     </div>
   );
 };

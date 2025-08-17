@@ -20,6 +20,24 @@ import { CartIcon } from '../components/cart/CartIcon';
 import { ShoppingCart, Plus, Check } from 'lucide-react';
 import estadioImage from '../assets/estadio.png';
 
+// Helpers to compute week ranges (Mon-Sun)
+const startOfWeek = (date: Date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 Sun ... 6 Sat
+  const diff = (day + 6) % 7; // Mon=0
+  d.setDate(d.getDate() - diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const endOfWeek = (date: Date) => {
+  const s = startOfWeek(date);
+  const e = new Date(s);
+  e.setDate(s.getDate() + 6);
+  e.setHours(23, 59, 59, 999);
+  return e;
+};
+
 // Format price in short notation: <1M -> K, >=1M -> M with 1 decimal
 const formatShortCOP = (value: number): string => {
   if (value < 1_000_000) {
@@ -142,35 +160,31 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
             />
           </button>
 
-          {/* Teams VS section */}
+          {/* Teams VS section - prominent shields */}
           <div className="absolute bottom-3 left-3 right-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm flex items-center justify-center">
                   <img 
                     src={`${constants.base_path}/${event.homeTeamImage}`}
                     alt={event.homeTeamName}
-                    className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                    className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
                   />
                 </div>
-                <span className="text-white text-xs sm:text-sm font-medium hidden sm:block">
-                  {event.homeTeamName}
-                </span>
+                <span className="hidden" aria-hidden="true">{event.homeTeamName}</span>
               </div>
               
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                <span className="text-xs sm:text-sm font-bold text-white">VS</span>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white text-gray-900 rounded-full flex items-center justify-center shadow-sm">
+                <span className="text-sm sm:text-base font-bold">VS</span>
               </div>
               
               <div className="flex items-center gap-2">
-                <span className="text-white text-xs sm:text-sm font-medium hidden sm:block">
-                  {event.awayTeamName}
-                </span>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                <span className="hidden" aria-hidden="true">{event.awayTeamName}</span>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm flex items-center justify-center">
                   <img 
                     src={`${constants.base_path}/${event.awayTeamImage}`}
                     alt={event.awayTeamName}
-                    className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                    className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
                   />
                 </div>
               </div>
@@ -181,7 +195,7 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
         {/* Content section */}
         <div className="p-3 sm:p-4 lg:p-5">
           {/* Title and rating */}
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start justify-between mb-2.5">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900 leading-snug line-clamp-2"
                   style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1rem)' }}>
@@ -197,7 +211,7 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
           </div>
 
           {/* Event details */}
-          <div className="space-y-2 mb-6">
+          <div className="space-y-2 mb-4">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-600">
@@ -242,44 +256,43 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
-              {/* Cart Button */}
-              {isInCart ? (
-                <button
-                  onClick={handleRemoveFromCart}
-                  className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 touch-manipulation min-h-[44px]"
-                  aria-label={`Quitar ${event.homeTeamName} vs ${event.awayTeamName} del carrito`}
-                >
-                  <Check className="w-4 h-4" />
-                  <span className="hidden sm:inline">En carrito</span>
-                </button>
-              ) : (
-                <button
-                  onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
-                  aria-label={`Agregar ${event.homeTeamName} vs ${event.awayTeamName} al carrito`}
-                >
-                  {isAddingToCart ? (
-                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Plus className="w-5 h-5" />
-                  )}
-                </button>
-              )}
-
-              {/* View Details Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClick();
-                }}
-                className="px-3 py-2 sm:px-4 sm:py-2.5 bg-[#353FEF] hover:bg-[#2A32C5] text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 shadow-sm touch-manipulation min-h-[44px]"
-                aria-label={`Ver ${event.homeTeamName} vs ${event.awayTeamName}`}
-              >
-                <span>Ver</span>
-                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-            </div>
+               {/* Cart Button */}
+               {isInCart ? (
+                 <button
+                   onClick={handleRemoveFromCart}
+                   className="w-10 h-10 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-all duration-200 flex items-center justify-center touch-manipulation min-h-[44px]"
+                   aria-label={`Quitar ${event.homeTeamName} vs ${event.awayTeamName} del carrito`}
+                 >
+                   <Check className="w-5 h-5" />
+                 </button>
+               ) : (
+                 <button
+                   onClick={handleAddToCart}
+                   disabled={isAddingToCart}
+                   className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
+                   aria-label={`Agregar ${event.homeTeamName} vs ${event.awayTeamName} al carrito`}
+                 >
+                   {isAddingToCart ? (
+                     <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                   ) : (
+                     <Plus className="w-5 h-5" />
+                   )}
+                 </button>
+               )}
+ 
+               {/* View Details Button */}
+               <button
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   onClick();
+                 }}
+                 className="px-3 py-2 sm:px-4 sm:py-2.5 bg-[#353FEF] hover:bg-[#2A32C5] text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 shadow-sm touch-manipulation min-h-[44px]"
+                 aria-label={`Ver ${event.homeTeamName} vs ${event.awayTeamName}`}
+               >
+                 <span>Ver</span>
+                 <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+               </button>
+             </div>
           </div>
         </div>
       </div>
@@ -434,7 +447,7 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
         {/* Price and Actions */}
         <div className="flex flex-col items-end justify-between flex-shrink-0 min-h-[60px]">
           {/* Precio */}
-          <div className="text-right mb-2">
+          <div className="text-right mb-1.5">
             <p className="font-bold text-base sm:text-lg text-gray-900 leading-none">
               ${formatShortCOP(eventData.basePrice)}
             </p>
@@ -447,7 +460,7 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
             {isInCart ? (
               <button
                 onClick={handleRemoveFromCart}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-green-100 text-green-600 hover:bg-green-200 transition-colors touch-manipulation"
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-100 text-green-600 hover:bg-green-200 transition-colors touch-manipulation"
                 aria-label={`Quitar ${event.homeTeamName} vs ${event.awayTeamName} del carrito`}
               >
                 <Check className="w-4 h-4" />
@@ -500,7 +513,8 @@ const MobileSportsInterface = React.memo(({
   onAddToCart,
   onRemoveFromCart,
   isEventInCart,
-  loading
+  loading,
+  grouped
 }: {
   events: any[];
   onEventClick: (eventId: string) => void;
@@ -513,6 +527,7 @@ const MobileSportsInterface = React.memo(({
   onRemoveFromCart: (event: any) => void;
   isEventInCart: (eventId: string) => boolean;
   loading: boolean;
+  grouped?: { title: string; events: any[] }[];
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -571,33 +586,77 @@ const MobileSportsInterface = React.memo(({
 
       {/* Content */}
       <div className="p-4">
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {events.map((event, index) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                index={index}
-                onClick={() => onEventClick(event.id)}
-                onAddToCart={onAddToCart}
-                onRemoveFromCart={onRemoveFromCart}
-                isInCart={isEventInCart(event.id)}
-              />
+        {grouped && grouped.length > 0 ? (
+          <div className="space-y-5">
+            {grouped.map((group, gIdx) => (
+              group.events.length > 0 && (
+                <div key={gIdx}>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3 px-1">{group.title}</h4>
+                  {viewMode === 'grid' ? (
+                    <div className="-mx-4 px-4 overflow-x-auto flex gap-3 snap-x snap-mandatory scroll-pb-2">
+                      {group.events.map((event, index) => (
+                        <div key={event.id} className="snap-start shrink-0 w-[300px]">
+                          <EventCard
+                            event={event}
+                            index={index}
+                            onClick={() => onEventClick(event.id)}
+                            onAddToCart={onAddToCart}
+                            onRemoveFromCart={onRemoveFromCart}
+                            isInCart={isEventInCart(event.id)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {group.events.map((event, index) => (
+                        <EventListItem
+                          key={event.id}
+                          event={event}
+                          onClick={() => onEventClick(event.id)}
+                          onAddToCart={onAddToCart}
+                          onRemoveFromCart={onRemoveFromCart}
+                          isInCart={isEventInCart(event.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
             ))}
           </div>
         ) : (
-          <div className="space-y-3">
-            {events.map((event, index) => (
-              <EventListItem
-                key={event.id}
-                event={event}
-                onClick={() => onEventClick(event.id)}
-                onAddToCart={onAddToCart}
-                onRemoveFromCart={onRemoveFromCart}
-                isInCart={isEventInCart(event.id)}
-              />
-            ))}
-          </div>
+          <>
+            {viewMode === 'grid' ? (
+              <div className="-mx-4 px-4 overflow-x-auto flex gap-3 snap-x snap-mandatory">
+                {events.map((event, index) => (
+                  <div key={event.id} className="snap-start shrink-0 w-[300px]">
+                    <EventCard
+                      event={event}
+                      index={index}
+                      onClick={() => onEventClick(event.id)}
+                      onAddToCart={onAddToCart}
+                      onRemoveFromCart={onRemoveFromCart}
+                      isInCart={isEventInCart(event.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {events.map((event, index) => (
+                  <EventListItem
+                    key={event.id}
+                    event={event}
+                    onClick={() => onEventClick(event.id)}
+                    onAddToCart={onAddToCart}
+                    onRemoveFromCart={onRemoveFromCart}
+                    isInCart={isEventInCart(event.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {events.length === 0 && !loading && (
@@ -686,6 +745,34 @@ export function SportsEvents() {
     return filtered;
   }, [sportEvents, debouncedSearchQuery, selectedTeam, selectedStadium]);
 
+  // Group by week
+  const groupedByWeek = useMemo(() => {
+    const now = new Date();
+    const thisStart = startOfWeek(now);
+    const thisEnd = endOfWeek(now);
+    const nextStart = new Date(thisStart);
+    nextStart.setDate(thisStart.getDate() + 7);
+    const nextEnd = endOfWeek(nextStart);
+
+    const thisWeek = filteredEvents.filter(e => {
+      const d = new Date(e.eventDate);
+      return d >= thisStart && d <= thisEnd;
+    });
+    const nextWeek = filteredEvents.filter(e => {
+      const d = new Date(e.eventDate);
+      return d >= nextStart && d <= nextEnd;
+    });
+    const later = filteredEvents.filter(e => {
+      const d = new Date(e.eventDate);
+      return d > nextEnd;
+    });
+    const groups: { title: string; events: any[] }[] = [];
+    groups.push({ title: 'Esta semana', events: thisWeek });
+    groups.push({ title: 'Próxima semana', events: nextWeek });
+    if (later.length > 0) groups.push({ title: 'Más adelante', events: later });
+    return groups;
+  }, [filteredEvents]);
+
   const handleEventClick = useCallback((eventId: string) => {
     navigate(`/event/${eventId}`);
   }, [navigate]);
@@ -745,6 +832,7 @@ export function SportsEvents() {
           onRemoveFromCart={handleRemoveFromCart}
           isEventInCart={isEventInCart}
           loading={loading}
+          grouped={groupedByWeek}
         />
       </div>
 
@@ -835,40 +923,49 @@ export function SportsEvents() {
 
           {/* Events Grid/List */}
           {filteredEvents.length > 0 ? (
-            viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
-                {filteredEvents.map((event, index) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    index={index}
-                    onClick={() => handleEventClick(event.id)}
-                    onAddToCart={handleAddToCart}
-                    onRemoveFromCart={handleRemoveFromCart}
-                    isInCart={isEventInCart(event.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredEvents.map((event, index) => (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                    <EventListItem
-                      event={event}
-                      onClick={() => handleEventClick(event.id)}
-                      onAddToCart={handleAddToCart}
-                      onRemoveFromCart={handleRemoveFromCart}
-                      isInCart={isEventInCart(event.id)}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            )
+            <div className="space-y-8">
+              {groupedByWeek.map((group, gi) => (
+                group.events.length > 0 && (
+                  <div key={gi}>
+                    <h3 className="text-base font-semibold text-gray-800 mb-3">{group.title}</h3>
+                    {viewMode === 'grid' ? (
+                      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                        {group.events.map((event, index) => (
+                          <EventCard
+                            key={event.id}
+                            event={event}
+                            index={index}
+                            onClick={() => handleEventClick(event.id)}
+                            onAddToCart={handleAddToCart}
+                            onRemoveFromCart={handleRemoveFromCart}
+                            isInCart={isEventInCart(event.id)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {group.events.map((event, index) => (
+                          <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                          >
+                            <EventListItem
+                              event={event}
+                              onClick={() => handleEventClick(event.id)}
+                              onAddToCart={handleAddToCart}
+                              onRemoveFromCart={handleRemoveFromCart}
+                              isInCart={isEventInCart(event.id)}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              ))}
+            </div>
           ) : (
             <div className="text-center py-12 sm:py-16">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

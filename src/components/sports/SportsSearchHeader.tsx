@@ -40,25 +40,8 @@ export const SportsSearchHeader = React.memo<SportsSearchHeaderProps>(({
             transition={{ duration: 0.4 }}
             className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-8"
           >
-            {/* Left Side - Branding & Title */}
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2 lg:mb-0">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-[#353FEF] to-[#6366F1] rounded-lg flex items-center justify-center">
-                    <Trophy className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl lg:text-2xl font-bold text-gray-900 leading-tight">
-                      Eventos Deportivos
-                    </h1>
-                    <p className="text-sm text-gray-600 hidden sm:block">
-                      Momentos publicitarios en vivo
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            {/* Left cleared to avoid repetition */}
+ 
             {/* Right Side - Search */}
             <div className="flex-1 max-w-2xl">
               <div className="relative">
@@ -87,7 +70,7 @@ export const SportsSearchHeader = React.memo<SportsSearchHeaderProps>(({
                 )}
               </div>
             </div>
-
+ 
             {/* Action Buttons - Cart and Info */}
             <div className="flex-shrink-0 hidden lg:flex items-center gap-3">
               {/* Cart Icon */}
@@ -95,7 +78,7 @@ export const SportsSearchHeader = React.memo<SportsSearchHeaderProps>(({
                 size="md" 
                 className="bg-gray-50 hover:bg-gray-100 border border-gray-200"
               />
-
+ 
               {/* Info Button */}
               <motion.button
                 onClick={onInfoClick}
