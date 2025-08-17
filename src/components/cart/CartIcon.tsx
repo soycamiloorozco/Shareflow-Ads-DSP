@@ -43,7 +43,7 @@ export const CartIcon: React.FC<CartIconProps> = ({
     <>
       <button
         onClick={handleClick}
-        className={`relative p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${className}`}
+        className={`relative p-2 rounded-lg hover:bg-white/50 backdrop-blur-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#353FEF] focus:ring-offset-2 ${className}`}
         aria-label={`Carrito de compras${cart.totalItems > 0 ? ` (${cart.totalItems} eventos)` : ''}`}
         type="button"
       >
@@ -69,7 +69,7 @@ export const CartIcon: React.FC<CartIconProps> = ({
                 stiffness: 500, 
                 damping: 30 
               }}
-              className={`absolute -top-1 -right-1 ${badgeSizeClasses[size]} bg-red-500 text-white rounded-full flex items-center justify-center font-bold shadow-sm`}
+              className={`absolute -top-1 -right-1 ${badgeSizeClasses[size]} bg-[#353FEF] text-white rounded-full flex items-center justify-center font-bold shadow-sm`}
             >
               <motion.span
                 key={cart.totalItems} // Re-animate when count changes
@@ -90,7 +90,7 @@ export const CartIcon: React.FC<CartIconProps> = ({
             animate={{ opacity: 1 }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-3 h-3 border-2 border-[#353FEF] border-t-transparent rounded-full animate-spin" />
           </motion.div>
         )}
       </motion.div>
@@ -102,7 +102,7 @@ export const CartIcon: React.FC<CartIconProps> = ({
             initial={{ scale: 1, opacity: 0.5 }}
             animate={{ scale: 1.2, opacity: 0 }}
             transition={{ duration: 0.6, repeat: 2 }}
-            className="absolute inset-0 rounded-lg bg-blue-500 pointer-events-none"
+            className="absolute inset-0 rounded-lg bg-[#353FEF] pointer-events-none"
           />
         )}
       </AnimatePresence>

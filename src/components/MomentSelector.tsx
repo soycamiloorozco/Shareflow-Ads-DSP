@@ -28,8 +28,8 @@ export const MomentSelector = memo(function MomentSelector({
       {selectedMinutes.map((minute, index) => (
         <div key={`${momentId}-${index}`} className="flex items-start gap-4">
           <div className="flex flex-col items-center">
-            <div className="w-[42px] h-[42px] bg-[#ABFAA9] rounded-[10.5px] flex items-center justify-center">
-              <span className="text-[14px] font-bold text-[#0B0B16] leading-[18.9px]">
+            <div className="w-[42px] h-[42px] bg-[#353FEF] rounded-[10.5px] flex items-center justify-center">
+                              <span className="text-[14px] font-bold text-white leading-[18.9px]">
                 {index + 1}
               </span>
             </div>
@@ -74,7 +74,7 @@ export const MomentSelector = memo(function MomentSelector({
                     [&::-webkit-slider-thumb]:w-3 
                     [&::-webkit-slider-thumb]:h-3 
                     [&::-webkit-slider-thumb]:rounded-full 
-                    [&::-webkit-slider-thumb]:bg-primary"
+                    [&::-webkit-slider-thumb]:bg-[#353FEF]"
                 />
                 <div className="absolute top-3 w-full flex justify-between">
                   {minuteMarkers.map((marker) => (
@@ -82,7 +82,7 @@ export const MomentSelector = memo(function MomentSelector({
                       key={marker}
                       className={`text-[10px] leading-[13.71px] ${
                         marker === minute 
-                          ? 'text-primary font-normal' 
+                          ? 'text-[#353FEF] font-normal' 
                           : 'text-neutral-400 font-normal'
                       }`}
                     >
@@ -92,7 +92,7 @@ export const MomentSelector = memo(function MomentSelector({
                 </div>
               </div>
 
-              <div className="h-6 bg-primary-50 rounded px-4 flex items-center">
+              <div className="h-6 bg-[#353FEF]/10 rounded px-4 flex items-center">
                 <span className="text-[12px] leading-[15px] text-neutral-800">
                   Tu momento saldrá en el minuto:{' '}
                   <strong className="font-semibold">{minute}'</strong>

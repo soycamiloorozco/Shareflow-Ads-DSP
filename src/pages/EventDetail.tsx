@@ -844,10 +844,10 @@ export function EventDetail() {
       description: '45 minutos de juego',
       maxMinutes: 45,
       price: event ? event?.moments.find(item => item.moment === 'FirstHalf')?.price || 0 : 0,
-      color: 'bg-gradient-to-br from-primary-50 to-primary-100',
-      textColor: 'text-primary-800',
-      borderColor: 'border-primary-200',
-      iconColor: 'text-primary',
+      color: 'bg-gradient-to-br from-[#353FEF]/10 to-[#353FEF]/20',
+      textColor: 'text-[#353FEF]',
+      borderColor: 'border-[#353FEF]/30',
+      iconColor: 'text-[#353FEF]',
       tvAudience: true
     },
     {
@@ -868,10 +868,10 @@ export function EventDetail() {
       description: '45 minutos de juego',
       maxMinutes: 45,
       price: event ? event?.moments.find(item => item.moment === 'SecondHalf')?.price || 0 : 0,
-      color: 'bg-gradient-to-br from-primary-50 to-primary-100',
-      textColor: 'text-primary-800',
-      borderColor: 'border-primary-200',
-      iconColor: 'text-primary',
+      color: 'bg-gradient-to-br from-[#353FEF]/10 to-[#353FEF]/20',
+      textColor: 'text-[#353FEF]',
+      borderColor: 'border-[#353FEF]/30',
+      iconColor: 'text-[#353FEF]',
       tvAudience: true
     }
   ];
@@ -1007,7 +1007,7 @@ export function EventDetail() {
     } else if (remainingMoments <= 10) {
       return 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500';
     } else {
-      return 'bg-gradient-to-r from-green-500 via-green-400 to-green-500';
+      return 'bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500';
     }
   };
 
@@ -1050,18 +1050,20 @@ export function EventDetail() {
     switch (flowStep) {
       case 'select-moments':
         return (
-          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-800 mb-4 sm:mb-6 flex items-center gap-2">
-              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl mb-6 border-0 shadow-[0_4px_16px_rgba(53,63,239,0.04)] hover:shadow-[0_8px_24px_rgba(53,63,239,0.06)] transition-all duration-300">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center shadow-sm">
+                <Trophy className="w-4 h-4 text-white" />
+              </div>
               Selecciona tus momentos
             </h2>
 
             {/* Subtle Availability Alert */}
-            <div className="bg-gradient-to-r from-slate-50 to-gray-50 border border-gray-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="bg-gradient-to-r from-white via-gray-50/50 to-white backdrop-blur-sm rounded-xl p-3 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${remainingMoments <= 5 ? 'bg-red-500' :
-                    remainingMoments <= 10 ? 'bg-amber-500' : 'bg-green-500'
+                    remainingMoments <= 10 ? 'bg-amber-500' : 'bg-[#353FEF]'
                     }`}></div>
                   <div>
                     <p className="text-sm font-medium text-gray-800">
@@ -1078,11 +1080,11 @@ export function EventDetail() {
                 </div>
               </div>
 
-              {/* Subtle progress bar */}
-              <div className="mt-3 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              {/* Modern progress bar */}
+              <div className="mt-4 h-2 bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 rounded-full overflow-hidden shadow-inner">
                 <motion.div
-                  className={`h-full ${remainingMoments <= 5 ? 'bg-red-500' :
-                    remainingMoments <= 10 ? 'bg-amber-500' : 'bg-green-500'
+                  className={`h-full rounded-full shadow-sm ${remainingMoments <= 5 ? 'bg-gradient-to-r from-red-400 to-red-500' :
+                    remainingMoments <= 10 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-[#353FEF] to-[#2A32C5]'
                     }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${availabilityPercentage}%` }}
@@ -1093,14 +1095,14 @@ export function EventDetail() {
 
             {/* Professional Instructions */}
             <div className="mb-8">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 md:p-5 mb-4 sm:mb-6">
+              <div className="bg-gradient-to-br from-[#353FEF]/5 via-white to-[#353FEF]/3 backdrop-blur-sm rounded-2xl p-4 mb-4 shadow-[0_2px_12px_rgba(53,63,239,0.04)] border-0">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
                     <Info className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-blue-900 mb-2">Selección de momentos publicitarios</h3>
-                    <p className="text-blue-800 text-sm leading-relaxed">
+                                      <h3 className="font-semibold text-[#353FEF] mb-2">Selección de momentos publicitarios</h3>
+                  <p className="text-[#353FEF]/80 text-sm leading-relaxed">
                       Elige los minutos específicos durante el partido donde aparecerá tu anuncio.
                       Cada momento dura 15 segundos y se reproduce en las pantallas LED del estadio.
                     </p>
@@ -1108,55 +1110,92 @@ export function EventDetail() {
                 </div>
               </div>
 
-              {/* Refined Game Period Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+              {/* Modern Game Period Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                 {gamePeriods.map((period) => (
                   <motion.button
                     key={period.id}
                     onClick={() => setSelectedPeriod(period.id)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01, y: -1 }}
+                    whileTap={{ scale: 0.99 }}
                     className={`
-                      p-5 rounded-xl border-2 transition-all duration-200 text-left relative overflow-hidden
+                      p-3 rounded-xl border-0 transition-all duration-200 text-left relative overflow-hidden backdrop-blur-xl
                       ${selectedPeriod === period.id
-                        ? 'border-primary-300 bg-primary-50 shadow-lg'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                        ? period.id === 'Halftime' 
+                          ? 'bg-gradient-to-br from-amber-50 via-white to-amber-50 shadow-[0_4px_16px_rgba(245,158,11,0.08)]'
+                          : 'bg-gradient-to-br from-[#353FEF]/10 via-white to-[#353FEF]/5 shadow-[0_4px_16px_rgba(53,63,239,0.08)]'
+                        : period.id === 'Halftime'
+                          ? 'bg-amber-50/50 hover:bg-amber-50/80 hover:shadow-[0_2px_12px_rgba(245,158,11,0.04)]'
+                          : 'bg-white/70 hover:bg-white/90 hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)]'
                       }
                     `}
                   >
                     {selectedPeriod === period.id && (
-                      <div className="absolute top-3 right-3">
-                        <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
-                          <Check className="w-3 h-3 text-white" />
+                      <div className="absolute top-2 right-2">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${
+                          period.id === 'Halftime' 
+                            ? 'bg-gradient-to-br from-amber-500 to-amber-600' 
+                            : 'bg-gradient-to-br from-[#353FEF] to-[#2A32C5]'
+                        }`}>
+                          <Check className="w-2.5 h-2.5 text-white" />
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedPeriod === period.id ? 'bg-primary-500' : 'bg-gray-100'
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm ${
+                        selectedPeriod === period.id 
+                          ? period.id === 'Halftime' 
+                            ? 'bg-gradient-to-br from-amber-500 to-amber-600'
+                            : 'bg-gradient-to-br from-[#353FEF] to-[#2A32C5]'
+                          : period.id === 'Halftime'
+                            ? 'bg-gradient-to-br from-amber-100 to-amber-200'
+                            : 'bg-gradient-to-br from-gray-50 to-gray-100'
                         }`}>
-                        <Clock className={`w-5 h-5 ${selectedPeriod === period.id ? 'text-white' : 'text-gray-600'
+                        <Clock className={`w-4 h-4 ${
+                          selectedPeriod === period.id 
+                            ? 'text-white'
+                            : period.id === 'Halftime' 
+                              ? 'text-amber-700'
+                              : 'text-gray-600'
                           }`} />
                       </div>
-                      <div>
-                        <h4 className={`font-semibold ${selectedPeriod === period.id ? 'text-primary-800' : 'text-gray-800'
+                      <div className="flex-1 min-w-0">
+                        <h4 className={`font-semibold text-sm ${
+                          selectedPeriod === period.id 
+                            ? period.id === 'Halftime' 
+                              ? 'text-amber-700'
+                              : 'text-[#353FEF]'
+                            : period.id === 'Halftime'
+                              ? 'text-amber-600'
+                              : 'text-gray-800'
                           }`}>
                           {period.name}
                         </h4>
-                        <p className="text-sm text-gray-600">{period.description}</p>
+                        <p className={`text-xs ${
+                          period.id === 'Halftime' 
+                            ? 'text-amber-600/80'
+                            : 'text-gray-600'
+                          }`}>
+                          {period.description}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Precio por momento</p>
-                        <p className="font-semibold text-gray-800">
+                    <div className="grid grid-cols-2 gap-2 pt-2 mt-2 border-t border-gray-100/50">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-0.5">Precio por momento</p>
+                        <p className={`font-semibold text-sm ${
+                          period.id === 'Halftime' ? 'text-amber-700' : 'text-gray-800'
+                        }`}>
                           ${formatShortCOP(period.price)} COP
                         </p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">CPM estimado</p>
-                        <p className="font-semibold text-gray-800">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-0.5">CPM estimado</p>
+                        <p className={`font-semibold text-sm ${
+                          period.id === 'Halftime' ? 'text-amber-700' : 'text-gray-800'
+                        }`}>
                           {calculatePeriodCPM(period)}
                         </p>
                       </div>
@@ -1166,22 +1205,22 @@ export function EventDetail() {
               </div>
             </div>
 
-            {/* Enhanced Moment Selector - Main Focus */}
-            <div className="bg-white border-2 border-primary-200 rounded-2xl shadow-lg overflow-hidden">
+            {/* Modern Moment Selector - Main Focus */}
+            <div className="bg-white/80 backdrop-blur-xl border-0 rounded-2xl shadow-[0_4px_24px_rgba(53,63,239,0.06)] overflow-hidden">
               {/* Header */}
-              <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-6">
+              <div className="bg-gradient-to-r from-[#353FEF] via-[#4C5EF7] to-[#2A32C5] p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-sm">
                       <Clock className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white">{currentPeriod.name}</h3>
-                      <p className="text-primary-100 text-sm">{currentPeriod.description}</p>
+                      <p className="text-white/90 text-sm">{currentPeriod.description}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-primary-100 text-sm">Precio por momento</p>
+                    <p className="text-white/90 text-sm">Precio por momento</p>
                     <p className="text-white font-bold text-lg">
                       ${formatShortCOP(currentPeriod.price)} COP
                     </p>
@@ -1231,7 +1270,7 @@ export function EventDetail() {
 
                 {/* Summary */}
                 {filteredMoments.length > 0 && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                  <div className="mt-6 p-4 bg-gradient-to-br from-gray-50/50 via-white to-gray-50/30 backdrop-blur-sm rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border-0">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600">Momentos seleccionados en {currentPeriod.name}</p>
@@ -1255,78 +1294,37 @@ export function EventDetail() {
 
       case 'upload-creative':
         return (
-          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-800 mb-4 sm:mb-6 flex items-center gap-2">
-              <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          <div className="bg-white/60 backdrop-blur-xl p-6 rounded-2xl shadow-[0_4px_16px_rgba(53,63,239,0.04)] mb-6 border-0">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center shadow-sm">
+                <Upload className="w-4 h-4 text-white" />
+              </div>
               Sube tu pieza creativa
             </h2>
 
-            <div className="mb-4 sm:mb-6">
-              <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <Info className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                <h3 className="text-base sm:text-lg font-semibold text-neutral-800">Especificaciones técnicas</h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-neutral-50 p-4 rounded-xl">
-                  <h4 className="font-medium mb-2">Dimensiones</h4>
-                  <p className="text-sm text-neutral-600 mb-2">1920 x 96 píxeles</p>
-                  <div className="w-full h-12 bg-neutral-200 rounded-lg relative overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs text-neutral-600">1920 x 96 px</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-neutral-50 p-4 rounded-xl">
-                  <h4 className="font-medium mb-2">Formato</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                        <path d="M8 8l4 4m0-4l-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                      <span className="text-sm font-medium">Solo videos MP4</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-success-500" />
-                      <span className="text-sm">Se cortará automáticamente a 15 segundos</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-success-500" />
-                      <span className="text-sm">Máximo 100MB</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-success-500" />
-                      <span className="text-sm">1920x96 píxeles (ajuste automático)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Upload Area */}
-              <div
-                className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${isDragging
-                  ? 'border-primary bg-primary-50 scale-105 shadow-lg'
-                  : loading || fileReceived
-                    ? 'border-primary bg-primary-5'
-                    : 'border-neutral-300 hover:border-neutral-400'
-                  }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
+            {/* Upload Area */}
+            <div
+              className={`relative rounded-xl p-8 text-center transition-all duration-300 backdrop-blur-sm ${isDragging
+                ? 'bg-[#353FEF]/10 scale-105 shadow-lg'
+                : loading || fileReceived
+                  ? 'bg-[#353FEF]/5'
+                  : 'bg-gray-50/50 hover:bg-gray-50/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)]'
+                }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
                 {/* Overlay especial para drag */}
                 {isDragging && (
-                  <div className="absolute inset-0 bg-primary-100 bg-opacity-80 rounded-xl flex items-center justify-center z-10">
+                  <div className="absolute inset-0 bg-[#353FEF]/10 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
                     <div className="text-center">
-                      <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                      <div className="w-16 h-16 bg-[#353FEF] rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                         <Upload className="w-8 h-8 text-white" />
                       </div>
-                      <p className="text-lg font-bold text-primary">
+                      <p className="text-lg font-bold text-[#353FEF]">
                         ¡Suelta tu video aquí!
                       </p>
-                      <p className="text-sm text-primary-600 mt-1">
+                      <p className="text-sm text-[#353FEF]/80 mt-1">
                         Archivo MP4 • Máximo 100MB
                       </p>
                     </div>
@@ -1345,8 +1343,10 @@ export function EventDetail() {
                     {/* Estado inicial o feedback inmediato */}
                     {!fileReceived && !loading ? (
                       <div className="flex flex-col items-center">
-                        <Upload className="w-12 h-12 text-neutral-400 mb-4" />
-                        <p className="text-lg font-medium mb-2">
+                        <div className="w-12 h-12 bg-[#353FEF]/10 rounded-lg flex items-center justify-center mb-3">
+                          <Upload className="w-6 h-6 text-[#353FEF]" />
+                        </div>
+                        <p className="text-base font-medium text-gray-900 mb-2">
                           Sube tu video MP4
                         </p>
                         <p className="text-sm text-neutral-500 mb-4">
@@ -1356,7 +1356,7 @@ export function EventDetail() {
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-500 touch-manipulation min-h-[44px]"
+                          className="px-4 py-2 bg-[#353FEF] hover:bg-[#2A32C5] text-white rounded-lg font-medium transition-colors touch-manipulation min-h-[40px] text-sm"
                         >
                           Seleccionar archivo
                         </button>
@@ -1508,11 +1508,11 @@ export function EventDetail() {
                           <p className="text-sm text-neutral-800 font-medium mb-2">{file.name}</p>
                           <div className="flex justify-center items-center gap-4 text-xs text-neutral-500">
                             <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span>Tamaño: {(file.size / (1024 * 1024)).toFixed(2)} MB</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                  <div className="w-2 h-2 bg-[#353FEF] rounded-full"></div>
+                    <span>Tamaño: {(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-[#353FEF] rounded-full"></div>
                               <span>Duración: {videoDuration.toFixed(1)}s</span>
                             </div>
                             <div className="flex items-center gap-1">
@@ -1520,7 +1520,7 @@ export function EventDetail() {
                               <span>Formato: MP4</span>
                             </div>
                           </div>
-                          <div className="mt-2 text-xs text-green-600 font-medium">
+                          <div className="mt-2 text-xs text-[#353FEF] font-medium">
                             ✓ Video procesado y listo para usar
                           </div>
                         </div>
@@ -1536,7 +1536,6 @@ export function EventDetail() {
                   {uploadError}
                 </p>
               )}
-            </div>
 
             {/* Creative Preview */}
             {preview && (
@@ -1599,29 +1598,31 @@ export function EventDetail() {
                 Volver
               </Button>
 
-              <Button
+                                        <Button
                 variant="primary"
                 size="lg"
                 icon={ChevronRight}
                 disabled={!file || !fileBase64}
                 onClick={handleProceedToPayment}
               >
-                Continuar al pago
-              </Button>
+              Continuar al pago
+            </Button>
             </div>
           </div>
         );
 
       case 'payment':
         return (
-          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-800 mb-4 sm:mb-6 flex items-center gap-2">
-              <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          <div className="bg-white/60 backdrop-blur-xl p-6 rounded-2xl shadow-[0_4px_16px_rgba(53,63,239,0.04)] mb-6 border-0">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center shadow-sm">
+                <CreditCard className="w-4 h-4 text-white" />
+              </div>
               Detalles de pago
             </h2>
 
             {/* Order Summary */}
-            <div className="mb-6 p-4 bg-neutral-50 rounded-xl">
+            <div className="mb-6 p-4 bg-gradient-to-br from-gray-50/50 via-white to-gray-50/30 backdrop-blur-sm rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border-0">
               <h3 className="font-semibold mb-4">Resumen del pedido</h3>
 
               <div className="flex gap-3 mb-4">
@@ -1682,7 +1683,7 @@ export function EventDetail() {
 
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span className="text-primary">${totalPrice.toLocaleString()} COP</span>
+                <span className="text-[#353FEF]">${totalPrice.toLocaleString()} COP</span>
               </div>
             </div>
 
@@ -1715,9 +1716,9 @@ export function EventDetail() {
                             </p>
                           </div>
                         </div>
-                        <div className="w-5 h-5 rounded-full border border-neutral-300 flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center">
                           {selectedPaymentMethod === method.id && (
-                            <div className="w-3 h-3 rounded-full bg-primary" />
+                            <div className="w-3 h-3 rounded-full bg-[#353FEF]" />
                           )}
                         </div>
                       </div>
@@ -1782,7 +1783,7 @@ export function EventDetail() {
 
       case 'confirmation':
         return (
-          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-2xl shadow-sm mb-4 sm:mb-6">
+          <div className="bg-white/60 backdrop-blur-xl p-6 rounded-2xl shadow-[0_4px_16px_rgba(53,63,239,0.04)] mb-6 border-0">
             <div className="text-center mb-6 sm:mb-8">
               <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="w-10 h-10 text-success-600" />
@@ -1901,14 +1902,14 @@ export function EventDetail() {
                 navigate('/sports-events');
               }
             }}
-            className="group relative overflow-hidden flex items-center gap-2 sm:gap-2.5 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 bg-gradient-to-r from-white to-gray-50 hover:from-gray-50 hover:to-white border border-gray-200/80 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-gray-700 hover:text-gray-900 backdrop-blur-sm touch-manipulation min-h-[40px] sm:min-h-[48px]"
+            className="group relative overflow-hidden flex items-center gap-2 sm:gap-2.5 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 bg-white/80 hover:bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] transition-all duration-300 text-gray-700 hover:text-gray-900 backdrop-blur-sm touch-manipulation min-h-[40px] sm:min-h-[48px]"
             whileHover={{ scale: 1.02, y: -1 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             aria-label="Volver atrás"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 flex items-center justify-center transition-all duration-300 shadow-sm">
-              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-blue-600 group-hover:translate-x-[-2px] transition-transform duration-200" />
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-[#353FEF]/10 to-[#353FEF]/20 group-hover:from-[#353FEF]/20 group-hover:to-[#353FEF]/30 flex items-center justify-center transition-all duration-300 shadow-sm">
+                              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-[#353FEF] group-hover:translate-x-[-2px] transition-transform duration-200" />
             </div>
             <span className="font-semibold text-xs sm:text-sm md:text-base">Volver</span>
             <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
@@ -1957,8 +1958,8 @@ export function EventDetail() {
         <div className="max-w-6xl mx-auto py-1 sm:py-2 md:py-4 lg:py-6" ref={headerRef}>
           <article className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8 lg:gap-10">
             <div className="lg:col-span-2">
-              {/* Professional Event Header - Optimizado para móvil */}
-              <div className="bg-white rounded-2xl border border-gray-200 mb-4 sm:mb-6 overflow-hidden shadow-sm">
+              {/* Modern Event Header - Optimizado para móvil */}
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl border-0 mb-6 overflow-hidden shadow-[0_4px_16px_rgba(53,63,239,0.04)]">
                 <div className="relative h-[200px] sm:h-[250px] md:h-[300px] overflow-hidden">
                   <img
                     src={`${constants.base_path}/${event.stadiumPhotos[0]}`}
@@ -2033,17 +2034,17 @@ export function EventDetail() {
               </div>
 
               {/* Event Description and Context Section - Colapsable */}
-              <section className="mb-4 sm:mb-6">
-                <div className="bg-white rounded-xl border border-gray-200 mb-4 sm:mb-6">
+              <section className="mb-6">
+                <div className="bg-white/80 backdrop-blur-xl rounded-2xl border-0 mb-6 shadow-[0_2px_12px_rgba(53,63,239,0.03)]">
                   <button
                     onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                    className="w-full px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                    className="w-full px-4 py-3 hover:bg-gray-50/50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                        <span className="w-5 h-5 sm:w-6 sm:h-6 bg-primary-100 rounded-md flex items-center justify-center text-primary-600 flex-shrink-0">
-                          <span className="text-xs font-bold">i</span>
-                        </span>
+                      <h2 className="text-lg font-bold text-gray-900 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center shadow-sm">
+                          <span className="text-white text-xs font-bold">i</span>
+                        </div>
                         Descripción del evento
                       </h2>
                       <ChevronDown
@@ -2062,43 +2063,43 @@ export function EventDetail() {
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                         className="overflow-hidden"
                       >
-                        <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
-                          <p className="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">
-                            El <span className="font-bold text-primary">{new Date(event.eventDate).toLocaleDateString('es-CO', {
+                        <div className="px-4 py-3">
+                          <p className="text-gray-700 mb-3 text-sm leading-relaxed">
+                            El <span className="font-bold text-[#353FEF]">{new Date(event.eventDate).toLocaleDateString('es-CO', {
                               weekday: 'long',
                               day: 'numeric',
                               month: 'long',
                               year: 'numeric'
-                            })} a las {event.eventTime}</span>, aprovecha la emoción del fútbol para conectar con tu audiencia en <span className="font-bold text-primary">{event.stadiumName}</span>.
-                            Durante el emocionante encuentro entre <span className="font-bold text-primary">{event.homeTeamName} y {event.awayTeamName}</span>, tu anuncio cobrará vida en las
-                            pantallas LED perimetrales del estadio, capturando la atención de <span className="font-bold text-primary">{event.estimatedAttendance.toLocaleString()}
+                            })} a las {event.eventTime}</span>, aprovecha la emoción del fútbol para conectar con tu audiencia en <span className="font-bold text-[#353FEF]">{event.stadiumName}</span>.
+                            Durante el emocionante encuentro entre <span className="font-bold text-[#353FEF]">{event.homeTeamName} y {event.awayTeamName}</span>, tu anuncio cobrará vida en las
+                            pantallas LED perimetrales del estadio, capturando la atención de <span className="font-bold text-[#353FEF]">{event.estimatedAttendance.toLocaleString()}
                               espectadores apasionados</span> en las gradas y miles más a través de la transmisión televisiva nacional.
-                            Cada momento publicitario tiene una duración de <span className="font-bold text-primary">15 segundos</span> y se reproduce en formato panorámico de alta definición,
+                            Cada momento publicitario tiene una duración de <span className="font-bold text-[#353FEF]">15 segundos</span> y se reproduce en formato panorámico de alta definición,
                             garantizando máxima visibilidad y recordación durante los momentos más intensos e inolvidables del partido.
                           </p>
 
-                          {/* Event Context - Más compacto */}
-                          <div className="mt-3 sm:mt-4">
-                            <h3 className="text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
-                              <Trophy className="w-4 h-4 text-primary-600" />
+                          {/* Event Context - Compacto */}
+                          <div className="mt-3">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                              <Trophy className="w-4 h-4 text-[#353FEF]" />
                               Contexto del evento
                             </h3>
-                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                              <div className="flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 bg-white border border-gray-200 rounded-full text-xs sm:text-sm font-medium text-gray-700 shadow-sm">
-                                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <div className="flex flex-wrap gap-1.5">
+                              <div className="flex items-center gap-1.5 px-2 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700 shadow-sm">
+                                <Users className="w-3 h-3" />
                                 <span>Evento Deportivo</span>
                               </div>
-                              <div className="px-3 py-1.5 bg-green-100 border border-green-200 rounded-full text-sm font-medium text-green-800">
+                              <div className="px-2 py-1 bg-[#353FEF]/10 rounded-full text-xs font-medium text-[#353FEF]">
                                 Audiencia en Vivo
                               </div>
-                              <div className="px-3 py-1.5 bg-blue-100 border border-blue-200 rounded-full text-sm font-medium text-blue-800">
+                              <div className="px-2 py-1 bg-[#353FEF]/10 rounded-full text-xs font-medium text-[#353FEF]">
                                 Transmisión TV
                               </div>
-                              <div className="px-3 py-1.5 bg-orange-100 border border-orange-200 rounded-full text-sm font-medium text-orange-800">
+                              <div className="px-2 py-1 bg-orange-100 rounded-full text-xs font-medium text-orange-700">
                                 Fútbol
                               </div>
-                              <div className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-full text-sm font-medium text-blue-800">
-                                <Users className="w-3.5 h-3.5 inline mr-1.5" />
+                              <div className="px-2 py-1 bg-gradient-to-r from-[#353FEF]/5 to-[#353FEF]/10 rounded-full text-xs font-medium text-[#353FEF]">
+                                <Users className="w-3 h-3 inline mr-1" />
                                 Familias y Aficionados
                               </div>
                             </div>
@@ -2111,17 +2112,17 @@ export function EventDetail() {
               </section>
 
               {/* Technical Specifications Section - Colapsable */}
-              <section className="mb-4 sm:mb-6">
-                <div className="bg-white rounded-xl border border-gray-200">
+              <section className="mb-6">
+                <div className="bg-white/80 backdrop-blur-xl rounded-2xl border-0 shadow-[0_2px_12px_rgba(53,63,239,0.03)]">
                   <button
                     onClick={() => setIsSpecsExpanded(!isSpecsExpanded)}
-                    className="w-full px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                    className="w-full px-4 py-3 hover:bg-gray-50/50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                        <span className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center text-blue-600 flex-shrink-0">
-                          <Info className="w-4 h-4" />
-                        </span>
+                      <h2 className="text-lg font-bold text-gray-900 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center shadow-sm">
+                          <Info className="w-4 h-4 text-white" />
+                        </div>
                         Especificaciones técnicas
                       </h2>
                       <ChevronDown
@@ -2140,58 +2141,57 @@ export function EventDetail() {
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                         className="overflow-hidden"
                       >
-                        <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
+                        <div className="px-4 py-3">
                           {/* Especificaciones técnicas completas */}
-                          <div className="space-y-6">
+                          <div className="space-y-4">
                             {/* Dimensiones y Formato */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="bg-gray-50 p-4 rounded-xl">
-                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="bg-gradient-to-br from-gray-50/50 via-white to-gray-50/30 backdrop-blur-sm p-3 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                                <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                                  <svg className="w-4 h-4 text-[#353FEF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                                   </svg>
                                   Dimensiones
                                 </h4>
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Resolución:</span>
-                                    <span className="text-sm font-medium">1920 x 96 píxeles</span>
+                                    <span className="text-xs text-gray-600">Resolución:</span>
+                                    <span className="text-xs font-medium">1920 x 96 píxeles</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Aspecto:</span>
-                                    <span className="text-sm font-medium">20:1 (Panorámico)</span>
+                                    <span className="text-xs text-gray-600">Aspecto:</span>
+                                    <span className="text-xs font-medium">20:1 (Panorámico)</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Orientación:</span>
-                                    <span className="text-sm font-medium">Horizontal</span>
+                                    <span className="text-xs text-gray-600">Orientación:</span>
+                                    <span className="text-xs font-medium">Horizontal</span>
                                   </div>
                                 </div>
-                                <div className="mt-3 w-full h-8 bg-gray-200 rounded-lg relative overflow-hidden">
+                                <div className="mt-2 w-full h-6 bg-gray-200 rounded-lg relative overflow-hidden">
                                   <div className="absolute inset-0 flex items-center justify-center">
                                     <span className="text-xs text-gray-600 font-medium">1920 x 96 px</span>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="bg-blue-50 p-4 rounded-xl">
-                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                  <PlayCircle className="w-5 h-5 text-blue-600" />
+                              <div className="bg-gradient-to-br from-[#353FEF]/5 via-white to-[#353FEF]/3 backdrop-blur-sm p-3 rounded-xl shadow-[0_2px_8px_rgba(53,63,239,0.04)]">
+                                <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                                  <PlayCircle className="w-4 h-4 text-[#353FEF]" />
                                   Formato de Video
                                 </h4>
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Formato:</span>
-                                    <span className="text-sm font-medium">MP4</span>
+                                    <span className="text-xs text-gray-600">Formato:</span>
+                                    <span className="text-xs font-medium">MP4</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Duración:</span>
-                                    <span className="text-sm font-medium">Máximo 15 segundos</span>
+                                    <span className="text-xs text-gray-600">Duración:</span>
+                                    <span className="text-xs font-medium">Máximo 15 segundos</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Tamaño:</span>
-                                    <span className="text-sm font-medium">Máximo 100MB</span>
+                                    <span className="text-xs text-gray-600">Tamaño:</span>
+                                    <span className="text-xs font-medium">Máximo 100MB</span>
                                   </div>
-
                                 </div>
                               </div>
                             </div>
@@ -2199,50 +2199,50 @@ export function EventDetail() {
 
 
                             {/* Recomendaciones de Diseño */}
-                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
-                              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="bg-gradient-to-br from-amber-50/50 via-white to-amber-50/30 backdrop-blur-sm p-3 rounded-xl shadow-[0_2px_8px_rgba(245,158,11,0.04)]">
+                              <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 Recomendaciones de Diseño
                               </h4>
-                              <ul className="space-y-2 text-sm text-gray-700">
+                              <ul className="space-y-1 text-xs text-gray-700">
                                 <li className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
                                   <span>Usa colores vibrantes y alto contraste para mejor visibilidad</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
                                   <span>Mantén el texto grande y legible (mínimo 48px de altura)</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
                                   <span>Evita transiciones muy rápidas o efectos estroboscópicos</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
                                   <span>Incluye tu logo y llamado a la acción claro</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
                                   <span>El video se reproducirá en loop durante tu momento</span>
                                 </li>
                               </ul>
                             </div>
                           </div>
 
-                          {/* Link a plantillas de Canva - Más compacto */}
-                          <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+                          {/* Link a plantillas de Canva - Compacto */}
+                          <div className="mt-3 p-2 bg-gradient-to-r from-[#353FEF]/5 to-purple-50/50 backdrop-blur-sm rounded-xl shadow-[0_2px_8px_rgba(53,63,239,0.04)]">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-purple-600" />
-                                <span className="font-medium text-purple-900 text-sm">¿Necesitas plantillas?</span>
+                                <Sparkles className="w-3 h-3 text-[#353FEF]" />
+                                <span className="font-medium text-gray-800 text-xs">¿Necesitas plantillas?</span>
                               </div>
                               <a
                                 href="https://www.canva.com/design/DAGXqVhwzQs/view?utm_content=DAGXqVhwzQs&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink&mode=preview"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-[#353FEF] to-[#2A32C5] text-white rounded-lg hover:from-[#2A32C5] hover:to-[#1E2499] transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
                               >
                                 Ver en Canva
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2265,54 +2265,86 @@ export function EventDetail() {
             {/* Sidebar - Purchase Options - Optimizado para móvil */}
             <div className="lg:col-span-1">
               <div className="sticky top-24">
-                <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-6">
-                  <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <h2 className="text-base sm:text-lg font-semibold text-gray-800">Resumen de compra</h2>
+                <div className="bg-white/80 backdrop-blur-xl p-5 rounded-2xl border-0 shadow-[0_4px_16px_rgba(53,63,239,0.04)] mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">Resumen de compra</h2>
                     {selectedMoments.length > 0 && (
-                      <span className="text-xs sm:text-sm text-primary bg-primary-50 px-2 py-1 sm:px-3 sm:py-1 rounded-full font-medium">
-                        {selectedMoments.length} momentos
+                      <span className="text-sm text-[#353FEF] bg-[#353FEF]/10 px-3 py-1 rounded-md font-medium">
+                        {selectedMoments.length} momento{selectedMoments.length !== 1 ? 's' : ''}
                       </span>
                     )}
                   </div>
 
-                  <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                    <div className="p-2 sm:p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">Evento</span>
-                        <span className="font-medium text-gray-800 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">
-                          {event.homeTeamName} vs {event.awayTeamName}
-                        </span>
+                                     {/* Match Header with Teams */}
+                   <div className="bg-gradient-to-r from-[#353FEF]/5 to-[#353FEF]/10 backdrop-blur-sm rounded-2xl p-4 mb-4 shadow-[0_2px_12px_rgba(53,63,239,0.04)] border-0">
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="flex items-center gap-2 flex-1 justify-end">
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900 text-sm">{event.homeTeamName}</div>
+                          <div className="text-xs text-gray-600">Local</div>
+                        </div>
+                        <div className="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm flex items-center justify-center">
+                          <img 
+                            src={`${constants.base_path}/${event.homeTeamImage}`}
+                            alt={event.homeTeamName}
+                            className="w-6 h-6 object-contain"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
+                        <span className="text-xs font-bold text-gray-600">VS</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm flex items-center justify-center">
+                          <img 
+                            src={`${constants.base_path}/${event.awayTeamImage}`}
+                            alt={event.awayTeamName}
+                            className="w-6 h-6 object-contain"
+                          />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-semibold text-gray-900 text-sm">{event.awayTeamName}</div>
+                          <div className="text-xs text-gray-600">Visitante</div>
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="p-2 sm:p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">Fecha</span>
-                        <span className="font-medium text-gray-800 text-xs sm:text-sm">
-                          {new Date(event.eventDate).toLocaleDateString('es-CO', {
-                            day: 'numeric',
-                            month: 'short'
-                          })} • {event.eventTime}
-                        </span>
-                      </div>
+                  {/* Event Details */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600 flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Fecha
+                      </span>
+                      <span className="font-medium text-gray-900 text-sm">
+                        {new Date(event.eventDate).toLocaleDateString('es-CO', {
+                          day: 'numeric',
+                          month: 'short'
+                        })} • {event.eventTime}
+                      </span>
                     </div>
 
-                    <div className="p-2 sm:p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">Estadio</span>
-                        <span className="font-medium text-gray-800 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">
-                          {event.stadiumName}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Estadio
+                      </span>
+                      <span className="font-medium text-gray-900 text-sm">
+                        {event.stadiumName}
+                      </span>
                     </div>
 
-                    <div className="p-2 sm:p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">Audiencia</span>
-                        <span className="font-medium text-gray-800 text-xs sm:text-sm">
-                          {(event.estimatedAttendance / 1000).toFixed(0)}K personas
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm text-gray-600 flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Audiencia
+                      </span>
+                      <span className="font-medium text-gray-900 text-sm">
+                        {(event.estimatedAttendance / 1000).toFixed(0)}K personas
+                      </span>
                     </div>
                   </div>
 
@@ -2374,13 +2406,16 @@ export function EventDetail() {
                   )}
                 </div>
 
-                {/* Purchase Summary by Game Period */}
+                {/* Selected Moments Summary */}
                 {selectedMoments.length > 0 && (
-                  <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-800">Momentos seleccionados</h3>
-                      <div className="px-3 py-1 bg-primary-50 rounded-full">
-                        <span className="text-sm font-medium text-primary">
+                  <div className="bg-white/80 backdrop-blur-xl p-5 rounded-2xl border-0 shadow-[0_4px_16px_rgba(53,63,239,0.04)]">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-6 h-6 bg-[#353FEF]/10 rounded-md flex items-center justify-center">
+                        <Clock className="w-3.5 h-3.5 text-[#353FEF]" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900">Momentos seleccionados</h3>
+                      <div className="px-2 py-1 bg-[#353FEF]/10 rounded-md ml-auto">
+                        <span className="text-xs font-medium text-[#353FEF]">
                           {selectedMoments.length} momento{selectedMoments.length !== 1 ? 's' : ''}
                         </span>
                       </div>
@@ -2393,34 +2428,34 @@ export function EventDetail() {
                         if (periodMoments.length === 0) return null;
 
                         return (
-                          <div key={period.id} className="p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
+                          <div key={period.id} className="rounded-xl p-3 bg-gradient-to-r from-gray-50/50 via-white to-gray-50/30 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.02)] border-0">
+                            <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <div className={`w-3 h-3 rounded-full ${period.id === 'FirstHalf' ? 'bg-blue-500' :
-                                  period.id === 'Halftime' ? 'bg-amber-500' : 'bg-green-500'
+                                <div className={`w-2.5 h-2.5 rounded-full ${period.id === 'FirstHalf' ? 'bg-[#353FEF]' :
+                                  period.id === 'Halftime' ? 'bg-amber-500' : 'bg-[#353FEF]'
                                   }`}></div>
-                                <span className="font-medium text-gray-800">{period.name}</span>
+                                <span className="font-medium text-gray-900 text-sm">{period.name}</span>
                               </div>
-                              <span className="text-sm text-gray-600">
-                                {periodMoments.length} momento{periodMoments.length !== 1 ? 's' : ''}
-                              </span>
+                              <div className="text-right">
+                                <div className="text-xs text-gray-600">
+                                  {periodMoments.length} momento{periodMoments.length !== 1 ? 's' : ''}
+                                </div>
+                                <div className="text-sm font-semibold text-gray-900">
+                                  ${(periodMoments.length * period.price).toLocaleString()} COP
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1.5">
                               {periodMoments
                                 .sort((a, b) => a.minute - b.minute)
                                 .map((moment, index) => (
                                   <span
                                     key={index}
-                                    className="inline-flex items-center px-2 py-1 bg-white rounded text-xs font-medium text-gray-700 border"
+                                    className="inline-flex items-center px-2.5 py-1 bg-[#353FEF]/10 text-[#353FEF] rounded-md text-xs font-medium"
                                   >
                                     Min {moment.minute}
                                   </span>
                                 ))}
-                            </div>
-                            <div className="mt-2 text-right">
-                              <span className="text-sm font-semibold text-gray-800">
-                                ${(periodMoments.length * period.price).toLocaleString()} COP
-                              </span>
                             </div>
                           </div>
                         );
@@ -2429,10 +2464,13 @@ export function EventDetail() {
 
                     {/* Timeline Visualization */}
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Cronología del partido</h4>
-                      <div className="relative">
+                      <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        <BarChart3 className="w-4 h-4 text-gray-600" />
+                        Cronología del partido
+                      </h4>
+                      <div className="relative bg-gradient-to-br from-gray-50/50 via-white to-gray-50/30 backdrop-blur-sm rounded-xl p-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
                         {/* Timeline line */}
-                        <div className="absolute top-4 left-4 right-4 h-0.5 bg-gray-200"></div>
+                        <div className="absolute top-6 left-6 right-6 h-0.5 bg-gray-300"></div>
 
                         {/* Timeline periods */}
                         <div className="flex justify-between relative">
@@ -2442,18 +2480,18 @@ export function EventDetail() {
 
                             return (
                               <div key={period.id} className="flex flex-col items-center">
-                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${hasSelection
-                                  ? 'bg-primary border-primary text-white'
-                                  : 'bg-white border-gray-300 text-gray-400'
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm ${hasSelection
+                                  ? 'bg-[#353FEF] text-white'
+                                  : 'bg-white/80 backdrop-blur-sm text-gray-500'
                                   }`}>
                                   {periodMoments.length || '0'}
                                 </div>
-                                <div className="mt-1 text-center">
-                                  <div className="text-xs font-medium text-gray-700">
+                                <div className="mt-1.5 text-center">
+                                  <div className="text-xs font-medium text-gray-800">
                                     {period.name.split(' ')[0]}
                                   </div>
                                   <div className="text-xs text-gray-500">
-                                    {period.name.split(' ')[1] || ''}
+                                    {period.name.split(' ')[1] || 'Tiempo'}
                                   </div>
                                 </div>
                               </div>
@@ -2465,18 +2503,18 @@ export function EventDetail() {
 
                     {/* Summary Stats */}
                     <div className="pt-3 border-t border-gray-200">
-                      <div className="grid grid-cols-2 gap-4 text-center">
-                        <div>
-                          <div className="text-lg font-bold text-gray-800">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center bg-gradient-to-br from-gray-50/50 via-white to-gray-50/30 backdrop-blur-sm rounded-xl p-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                          <div className="text-base font-bold text-gray-900">
                             {selectedMoments.length * 15}s
                           </div>
-                          <div className="text-xs text-gray-500">Tiempo total</div>
+                          <div className="text-xs text-gray-600">Tiempo total</div>
                         </div>
-                        <div>
-                          <div className="text-lg font-bold text-primary">
+                        <div className="text-center bg-gradient-to-br from-[#353FEF]/10 via-white to-[#353FEF]/5 backdrop-blur-sm rounded-xl p-2 shadow-[0_2px_12px_rgba(53,63,239,0.04)]">
+                          <div className="text-base font-bold text-[#353FEF]">
                             ${totalPrice.toLocaleString()}
                           </div>
-                          <div className="text-xs text-gray-500">Total COP</div>
+                          <div className="text-xs text-[#353FEF]">Total COP</div>
                         </div>
                       </div>
                     </div>
@@ -2485,7 +2523,7 @@ export function EventDetail() {
 
                 {/* Empty State */}
                 {selectedMoments.length === 0 && (
-                  <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl border-0 shadow-[0_4px_16px_rgba(53,63,239,0.04)]">
                     <div className="text-center py-6">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <Clock className="w-8 h-8 text-gray-400" />
@@ -2503,13 +2541,13 @@ export function EventDetail() {
         </div>
       </div>
 
-      {/* Mobile Bottom Bar - Optimizado con mejor espaciado */}
+      {/* Modern Mobile Bottom Bar - Optimizado con mejor espaciado */}
       {flowStep === 'select-moments' && (
-        <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white border-t border-neutral-200 safe-bottom">
+        <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white/90 backdrop-blur-xl border-t border-white/20 safe-bottom shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
           <div className="p-3 pb-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-neutral-600 text-sm">Total</span>
-              <span className="font-semibold text-primary text-sm">${totalPrice.toLocaleString()} COP</span>
+                              <span className="font-semibold text-[#353FEF] text-sm">${totalPrice.toLocaleString()} COP</span>
             </div>
             <Button
               variant="primary"
@@ -2518,7 +2556,7 @@ export function EventDetail() {
               icon={ArrowRight}
               disabled={selectedMoments.length === 0}
               onClick={handleContinue}
-              className="h-12 text-sm font-medium"
+              className="h-9 text-sm font-medium"
             >
               Continuar
             </Button>

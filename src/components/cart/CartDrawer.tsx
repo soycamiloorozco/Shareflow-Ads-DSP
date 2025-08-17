@@ -35,11 +35,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     trapFocus: true,
     autoFocus: true
   });
-  const { announceCartAction, announceLoading } = useScreenReader();
   
   // Cart management hooks
-  const { getExpiringEvents, getTimeUntilExpiration } = useCartExpiration();
-  const { scheduleEmailNotifications } = useCartTracking();
+  const { getExpiringEvents } = useCartExpiration();
 
   // Handle escape key
   useEffect(() => {
@@ -52,8 +50,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
-
-
 
   // Focus management
   useEffect(() => {
@@ -114,26 +110,34 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           {/* Drawer */}
           <motion.div
             ref={(node) => {
-              drawerRef.current = node;
+              if (drawerRef.current !== node) {
+                Object.defineProperty(drawerRef, 'current', {
+                  value: node,
+                  writable: true
+                });
+              }
               if (containerRef.current !== node) {
-                containerRef.current = node;
+                Object.defineProperty(containerRef, 'current', {
+                  value: node,
+                  writable: true
+                });
               }
             }}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-white/95 backdrop-blur-xl shadow-[0_16px_64px_rgba(0,0,0,0.15)] z-50 flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-labelledby="cart-title"
             aria-describedby="cart-description"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 bg-gradient-to-br from-[#353FEF] to-[#2A32C5] rounded-xl flex items-center justify-center shadow-sm">
+                  <ShoppingBag className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h2 id="cart-title" className="text-lg font-semibold text-gray-900">
@@ -147,7 +151,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/50 rounded-lg transition-colors backdrop-blur-sm"
                 aria-label="Cerrar carrito"
               >
                 <X className="w-5 h-5 text-gray-600" />
@@ -158,7 +162,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <div className="flex-1 overflow-y-auto">
               {cart.loading ? (
                 <div className="flex items-center justify-center h-32">
-                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-[#353FEF] border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : cart.items.length === 0 ? (
                 <EmptyCartState onClose={onClose} />
@@ -169,7 +173,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     const expiringEvents = getExpiringEvents();
                     if (expiringEvents.length > 0) {
                       return (
-                        <div className="p-3 bg-amber-50 border-b border-amber-200">
+                        <div className="p-3 bg-gradient-to-r from-amber-50/80 to-amber-100/60 backdrop-blur-sm rounded-xl mx-4 mt-4 shadow-[0_2px_8px_rgba(245,158,11,0.08)]">
                           <div className="flex items-center gap-2 text-amber-800">
                             <Clock className="w-4 h-4" />
                             <span className="text-sm font-medium">
@@ -184,7 +188,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                   {/* Events Display */}
                   <div className="flex-1">
-                    <CartItemList items={cart.items} onRemoveItem={removeEvent} />
+                    <CartItemList items={cart.items} onRemoveItem={removeEvent} onConfigureMoments={onConfigureMoments} />
                   </div>
 
 
@@ -205,7 +209,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Error Display */}
             {cart.error && (
-              <div className="p-4 bg-red-50 border-t border-red-200">
+              <div className="p-4 bg-gradient-to-r from-red-50/80 to-red-100/60 backdrop-blur-sm rounded-xl mx-4 mb-4 shadow-[0_2px_8px_rgba(239,68,68,0.08)]">
                 <p className="text-sm text-red-600">{cart.error}</p>
               </div>
             )}
@@ -221,7 +225,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 // Empty Cart State Component
 const EmptyCartState: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+    <div className="w-20 h-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mb-4 shadow-sm">
       <ShoppingBag className="w-10 h-10 text-gray-400" />
     </div>
     <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -232,7 +236,7 @@ const EmptyCartState: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     </p>
     <button
       onClick={onClose}
-      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+      className="px-6 py-3 bg-[#353FEF] text-white rounded-lg hover:bg-[#2A32C5] transition-colors font-medium shadow-sm"
     >
       Explorar Eventos
     </button>
@@ -243,16 +247,18 @@ const EmptyCartState: React.FC<{ onClose: () => void }> = ({ onClose }) => (
 interface CartItemListProps {
   items: CartEvent[];
   onRemoveItem: (cartId: string) => void;
+  onConfigureMoments?: (event: CartEvent) => void;
 }
 
-const CartItemList: React.FC<CartItemListProps> = ({ items, onRemoveItem }) => (
+const CartItemList: React.FC<CartItemListProps> = ({ items, onRemoveItem, onConfigureMoments }) => (
   <div className="p-4 space-y-4">
     {items.map((item, index) => (
       <CartItemCard 
         key={item.cartId} 
         item={item} 
         index={index}
-        onRemove={() => onRemoveItem(item.cartId)} 
+        onRemove={() => onRemoveItem(item.cartId)}
+        onConfigureMoments={onConfigureMoments}
       />
     ))}
   </div>
@@ -263,9 +269,10 @@ interface CartItemCardProps {
   item: CartEvent;
   index: number;
   onRemove: () => void;
+  onConfigureMoments?: (event: CartEvent) => void;
 }
 
-const CartItemCard: React.FC<CartItemCardProps> = ({ item, index, onRemove }) => {
+const CartItemCard: React.FC<CartItemCardProps> = ({ item, index, onRemove, onConfigureMoments }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -282,12 +289,18 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, index, onRemove }) =>
     });
   };
 
+  const handleConfigureOrEdit = () => {
+    if (onConfigureMoments) {
+      onConfigureMoments(item);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow"
+      className="bg-white/80 backdrop-blur-sm rounded-xl p-4 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
     >
       {/* Event Header */}
       <div className="flex items-start gap-3 mb-3">
@@ -343,14 +356,14 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, index, onRemove }) =>
 
         <button
           onClick={onRemove}
-          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors group"
+          className="p-1.5 hover:bg-red-50/80 rounded-lg transition-colors group backdrop-blur-sm"
           aria-label={`Eliminar ${item.homeTeamName} vs ${item.awayTeamName} del carrito`}
         >
           <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
         </button>
       </div>
 
-      {/* Configuration Status */}
+      {/* Configuration Status and Moments Summary */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {item.isConfigured ? (
@@ -376,20 +389,50 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, index, onRemove }) =>
           <p className="font-bold text-gray-900">
             {formatPrice(item.finalPrice || item.estimatedPrice)}
           </p>
-          {!item.isConfigured && (
-            <button 
-              onClick={() => onConfigureMoments?.(item)}
-              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 mt-1 transition-colors"
-            >
-              <Settings className="w-3 h-3" />
-              Configurar
-            </button>
-          )}
+          {/* Always show configure/edit button */}
+          <button 
+            onClick={handleConfigureOrEdit}
+            className="text-xs text-[#353FEF] hover:text-[#2A32C5] flex items-center gap-1 mt-1 transition-colors"
+          >
+            <Settings className="w-3 h-3" />
+            {item.isConfigured ? 'Editar' : 'Configurar'}
+          </button>
         </div>
       </div>
 
+      {/* Detailed Moments Display for Configured Events */}
+      {item.isConfigured && item.selectedMoments && item.selectedMoments.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-100/50">
+          <div className="space-y-2">
+            <h5 className="text-xs font-medium text-gray-700 mb-2">Momentos seleccionados:</h5>
+            <div className="grid grid-cols-1 gap-2">
+              {item.selectedMoments.map((moment, index) => (
+                <div key={index} className="flex items-center justify-between bg-gray-50/80 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      moment.period === 'FirstHalf' ? 'bg-blue-500' :
+                      moment.period === 'Halftime' ? 'bg-amber-500' : 'bg-green-500'
+                    }`}></div>
+                    <span className="text-xs font-medium text-gray-700">
+                      {moment.period === 'FirstHalf' ? 'Primer Tiempo' :
+                       moment.period === 'Halftime' ? 'Entre Tiempo' : 'Segundo Tiempo'}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {moment.quantity > 1 ? `${moment.quantity} momentos` : '1 momento'}
+                    </span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-900">
+                    {formatPrice(moment.price * moment.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Audience Info */}
-      <div className="mt-3 pt-3 border-t border-gray-100">
+      <div className="mt-3 pt-3 border-t border-gray-100/50">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span className="flex items-center gap-1">
             <Users className="w-3 h-3" />
@@ -441,7 +484,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
   };
 
   return (
-    <div className="border-t border-gray-200 bg-gray-50 p-4 space-y-4">
+    <div className="bg-white/50 backdrop-blur-sm p-4 space-y-4">
       {/* Summary */}
       <div className="space-y-2">
         <div className="flex justify-between items-center">
@@ -470,7 +513,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
         
         <button
           onClick={handleClearCart}
-          className="w-full px-4 py-2 text-gray-600 hover:text-red-600 transition-colors text-sm"
+          className="w-full px-4 py-2 text-gray-600 hover:text-red-600 transition-colors text-sm rounded-lg hover:bg-red-50/50 backdrop-blur-sm"
         >
           Vaciar carrito
         </button>

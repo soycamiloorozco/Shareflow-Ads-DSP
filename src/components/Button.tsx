@@ -1,5 +1,5 @@
 import React from 'react';
-import { DivideIcon as LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -23,19 +23,19 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-semibold transition-all duration-200 rounded-full focus-ring disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 rounded-lg focus-ring disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-[#ABFAA9] text-[#0B0B16] hover:bg-[#9AE998] active:bg-[#9AE998]/90',
+    primary: 'bg-[#353FEF] text-white hover:bg-[#2A32C5] active:bg-[#1E2499] disabled:bg-gray-400',
     secondary: 'bg-[#F2F4F7] text-[#0B0B16] hover:bg-[#E4E7EC] active:bg-[#E4E7EC]/90',
-    outline: 'border-2 border-[#ABFAA9] text-[#ABFAA9] hover:bg-[#ABFAA9]/10 active:bg-[#ABFAA9]/20',
+    outline: 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-sm active:bg-gray-50 shadow-[0_2px_8px_rgba(0,0,0,0.04)]',
     ghost: 'text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200'
   };
 
   const sizes = {
-    sm: 'text-sm h-8 px-4 gap-2',
-    md: 'text-base h-10 px-6 gap-3',
-    lg: 'text-lg h-12 px-8 gap-4'
+    sm: 'text-sm h-8 px-3 gap-1.5',
+    md: 'text-sm h-9 px-4 gap-2',
+    lg: 'text-sm h-10 px-5 gap-2'
   };
 
   const widthClass = fullWidth ? 'w-full' : '';

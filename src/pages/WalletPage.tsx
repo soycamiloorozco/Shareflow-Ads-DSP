@@ -106,7 +106,7 @@ const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: (id: any) => v
       <button
         type="submit"
         disabled={!stripe || isProcessing}
-        className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-2.5 bg-[#353FEF] hover:bg-[#2A32C5] disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
       >
         {isProcessing ? (
           <>
