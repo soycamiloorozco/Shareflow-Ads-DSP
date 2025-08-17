@@ -1,13 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  X, Check, CreditCard, Gift, Crown, AlertTriangle, ChevronRight, 
-  ChevronLeft, Loader2, Sparkles, Zap, Star
+  X, Check, CreditCard, Gift, Crown, AlertTriangle, 
+  Loader2, Sparkles, Zap, Star, Shield, Info, ArrowRight, Lock
 } from 'lucide-react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
+
+// Stripe appearance configuration for professional look
+const stripeAppearance = {
+  theme: 'stripe' as const,
+  variables: {
+    colorPrimary: '#3b82f6',
+    colorBackground: '#ffffff',
+    colorText: '#1f2937',
+    colorDanger: '#ef4444',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    spacingUnit: '2px',
+    borderRadius: '6px',
+    fontSizeBase: '13px',
+    colorTextSecondary: '#6b7280',
+    colorTextPlaceholder: '#9ca3af'
+  },
+  rules: {
+    '.Input': {
+      padding: '8px 10px',
+      fontSize: '13px',
+      border: '1px solid #e5e7eb',
+      boxShadow: 'none',
+      transition: 'border-color 0.2s ease',
+      fontFamily: 'Inter, system-ui, sans-serif'
+    },
+    '.Input:focus': {
+      borderColor: '#3b82f6',
+      boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.1)'
+    },
+    '.Input--invalid': {
+      borderColor: '#ef4444'
+    },
+    '.Label': {
+      fontSize: '11px',
+      fontWeight: '500',
+      color: '#374151',
+      marginBottom: '3px',
+      fontFamily: 'Inter, system-ui, sans-serif'
+    },
+    '.Tab': {
+      padding: '6px 10px',
+      borderRadius: '6px',
+      border: '1px solid #e5e7eb',
+      fontSize: '12px',
+      fontWeight: '500',
+      fontFamily: 'Inter, system-ui, sans-serif'
+    },
+    '.Tab:hover': {
+      borderColor: '#d1d5db'
+    },
+    '.Tab--selected': {
+      borderColor: '#3b82f6',
+      backgroundColor: '#eff6ff'
+    }
+  }
+};
 
 interface RechargePackage {
   amount: number;
@@ -16,17 +72,7 @@ interface RechargePackage {
   description: string;
   icon: string;
   popular?: boolean;
-}
-
-interface PaymentData {
-  cardNumber: string;
-  cardHolder: string;
-  cardExpiry: string;
-  cardCvv: string;
-  documentType: 'CC' | 'CE' | 'TI' | 'PAS';
-  documentNumber: string;
-  email: string;
-  phone: string;
+  savings?: string;
 }
 
 interface Campaign {
@@ -68,14 +114,14 @@ const rechargePackages: RechargePackage[] = [
     amount: 100000,
     label: "100K",
     title: "Explorando",
-    description: "Perfecto para comenzar",
+    description: "Ideal para empezar",
     icon: "🎯"
   },
   {
     amount: 500000,
     label: "500K", 
     title: "Creciendo",
-    description: "El más popular",
+    description: "Más contenido",
     icon: "⚡",
     popular: true
   },
@@ -83,7 +129,7 @@ const rechargePackages: RechargePackage[] = [
     amount: 1500000,
     label: "1.5M",
     title: "Expandiendo", 
-    description: "Para marcas serias",
+    description: "Máximo alcance",
     icon: "🔥"
   },
   {
@@ -114,43 +160,44 @@ const RechargeModal: React.FC<RechargeModalProps> = ({
   deposit,
   PaymentForm
 }) => {
-  const [step, setStep] = useState<'packages' | 'payment'>('packages');
-  const [selectedAmount, setSelectedAmount] = useState<number>(0);
+  const [selectedAmount, setSelectedAmount] = useState<number>(500000); // Default to popular option
   const [customAmount, setCustomAmount] = useState<string>('');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'pse' | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentData, setPaymentData] = useState<PaymentData>({
-    cardNumber: '',
-    cardHolder: '',
-    cardExpiry: '',
-    cardCvv: '',
-    documentType: 'CC',
-    documentNumber: '',
-    email: '',
-    phone: ''
-  });
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedAmount(500000);
+      setCustomAmount('');
+      setIsProcessing(false);
+      setShowPaymentForm(false);
+    }
+  }, [isOpen]);
 
   const handleAmountSelect = (amount: number) => {
     setSelectedAmount(amount);
-    setCustomAmount('');
+    setCustomAmount(amount.toString());
+    setShowPaymentForm(true);
   };
 
   const handleCustomAmountChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
     if (numericValue) {
       const amount = parseInt(numericValue);
-      setCustomAmount(numericValue);
-      setSelectedAmount(amount);
+      if (amount >= 100000) {
+        setCustomAmount(numericValue);
+        setSelectedAmount(amount);
+        setShowPaymentForm(true);
+      } else {
+        setCustomAmount(numericValue);
+        setSelectedAmount(0);
+        setShowPaymentForm(false);
+      }
     } else {
       setCustomAmount('');
       setSelectedAmount(0);
-    }
-  };
-
-  const handleContinueToPayment = () => {
-    if (selectedAmount >= 100000) {
-      setSelectedPaymentMethod('card');
-      setStep('payment');
+      setShowPaymentForm(false);
     }
   };
 
@@ -173,352 +220,292 @@ const RechargeModal: React.FC<RechargeModalProps> = ({
   };
 
   const handleCloseModal = () => {
-    setStep('packages');
-    setSelectedAmount(0);
+    setSelectedAmount(500000);
     setCustomAmount('');
     setIsProcessing(false);
-    setPaymentData({
-      cardNumber: '',
-      cardHolder: '',
-      cardExpiry: '',
-      cardCvv: '',
-      documentType: 'CC',
-      documentNumber: '',
-      email: '',
-      phone: ''
-    });
-    setSelectedPaymentMethod(null);
+    setShowPaymentForm(false);
     onClose();
   };
 
   const finalAmount = selectedAmount || 0;
   const bonus = calculateBonus(finalAmount);
-  const total = finalAmount + bonus;
-  const getTotalWithCommission = () => finalAmount + calculateFinancialCommission(finalAmount, 'card');
+  const levelBonus = 0; // Always 0 since it's disabled
+  const campaignBonus = calculateCampaignBonus(finalAmount);
+  const commission = calculateFinancialCommission(finalAmount, 'card');
+  const total = finalAmount + campaignBonus; // Only campaign bonus
+  const totalWithCommission = finalAmount + commission;
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white backdrop-blur-xl w-full max-w-md sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+        initial={{ opacity: 0, y: "100%", scale: 1 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: "100%", scale: 1 }}
+        className="bg-white w-full sm:w-auto sm:max-w-5xl max-h-screen sm:max-h-[85vh] sm:rounded-xl shadow-2xl border-0 sm:border border-gray-200 overflow-hidden flex flex-col"
       >
-        {/* HEADER FIJO */}
-        <div className="flex-shrink-0 bg-blue-50 border-b border-gray-200 p-4 sm:p-6">
+        {/* Header - Compact */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Recargar Wallet</h2>
-                <p className="text-xs sm:text-sm text-gray-600">Saldo actual: {formatBalance(currentBalance)}</p>
+                <h2 className="text-lg font-bold text-gray-900">Recargar Wallet</h2>
+                <p className="text-xs text-gray-600">Saldo: {formatBalance(currentBalance)}</p>
               </div>
             </div>
             <button
               onClick={handleCloseModal}
-              className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+              className="w-8 h-8 bg-white/80 hover:bg-white rounded-lg flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4 text-gray-600" />
             </button>
           </div>
 
-          {/* Campaign Badge */}
-          {currentCampaign && step === 'packages' && (
+          {/* Campaign Alert - Compact */}
+          {currentCampaign && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-3"
+              className="mt-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-3"
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg">{currentCampaign.icon}</span>
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">{currentCampaign.icon}</span>
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold text-sm text-gray-900 truncate">{currentCampaign.name}</h3>
                     <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold whitespace-nowrap">
-                      ¡{timeLeft} DÍAS!
+                      {timeLeft} días
                     </span>
                   </div>
-                  <p className="text-xs text-gray-700 line-clamp-2">{currentCampaign.description}</p>
+                  <p className="text-xs text-gray-700">{currentCampaign.description}</p>
                 </div>
                 <div className="text-center flex-shrink-0">
-                  <p className="font-bold text-orange-600">+{currentCampaign.value}%</p>
-                  <p className="text-xs text-gray-500">{userType}</p>
+                  <div className="bg-orange-500 text-white rounded-lg px-2 py-1">
+                    <p className="font-bold text-sm leading-none">+{currentCampaign.value}%</p>
+                    <p className="text-xs opacity-90">bonus</p>
+                  </div>
                 </div>
               </div>
             </motion.div>
           )}
         </div>
 
-        {/* CONTENIDO SCROLLEABLE */}
+        {/* Content - Horizontal layout for desktop */}
         <div className="flex-1 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {step === 'packages' && (
-              <motion.div
-                key="packages"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="p-4 sm:p-6 space-y-6"
-              >
-                {/* Packages Grid */}
-                <div>
-                  <h3 className="text-md sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                    Elige tu paquete
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-                    {rechargePackages.map((pkg) => {
-                      const totalBonus = calculateBonus(pkg.amount);
-                      const finalTotal = pkg.amount + totalBonus;
-                      
-                      return (
-                        <motion.button
-                          key={pkg.amount}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleAmountSelect(pkg.amount)}
-                          className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left group ${
-                            selectedAmount === pkg.amount
-                              ? 'border-blue-500 bg-blue-50 shadow-lg'
-                              : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-blue-50/50'
-                          }`}
-                        >
-                          {/* Popular Badge */}
-                          {pkg.popular && (
-                            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold z-10">
-                              POPULAR
-                            </div>
-                          )}
-                          
-                          {/* Selected Indicator */}
-                          {selectedAmount === pkg.amount && (
-                            <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                              <Check className="w-3 h-3 text-white" />
-                            </div>
-                          )}
-                          
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg sm:text-xl">{pkg.icon}</span>
-                              <div className="min-w-0 flex-1">
-                                <div className="font-bold text-gray-900 text-sm truncate">{pkg.label}</div>
-                                <div className="text-xs text-gray-600 truncate">{pkg.title}</div>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <div className="text-md sm:text-lg font-bold text-gray-800">
-                                {formatCurrency(pkg.amount)}
-                              </div>
-                              <p className="text-xs text-gray-600 leading-tight line-clamp-2">{pkg.description}</p>
-                            </div>
-                            
-                            {/* Simplified Bonus Display */}
-                            {totalBonus > 0 && (
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
-                                <div className="text-xs font-semibold text-blue-900 mb-1">
-                                  🎁 Compras {formatCurrency(pkg.amount)}
-                                </div>
-                                <div className="text-xs font-bold text-blue-700">
-                                  Recibes {formatCreditsText(finalTotal)}
-                                </div>
-                                <div className="text-xs text-blue-600 mt-1">
-                                  Bonus: +{formatCreditsText(totalBonus)}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </motion.button>
-                      );
-                    })}
+          <div className="flex flex-col lg:flex-row h-full">
+            {/* Left Side - Amount Selection */}
+            <div className="flex-1 p-4 sm:p-5 border-b lg:border-b-0 lg:border-r border-gray-200">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-4 h-4 text-blue-500" />
+                <h3 className="text-base font-bold text-gray-900">Selecciona el monto</h3>
+              </div>
+              
+              {/* Custom Amount Input */}
+              <div className="space-y-3 mb-6">
+                <label className="text-sm font-medium text-gray-700 block">
+                  Monto a recargar
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={customAmount ? parseInt(customAmount).toLocaleString('es-CO') : ''}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      handleCustomAmountChange(value);
+                    }}
+                    placeholder="Ingresa el monto"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-colors bg-white"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm font-medium">
+                    $ COP
                   </div>
                 </div>
+                {customAmount && selectedAmount < 100000 && (
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <AlertTriangle className="w-4 h-4" />
+                    El monto mínimo es $100,000 COP
+                  </p>
+                )}
+              </div>
 
-                {/* Custom Amount */}
-                <div>
-                  <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="text-blue-500">✏️</span>
-                    Monto personalizado
-                  </h4>
-                  <div className="max-w-full sm:max-w-sm">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={customAmount}
-                        onChange={(e) => handleCustomAmountChange(e.target.value)}
-                        placeholder="Mínimo $100.000"
-                        className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-sm font-medium bg-gray-50 focus:bg-white transition-all"
-                      />
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
-                        COP
-                      </div>
-                    </div>
-                    {customAmount && parseInt(customAmount.replace(/\D/g, '')) < 100000 && (
-                      <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        El monto mínimo es $100.000
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Summary */}
-                {finalAmount >= 100000 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-blue-50 border border-blue-200 rounded-xl p-4"
-                  >
-                    <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <span className="text-blue-500">📋</span>
-                      Resumen de tu recarga
-                    </h4>
+              {/* Quick Amount Options */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-700 block">
+                  Opciones rápidas
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[100000, 500000, 1000000, 2500000, 5000000, 10000000].map((amount) => {
+                    const isSelected = selectedAmount === amount;
                     
-                    <div className="bg-white rounded-lg p-4 border border-blue-200">
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-gray-900 mb-2">
-                          Compras {formatCurrency(finalAmount)}
+                    return (
+                      <button
+                        key={amount}
+                        onClick={() => handleAmountSelect(amount)}
+                        className={`p-3 rounded-lg border transition-all duration-200 text-center ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        <div className="font-medium text-sm">
+                          ${amount.toLocaleString('es-CO')}
                         </div>
-                        <div className="text-2xl font-bold text-blue-600 mb-2">
-                          Recibes {formatCreditsText(total)}
+                        <div className="text-xs text-gray-400 mt-0.5">COP</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Campaign bonus info when amount is selected */}
+              {selectedAmount >= 100000 && campaignBonus > 0 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
+                    <Star className="w-4 h-4" />
+                    Bonus de campaña activa
+                  </div>
+                  <div className="text-green-600 font-bold text-lg mt-1">
+                    +{formatCreditsText(campaignBonus)}
+                  </div>
+                  <div className="text-green-600 text-xs">
+                    {currentCampaign?.value}% adicional por tiempo limitado
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Side - Summary and Payment */}
+            <div className="flex-1 p-4 sm:p-5">
+              <AnimatePresence>
+                {selectedAmount >= 100000 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-4"
+                  >
+                                         {/* Bonus Breakdown - Simplified */}
+                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                         <Gift className="w-4 h-4 text-gray-600" />
+                         Resumen de tu recarga
+                       </h4>
+                       
+                       <div className="space-y-3">
+                         <div className="flex justify-between items-center">
+                           <span className="text-sm text-gray-600">Monto a recargar</span>
+                           <span className="font-semibold text-gray-900">{formatCurrency(finalAmount)}</span>
+                         </div>
+                         
+                         {campaignBonus > 0 && (
+                           <div className="flex justify-between items-center">
+                             <span className="flex items-center gap-1 text-sm text-gray-600">
+                               <Star className="w-3 h-3 text-green-500" />
+                               Bonus campaña ({currentCampaign?.value}%)
+                             </span>
+                             <span className="font-semibold text-green-600">+{formatCreditsText(campaignBonus)}</span>
+                           </div>
+                         )}
+                         
+                         <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+                           <span className="font-bold text-gray-900">Total a recibir</span>
+                           <div className="text-right">
+                             <div className="text-xl font-bold text-blue-600">
+                               {formatCreditsText(total)}
+                             </div>
+                             <div className="text-xs text-gray-500">Shareflow Credits</div>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+
+                    {/* Payment Section - Simplified */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-gray-600" />
+                          Método de pago
+                        </h4>
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <Shield className="w-3 h-3" />
+                          Seguro con Stripe
                         </div>
-                        {bonus > 0 && (
-                          <div className="text-sm text-green-600 font-medium">
-                            🎁 Bonus adicional: +{formatCreditsText(bonus)}
-                          </div>
-                        )}
                       </div>
+                      
+                      {/* Payment total */}
+                      <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Total a pagar</span>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-gray-900">
+                              {formatCurrency(totalWithCommission)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Incluye comisión {formatCurrency(commission)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Banking Commission Notice */}
+                      <div className="mb-4 text-xs text-gray-500 bg-gray-100 rounded-lg p-3 border border-gray-200">
+                        <p className="leading-relaxed">
+                          <span className="font-medium">Aviso:</span> Se aplica una comisión bancaria del 5% por pagos con tarjeta de crédito/débito, según regulaciones financieras vigentes.
+                        </p>
+                      </div>
+
+                      {/* Stripe Payment Form */}
+                      {showPaymentForm && (
+                        <div className="space-y-3">
+                          {isProcessing ? (
+                            <div className="flex justify-center items-center py-6">
+                              <div className="text-center">
+                                <Loader2 className="w-5 h-5 text-gray-500 animate-spin mx-auto mb-2" />
+                                <p className="text-sm text-gray-600 font-medium">
+                                  Procesando pago seguro...
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  No cierres esta ventana
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <Elements 
+                              stripe={stripePromise}
+                              options={{
+                                appearance: stripeAppearance,
+                                clientSecret: undefined
+                              }}
+                            >
+                              <PaymentForm
+                                onSuccess={handlePayment}
+                                onError={handlePaymentError}
+                                amount={totalWithCommission}
+                              />
+                            </Elements>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
-              </motion.div>
-            )}
-
-            {step === 'payment' && (
-              <motion.div
-                key="payment"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="p-4 sm:p-6 space-y-6"
-              >
-                {/* Payment Summary */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="text-blue-500">💳</span>
-                    Resumen del pago
-                  </h4>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Monto:</span>
-                      <span className="font-bold">{formatCurrency(finalAmount)}</span>
-                    </div>
-
-                    {calculateLevelBonus(finalAmount) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-blue-600 flex items-center gap-1">
-                          <Crown className="w-3 h-3" />
-                          Bonus Nivel ({currentLevel.bonusPercentage}%):
-                        </span>
-                        <span className="font-bold text-blue-600">
-                          +{formatCreditsText(calculateLevelBonus(finalAmount))}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {calculateCampaignBonus(finalAmount) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-green-600 flex items-center gap-1">
-                          <Gift className="w-3 h-3" />
-                          Bonus Campaña ({currentCampaign?.value}%):
-                        </span>
-                        <span className="font-bold text-green-600">
-                          +{formatCreditsText(calculateCampaignBonus(finalAmount))}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-orange-600 flex items-center gap-1">
-                        <CreditCard className="w-3 h-3" />
-                        Comisión (5%):
-                      </span>
-                      <span className="font-bold text-orange-600">
-                        +{formatCurrency(calculateFinancialCommission(finalAmount, 'card'))}
-                      </span>
-                    </div>
-                    
-                    <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Total a pagar:</span>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">
-                          {formatCurrency(getTotalWithCommission())}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          = {formatCreditsText(total)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Form */}
-                <div>
-                  <h4 className="text-sm sm:text-md font-semibold text-gray-900 mb-4">Información de pago</h4>
-                  
-                  {isProcessing ? (
-                    <div className="flex justify-center items-center py-8">
-                      <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-                      <p className="text-sm text-gray-600 ml-3">
-                        Procesando pago... no cierre la página
-                      </p>
-                    </div>
-                  ) : (
-                    <Elements stripe={stripePromise}>
-                      <PaymentForm
-                        onSuccess={handlePayment}
-                        onError={handlePaymentError}
-                        amount={getTotalWithCommission()}
-                      />
-                    </Elements>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
 
-        {/* FOOTER FIJO CON BOTONES */}
-        <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4 sm:p-6">
-          {step === 'packages' ? (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleContinueToPayment}
-              disabled={!selectedAmount || selectedAmount < 100000}
-              className="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
-            >
-              <CreditCard className="w-4 h-4" />
-              Continuar al Pago
-              <ChevronRight className="w-4 h-4" />
-            </motion.button>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setStep('packages')}
-              className="w-full px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Volver a Paquetes
-            </motion.button>
-          )}
+        {/* Footer - Compact */}
+        <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-4 py-2 sm:px-6 sm:py-3">
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+            <Info className="w-3 h-3" />
+            <span>Los credits se acreditan inmediatamente después del pago</span>
+          </div>
         </div>
       </motion.div>
     </div>

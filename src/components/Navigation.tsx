@@ -5,7 +5,7 @@ import {
   Home, PlusSquare, Layout, User, Settings, ShoppingBag,
   Tv, Shield, BarChart3, FileText, Wallet, CreditCard,
   Users, Bell, HardDrive, Boxes, ChevronDown,
-  ChevronLeft, Sun, Moon, Menu, X, LogOut,
+  ChevronLeft, ChevronRight, Sun, Moon, Menu, X, LogOut,
   Cog, Eye, ImageIcon, Trophy, Rocket,
   Percent, Building, ChevronsLeft, ChevronsRight, Zap
 } from 'lucide-react';
@@ -51,9 +51,9 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
       if (savedTheme) {
         return savedTheme === 'dark';
       }
-      return false;
+      return true; // Default to dark mode
     }
-    return false;
+    return true; // Default to dark mode
   });
 
   useEffect(() => {
@@ -61,11 +61,23 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
     if (isDarkMode) {
       root.classList.add('dark');
       localStorage.setItem('theme', 'dark');
+      // Force a small delay to ensure dark mode applies
+      setTimeout(() => {
+        root.classList.add('dark');
+      }, 10);
     } else {
       root.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
   }, [isDarkMode]);
+
+  // Force apply dark mode on mount
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+    }
+  }, []);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -88,7 +100,19 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
   };
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
+    const newDarkMode = !isDarkMode;
+    console.log('🎨 Toggling theme:', { from: isDarkMode, to: newDarkMode });
+    setIsDarkMode(newDarkMode);
+    
+    // Immediate application
+    const root = document.documentElement;
+    if (newDarkMode) {
+      root.classList.add('dark');
+      console.log('🌙 Dark mode activated');
+    } else {
+      root.classList.remove('dark');
+      console.log('☀️ Light mode activated');
+    }
   };
 
   const generalNavItems: NavGroup = {
@@ -153,9 +177,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
   ];
 
   const accountNavItems: NavItem[] = [
-    { path: '/profile', icon: User, label: 'Mi Perfil' },
-    { path: '/notifications', icon: Bell, label: 'Notificaciones' },
-    { path: '/settings', icon: Settings, label: 'Ajustes Generales' }
+    { path: '/profile', icon: User, label: 'Mi Perfil' }
   ];
 
   const NavLink = ({ item }: { item: NavItem }) => {
@@ -181,55 +203,70 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
       <Link
         to={item.path}
         className={`
-          group flex items-center px-3 py-2.5 rounded-xl transition-all duration-300
+          group flex items-center rounded-2xl transition-all duration-200 ease-out
+          min-h-[48px] relative overflow-hidden
+          ${isCollapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'}
           ${isActive ? 
-            'bg-blue-600 dark:bg-blue-500 shadow-lg shadow-blue-600/20 transform scale-[1.02]' : 
-            'hover:bg-blue-50/70 dark:hover:bg-blue-900/20 hover:shadow-sm'}
-          ${isCollapsed ? 'justify-center' : ''}
+            'bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 text-white shadow-lg shadow-blue-600/25 scale-[1.02]' : 
+            'text-neutral-700 dark:text-neutral-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 dark:hover:from-blue-950/30 dark:hover:to-blue-900/20 hover:shadow-sm hover:scale-[1.01]'}
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900
+          active:scale-95
         `}
       >
-        <span className={`
-          relative flex items-center justify-center
-          ${isCollapsed ? 'w-10 h-10' : 'w-9 h-9'} 
-          rounded-xl transition-all duration-300 transform
-          ${isActive ? 
-            'bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 text-white shadow-lg shadow-blue-600/30 scale-105' : 
-            'text-neutral-600 dark:text-neutral-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 group-hover:bg-gradient-to-br group-hover:from-blue-50 group-hover:to-blue-100 dark:group-hover:from-blue-900/20 dark:group-hover:to-blue-800/20 group-hover:scale-105'}
-          before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 ${isActive ? 'before:opacity-100' : 'group-hover:before:opacity-50'} before:transition-opacity before:duration-300
+        {/* Icon Container */}
+        <div className={`
+          flex items-center justify-center rounded-xl transition-all duration-200
+          ${isCollapsed ? 'w-6 h-6' : 'w-6 h-6 mr-3'} 
+          ${isActive ? 'text-white' : 'text-neutral-600 dark:text-neutral-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'}
         `}>
-          <item.icon className={`
-            w-[22px] h-[22px] transition-all duration-300 relative z-10
-            ${isActive ? 'stroke-[2.5px] text-white drop-shadow-sm' : 'stroke-[1.75px] group-hover:stroke-[2px] group-hover:drop-shadow-sm'}
-          `} />
-        </span>
+          <item.icon className="w-5 h-5 stroke-[1.5]" />
+        </div>
+        
+        {/* Label */}
         {!isCollapsed && (
           <span className={`
-            ml-4 font-medium text-[15px] transition-all duration-300
-            ${isActive ? 
-              'text-white font-semibold' : 
-              'text-neutral-600 dark:text-neutral-300 group-hover:text-blue-600 dark:group-hover:text-blue-300'}
+            font-medium text-[15px] leading-tight transition-colors duration-200
+            ${isActive ? 'text-white' : 'text-neutral-700 dark:text-neutral-300 group-hover:text-blue-700 dark:group-hover:text-blue-300'}
           `}>
             {item.label}
           </span>
+        )}
+        
+        {/* Active Indicator */}
+        {isActive && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/40 rounded-r-full" />
+        )}
+        
+        {/* Tooltip for collapsed state */}
+        {isCollapsed && (
+          <div className="absolute left-full ml-3 px-3 py-2 bg-neutral-900 dark:bg-neutral-700 text-white text-sm rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+            {item.label}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-neutral-900 dark:bg-neutral-700 rotate-45" />
+          </div>
         )}
       </Link>
     );
   };
 
   const NavGroup = ({ group }: { group: NavGroup }) => (
-    <div className="first:mt-0">
+    <section className="space-y-2" role="group" aria-labelledby={`nav-section-${group.title.replace(/\s+/g, '-').toLowerCase()}`}>
       {!isCollapsed && (
-        <h3 className="px-3 mb-3 text-xs font-semibold uppercase text-neutral-400 dark:text-neutral-500 tracking-wider">
+        <h3 
+          id={`nav-section-${group.title.replace(/\s+/g, '-').toLowerCase()}`}
+          className="px-4 mb-4 text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400 tracking-[0.1em] leading-none"
+        >
           {group.title}
         </h3>
       )}
-      {isCollapsed && <div className="mb-4 border-t border-neutral-200/70 dark:border-neutral-700/50 mx-1.5"></div>}
-      <div className="space-y-1.5">
+      {isCollapsed && (
+        <div className="mb-6 mx-4 border-t border-neutral-200/60 dark:border-neutral-700/60" />
+      )}
+      <nav className="space-y-1" role="navigation">
         {group.items.map((item) => (
           <NavLink key={item.path} item={item} />
         ))}
-      </div>
-    </div>
+      </nav>
+    </section>
   );
 
   const renderNavGroups = (groups: NavGroup[]) => groups.map(group => <NavGroup key={group.title} group={group} />);
@@ -240,7 +277,9 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
         {/* Logo and Brand */}
         <div className={`
           flex items-center justify-center relative
-          ${isCollapsed ? 'px-4 py-6' : 'px-6 py-5'} h-20 border-b border-neutral-200/50 dark:border-neutral-950/30
+          ${isCollapsed ? 'px-4 py-6' : 'px-6 py-5'} h-20 
+          border-b border-neutral-200/50 dark:border-neutral-800/80
+          bg-white dark:bg-neutral-900
         `}>
           {!isCollapsed && (
             <Link to="/sports-events" className="flex items-center">
@@ -270,8 +309,8 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
               bg-white dark:bg-neutral-800 
               shadow-md dark:shadow-neutral-900/50
               rounded-full border border-neutral-100 dark:border-neutral-700 
-              text-neutral-500 dark:text-primary
-              hover:text-primary dark:hover:text-primary
+              text-neutral-500 dark:text-neutral-400
+              hover:text-blue-600 dark:hover:text-blue-400
               transition-all duration-200
             `}
             title={isCollapsed ? "Expandir menú" : "Contraer menú"}
@@ -286,194 +325,147 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
 
         {/* Navigation Links */}
         <nav className={`
-          flex-grow pt-5 space-y-5 overflow-y-auto hide-scrollbar 
-          px-3 pb-4 ${isCollapsed ? 'px-2.5' : 'px-4'}
-        `}>
+          flex-grow py-6 space-y-8 overflow-y-auto hide-scrollbar 
+          ${isCollapsed ? 'px-3' : 'px-4'}
+          bg-white dark:bg-neutral-900
+        `} role="navigation" aria-label="Navegación principal">
           <NavGroup group={generalNavItems} />
-          
-
           
           {(hasRole(['Admin'])) && renderNavGroups(adminNavItems)}
         </nav>
 
         {/* Footer: Theme Toggle & User Profile */}
-        <div className={`
-          border-t border-neutral-200/50 dark:border-neutral-800 p-4
-          ${isCollapsed ? 'px-2.5' : 'px-4'}
+        <footer className={`
+          border-t border-neutral-200/50 dark:border-neutral-800/80 pt-4 pb-6
+          ${isCollapsed ? 'px-3' : 'px-4'}
+          bg-white dark:bg-neutral-900
         `}>
-          {/* Theme Toggle */}
+          {/* Theme Toggle - Más sutil */}
           <div className={`
-            flex items-center mb-3 px-2 py-1.5 rounded-xl
+            flex items-center mb-4
             ${isCollapsed ? 'justify-center' : 'justify-between'}
-            bg-white/60 dark:bg-neutral-800/70 border border-neutral-200/30 dark:border-neutral-700/30
           `}>
-            {!isCollapsed && <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">Tema</span>}
+            {!isCollapsed && (
+              <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                Tema
+              </span>
+            )}
             <button 
               onClick={toggleTheme}
               className={`
-                p-2 rounded-lg transition-all duration-200
+                p-2 rounded-lg transition-all duration-200 ease-out
                 ${isDarkMode 
-                  ? 'bg-neutral-700/50 hover:bg-neutral-600/50 text-yellow-400 hover:text-yellow-300' 
-                  : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600 hover:text-neutral-700'
+                  ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400' 
+                  : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
                 }
-                ${isCollapsed ? 'w-full flex justify-center' : ''}
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900
+                active:scale-95
               `}
               title={isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}
+              aria-label={isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}
             >
               {isDarkMode ? (
-                <Sun className="w-5 h-5" />
+                <Sun className="w-4 h-4" />
               ) : (
-                <Moon className="w-5 h-5" />
+                <Moon className="w-4 h-4" />
               )}
             </button>
           </div>
 
           {/* User Profile Section */}
           <div className="group relative">
-            <div 
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`
-                flex items-center p-3 rounded-xl cursor-pointer 
-                hover:bg-white/70 dark:hover:bg-neutral-800
-                transition-colors
-                ${isCollapsed ? 'justify-center' : ''}
-              `}
+            {/* Profile Card - Similar to reference image */}
+            <Link 
+              to="/profile"
+              className="w-full flex items-center p-4 rounded-2xl
+                       bg-gradient-to-br from-neutral-50 to-neutral-100/50 
+                       dark:from-neutral-800/30 dark:to-neutral-800/10
+                       hover:from-neutral-100 hover:to-neutral-100 
+                       dark:hover:from-neutral-800/50 dark:hover:to-neutral-800/30
+                       border border-neutral-200/40 dark:border-neutral-700/40
+                       transition-all duration-200 ease-in-out group/profile
+                       shadow-sm hover:shadow-md
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
+                       min-h-[68px]"
+              aria-label={`Ver perfil de ${user?.username || 'Usuario'}`}
             >
-              {/* User avatar with gradient background */}
-              <div className="flex-shrink-0 relative overflow-hidden">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-600 text-white flex items-center justify-center shadow-md shadow-primary/10">
-                  {user?.username ? user.username.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+              <div className="flex-shrink-0 relative">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 
+                             flex items-center justify-center 
+                             shadow-lg ring-2 ring-white/80 dark:ring-neutral-900/80
+                             group-hover/profile:scale-105 transition-transform duration-200">
+                  <span className="text-white font-bold text-lg">
+                    {(user?.username || 'U').charAt(0).toUpperCase()}
+                  </span>
                 </div>
-                <div className="absolute top-0 left-0 w-full h-full bg-black/5 dark:bg-white/5 rounded-xl"></div>
+                {/* Online indicator */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-neutral-900 rounded-full shadow-sm" />
               </div>
               
               {!isCollapsed && (
-                <div className="overflow-hidden ml-3">
-                  <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">
+                <div className="flex-1 overflow-hidden ml-4 text-left">
+                  <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100 truncate leading-tight mb-1">
                     {user?.username || 'Usuario'}
                   </p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate leading-tight">
                     {user?.email || 'usuario@ejemplo.com'}
                   </p>
                 </div>
               )}
+              
               {!isCollapsed && (
-                <ChevronDown className={`w-4 h-4 text-neutral-400 dark:text-neutral-500 ml-auto transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
-              )}
-            </div>
-            
-            {/* User Actions Dropdown/Flyout - Versión no colapsada */}
-            {!isCollapsed && isProfileOpen && (
-              <div className="absolute bottom-full mb-1 w-[calc(100%-1rem)] left-2 right-2
-                       bg-white dark:bg-neutral-800 rounded-xl
-                       shadow-lg shadow-neutral-200/70 dark:shadow-black/20
-                       border border-neutral-100 dark:border-neutral-700/80
-                       backdrop-blur-sm z-20">
-                <div className="p-2 space-y-1">
-                  {accountNavItems.map(item => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className="flex items-center py-2.5 px-3 rounded-lg w-full text-left
-                               text-neutral-700 dark:text-neutral-300 
-                               hover:bg-neutral-50 dark:hover:bg-neutral-700/50 
-                               transition-colors duration-200 ease-in-out group"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <span className="w-8 h-8 rounded-lg flex items-center justify-center
-                                    bg-neutral-100 dark:bg-neutral-700 
-                                    text-neutral-500 dark:text-neutral-400 
-                                    group-hover:text-primary dark:group-hover:text-primary
-                                    transition-colors">
-                        <item.icon className="w-4.5 h-4.5" />
-                      </span>
-                      <span className="ml-3 font-medium">{item.label}</span>
-                    </Link>
-                  ))}
-                  <div className="h-px w-full bg-neutral-100 dark:bg-neutral-700/50 my-1"></div>
-                  <button 
-                    onClick={handleLogout} 
-                    className="flex items-center py-2.5 px-3 rounded-lg w-full text-left
-                             text-neutral-700 dark:text-neutral-300 
-                             hover:bg-red-50 dark:hover:bg-red-900/20 
-                             hover:text-red-600 dark:hover:text-red-400 
-                             transition-colors duration-200 ease-in-out group"
-                  >
-                    <span className="w-8 h-8 rounded-lg flex items-center justify-center
-                                  bg-neutral-100 dark:bg-neutral-700 
-                                  text-neutral-500 dark:text-neutral-400 
-                                  group-hover:text-red-500 dark:group-hover:text-red-400
-                                  transition-colors">
-                      <LogOut className="w-4.5 h-4.5" />
-                    </span>
-                    <span className="ml-3 font-medium">Cerrar Sesión</span>
-                  </button>
+                <div className="ml-2 opacity-0 group-hover/profile:opacity-100 transition-opacity duration-200">
+                  <ChevronRight className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
                 </div>
-              </div>
+              )}
+            </Link>
+            
+            {/* Logout Button - Subtle text below profile */}
+            {!isCollapsed && (
+              <button 
+                onClick={handleLogout} 
+                className="w-full mt-3 text-center text-xs text-neutral-400 dark:text-neutral-500 
+                         hover:text-red-500 dark:hover:text-red-400 
+                         transition-colors duration-200 py-2
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2
+                         rounded-lg hover:bg-red-50/50 dark:hover:bg-red-900/10"
+              >
+                Cerrar sesión
+              </button>
             )}
             
-            {/* Collapsed Profile Flyout */}
+            {/* Collapsed Profile Tooltip */}
             {isCollapsed && (
-              <div className="absolute left-full ml-2 top-0 w-48
-                       bg-white dark:bg-neutral-800 rounded-xl
-                       shadow-lg shadow-neutral-200/70 dark:shadow-black/20
-                       border border-neutral-100 dark:border-neutral-700/80
-                       opacity-0 group-hover:opacity-100 
-                       transition-opacity duration-200 z-20
-                       backdrop-blur-sm">
+              <div className="absolute left-full ml-3 top-0 w-56
+                           bg-neutral-900 rounded-xl shadow-xl border border-neutral-800
+                           opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20
+                           pointer-events-none">
                 <div className="p-3">
-                  <div className="px-2 py-2 mb-2 bg-neutral-50 dark:bg-neutral-700/30 rounded-lg">
-                    <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">
-                      {user?.username || 'Usuario'}
-                    </p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                      {user?.email || 'usuario@ejemplo.com'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    {accountNavItems.map(item => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className="flex items-center py-2 px-3 rounded-lg w-full text-left
-                                text-neutral-700 dark:text-neutral-300 
-                                hover:bg-neutral-50 dark:hover:bg-neutral-700/50 
-                                transition-colors duration-200 ease-in-out group"
-                      >
-                        <span className="w-7 h-7 rounded-lg flex items-center justify-center
-                                      bg-neutral-100 dark:bg-neutral-700 
-                                      text-neutral-500 dark:text-neutral-400 
-                                      group-hover:text-primary dark:group-hover:text-primary
-                                      transition-colors">
-                          <item.icon className="w-4 h-4" />
-                        </span>
-                        <span className="ml-2.5 text-sm font-medium">{item.label}</span>
-                      </Link>
-                    ))}
-                    <div className="h-px w-full bg-neutral-100 dark:bg-neutral-700/50 my-1"></div>
-                    <button 
-                      onClick={handleLogout} 
-                      className="flex items-center py-2 px-3 rounded-lg w-full text-left
-                               text-neutral-700 dark:text-neutral-300 
-                               hover:bg-red-50 dark:hover:bg-red-900/20 
-                               hover:text-red-600 dark:hover:text-red-400 
-                               transition-colors duration-200 ease-in-out group"
-                    >
-                      <span className="w-7 h-7 rounded-lg flex items-center justify-center
-                                    bg-neutral-100 dark:bg-neutral-700 
-                                    text-neutral-500 dark:text-neutral-400 
-                                    group-hover:text-red-500 dark:group-hover:text-red-400
-                                    transition-colors">
-                        <LogOut className="w-4 h-4" />
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 
+                                 flex items-center justify-center shadow-md">
+                      <span className="text-white font-semibold">
+                        {(user?.username || 'U').charAt(0).toUpperCase()}
                       </span>
-                      <span className="ml-2.5 text-sm font-medium">Cerrar Sesión</span>
-                    </button>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-100 truncate">
+                        {user?.username || 'Usuario'}
+                      </p>
+                      <p className="text-xs text-neutral-400 truncate">
+                        {user?.email || 'usuario@ejemplo.com'}
+                      </p>
+                    </div>
                   </div>
+                  <div className="h-px bg-neutral-700 mb-2"></div>
+                  <p className="text-xs text-neutral-400">
+                    Click para ver perfil
+                  </p>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </footer>
       </div>
     );
   };
@@ -484,31 +476,38 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
       <aside 
         className={`
           hidden md:flex flex-col fixed top-0 left-0 h-full
-          bg-gradient-to-b from-neutral-50/90 to-neutral-100/80
-          dark:from-neutral-900/95 dark:via-neutral-900/98 dark:to-neutral-950/95
+          bg-white dark:bg-neutral-900
           border-r border-neutral-200/60 dark:border-neutral-800/80
-          shadow-[5px_0_30px_-15px_rgba(0,0,0,0.08)]
-          dark:shadow-[5px_0_30px_-15px_rgba(0,0,0,0.3)]
-          backdrop-filter backdrop-blur-sm
+          shadow-[8px_0_40px_-12px_rgba(0,0,0,0.08)]
+          dark:shadow-[8px_0_40px_-12px_rgba(0,0,0,0.4)]
           z-40 overflow-hidden
           transition-all duration-300 ease-in-out
-          ${isCollapsed ? 'w-20' : 'w-72'}
+          ${isCollapsed ? 'w-20' : 'w-80'}
         `}
+        role="navigation"
+        aria-label="Navegación principal de la aplicación"
       >
         <SidebarContent />
       </aside>
 
       {/* Mobile Navbar */}
-      <nav className="md:hidden fixed top-0 left-0 right-0 h-16 
-                      bg-neutral-50/95 dark:bg-neutral-900/98 
-                      backdrop-blur-xl
-                      border-b border-neutral-200/60 dark:border-neutral-800/80 
-                      shadow-sm dark:shadow-neutral-900/20 z-50 
-                      flex items-center justify-between px-4">
+      <nav 
+        className="md:hidden fixed top-0 left-0 right-0 h-16 
+                    bg-white dark:bg-neutral-900 
+                    border-b border-neutral-200/60 dark:border-neutral-800/80 
+                    shadow-sm dark:shadow-neutral-900/20 z-50 
+                    flex items-center justify-between px-4"
+        role="navigation"
+        aria-label="Navegación móvil"
+      >
         {/* Logo */}
-        <Link to="/sports-events" className="flex items-center">
+        <Link to="/sports-events" className="flex items-center" aria-label="Ir al inicio">
           <div className="h-8 flex items-center justify-center">
-            <img src={Logo} alt="Shareflow Ads Logo" className="h-7 w-auto dark:filter dark:brightness-0 dark:invert" /> 
+            <img 
+              src={Logo} 
+              alt="Shareflow Ads" 
+              className="h-7 w-auto dark:filter dark:brightness-0 dark:invert" 
+            /> 
           </div>
         </Link>
         
@@ -517,11 +516,15 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
           {/* Menu hamburguesa */}
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 
+            className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 
                       text-neutral-700 dark:text-neutral-300 
                       hover:bg-neutral-200 dark:hover:bg-neutral-700
-                      shadow-sm border border-neutral-200 dark:border-neutral-700
-                      transition-all duration-200 active:scale-95"
+                      shadow-sm border border-neutral-200/60 dark:border-neutral-700/60
+                      transition-all duration-200 active:scale-95
+                      min-h-[44px] min-w-[44px]
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label="Abrir menú de navegación"
+            aria-expanded={isMobileMenuOpen}
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -530,37 +533,44 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
 
       {/* Mobile Off-canvas Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[100]">
+        <div className="md:hidden fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title">
           {/* Overlay */}
           <div 
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm 
                        animate-in fade-in duration-300" 
             onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
           />
           
           {/* Sidebar Panel */}
-          <div className="absolute right-0 top-0 h-full w-[320px] 
+          <div className="absolute right-0 top-0 h-full w-[340px] max-w-[85vw]
                          bg-white dark:bg-neutral-900
-                         shadow-2xl border-l border-neutral-100 dark:border-neutral-800
+                         shadow-2xl border-l border-neutral-100/60 dark:border-neutral-800/60
                          animate-in slide-in-from-right duration-300 ease-out">
             {/* Header del menú móvil */}
-            <div className="flex items-center justify-end p-4 h-16 
-                          border-b border-neutral-100 dark:border-neutral-800
-                          bg-gradient-to-r from-neutral-50 to-white dark:from-neutral-800 dark:to-neutral-900">
+            <div className="flex items-center justify-between p-4 h-16 
+                          border-b border-neutral-100/60 dark:border-neutral-800/60
+                          bg-white dark:bg-neutral-900">
+              <h2 id="mobile-menu-title" className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                Menú
+              </h2>
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 
+                className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 
                           text-neutral-500 dark:text-neutral-400 
                           hover:bg-neutral-200 dark:hover:bg-neutral-700
-                          transition-colors duration-200"
+                          transition-all duration-200 active:scale-95
+                          min-h-[44px] min-w-[44px]
+                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                aria-label="Cerrar menú"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
             {/* Contenido del menú */}
-            <div className="h-[calc(100vh-4rem)] overflow-auto">
-              <div className="p-4 space-y-6">
+            <div className="h-[calc(100vh-4rem)] overflow-auto bg-white dark:bg-neutral-900">
+              <div className="p-5">
                 <SidebarContent />
               </div>
             </div>
@@ -569,7 +579,7 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
       )}
 
       {/* Content Area - Adjust margin based on sidebar state */}
-      <main className={`transition-all duration-300 ease-in-out md:ml-20 ${!isCollapsed ? 'md:ml-72' : ''} pt-16 md:pt-0`}>
+      <main className={`transition-all duration-300 ease-in-out md:ml-20 ${!isCollapsed ? 'md:ml-80' : ''} pt-16 md:pt-0`}>
         {/* This is where the page content will be rendered by Layout.tsx */}
       </main>
     </>

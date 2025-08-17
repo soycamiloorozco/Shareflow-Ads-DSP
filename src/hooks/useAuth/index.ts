@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { RootState } from '../../store/store';
-import { login, register, logout, googleAuth, forgotPassword, resetPassword } from '../../store/slices/authSlice';
+import { login, register, logout, googleAuth, forgotPassword, resetPassword, updateProfile, updatePassword } from '../../store/slices/authSlice';
 import type { AppDispatch } from '../../store/store';
 
 export function useAuth() {
@@ -37,117 +37,128 @@ export function useAuth() {
       return result;
     } catch (error: any) {
       // Handle API error responses
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      if (error.message && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor, verifica tu conexión a internet y vuelve a intentarlo.');
       }
       
-      // Handle specific error cases
+      // Network or other connection errors
       if (!navigator.onLine) {
         throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
       
-      if (error.message?.includes('auth/invalid-email')) {
-        throw new Error('El correo electrónico no es válido.');
-      }
-      
-      if (error.message?.includes('auth/wrong-password')) {
-        throw new Error('La contraseña es incorrecta.');
-      }
-      
-      if (error.message?.includes('auth/user-not-found')) {
-        throw new Error('No existe una cuenta con este correo electrónico.');
-      }
-      
-      if (error.message?.includes('auth/too-many-requests')) {
-        throw new Error('Demasiados intentos fallidos. Por favor, inténtalo de nuevo más tarde.');
-      }
-
-      // If we have a string message, use it
-      if (typeof error.message === 'string') {
-        throw new Error(error.message);
-      }
-
-      // Fallback error message
-      throw new Error('Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.');
+      // Re-throw the error so the component can handle it
+      throw error;
     }
   };
 
-  const handleRegister = async (name: string, email: string, password: string, whatsapp?: string) => {
-    try {
-      if (!navigator.onLine) {
-        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
-      }
-      //@ts-ignore
-      await dispatch(register({ username: name, email, password, phone: whatsapp })).unwrap();
-      alert('Registro exitoso. Por favor, revisa tu correo electrónico para validar tu cuenta antes de iniciar sesión.');
-
-      window.location.href = '/login';
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
-
-      if (!navigator.onLine) {
-        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
-      }
-
-      if (error.message?.includes('auth/email-already-in-use')) {
-        throw new Error('Ya existe una cuenta con este correo electrónico.');
-      }
-
-      if (error.message?.includes('auth/invalid-email')) {
-        throw new Error('El correo electrónico no es válido.');
-      }
-
-      if (error.message?.includes('auth/weak-password')) {
-        throw new Error('La contraseña es demasiado débil. Debe tener al menos 6 caracteres.');
-      }
-
-      if (typeof error.message === 'string') {
-        throw new Error(error.message);
-      }
-
-      throw new Error('Ha ocurrido un error inesperado durante el registro. Por favor, inténtalo de nuevo.');
-    }
-  };
-
-  const handleGoogleAuth = async (token: string) => {
+  const handleRegister = async (userData: {
+    username: string;
+    email: string;
+    password: string;
+    phone: string;
+  }) => {
     try {
       if (!navigator.onLine) {
         throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
 
-      await dispatch(googleAuth(token)).unwrap();
-      navigate('/');
+      const result = await dispatch(register(userData)).unwrap();
+      
+      // Redirigir al dashboard después del registro exitoso
+      navigate('/dashboard', { replace: true });
+      return result;
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      // Handle API error responses
+      if (error.message && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor, verifica tu conexión a internet y vuelve a intentarlo.');
       }
+      
+      // Network or other connection errors
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+      
+      throw error;
+    }
+  };
 
+  const handleUpdateProfile = async (profileData: {
+    fullName?: string;
+    username?: string;
+    email?: string;
+    phone?: string;
+    jobTitle?: string;
+    company?: string;
+    location?: string;
+    website?: string;
+  }) => {
+    try {
       if (!navigator.onLine) {
         throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
 
-      if (error.message?.includes('auth/popup-closed-by-user')) {
-        throw new Error('Se cerró la ventana de autenticación de Google. Por favor, inténtalo de nuevo.');
+      const result = await dispatch(updateProfile(profileData)).unwrap();
+      return result;
+    } catch (error: any) {
+      if (error.message && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor, verifica tu conexión a internet y vuelve a intentarlo.');
       }
-
-      if (typeof error.message === 'string') {
-        throw new Error(error.message);
+      
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
-
-      throw new Error('Ha ocurrido un error inesperado durante la autenticación con Google. Por favor, inténtalo de nuevo.');
+      
+      throw error;
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    // Limpiar localStorage para asegurar que se elimina el token
-    localStorage.removeItem('auth_token');
-    // Redirigir después de un pequeño retraso
-    setTimeout(() => {
-      navigate('/login');
-    }, 100);
+  const handleUpdatePassword = async (passwordData: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => {
+    try {
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+
+      const result = await dispatch(updatePassword(passwordData)).unwrap();
+      return result;
+    } catch (error: any) {
+      if (error.message && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor, verifica tu conexión a internet y vuelve a intentarlo.');
+      }
+      
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+      
+      throw error;
+    }
+  };
+
+  const handleGoogleAuth = async (credential: string) => {
+    try {
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+
+      const result = await dispatch(googleAuth(credential)).unwrap();
+      
+      // Redirigir al dashboard después del login exitoso
+      navigate('/dashboard', { replace: true });
+      return result;
+    } catch (error: any) {
+      if (error.message && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor, verifica tu conexión a internet y vuelve a intentarlo.');
+      }
+      
+      if (!navigator.onLine) {
+        throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
+      }
+      
+      throw error;
+    }
   };
 
   const handleForgotPassword = async (email: string) => {
@@ -159,45 +170,49 @@ export function useAuth() {
       const result = await dispatch(forgotPassword({ email })).unwrap();
       return result;
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      if (error.message && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor, verifica tu conexión a internet y vuelve a intentarlo.');
       }
-
+      
       if (!navigator.onLine) {
         throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
-
-      if (typeof error.message === 'string') {
-        throw new Error(error.message);
-      }
-
-      throw new Error('Ha ocurrido un error inesperado al enviar el correo de recuperación. Por favor, inténtalo de nuevo.');
+      
+      throw error;
     }
   };
 
-  const handleResetPassword = async (token: string, newPassword: string, confirmPassword: string) => {
+  const handleResetPassword = async (data: {
+    token: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => {
     try {
       if (!navigator.onLine) {
         throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
 
-      const result = await dispatch(resetPassword({ token, newPassword, confirmPassword })).unwrap();
+      const result = await dispatch(resetPassword(data)).unwrap();
+      
+      // Redirigir al login después del reset exitoso
+      navigate('/login', { replace: true });
       return result;
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      if (error.message && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor, verifica tu conexión a internet y vuelve a intentarlo.');
       }
-
+      
       if (!navigator.onLine) {
         throw new Error('No hay conexión a internet. Por favor, verifica tu conexión y vuelve a intentarlo.');
       }
-
-      if (typeof error.message === 'string') {
-        throw new Error(error.message);
-      }
-
-      throw new Error('Ha ocurrido un error inesperado al restablecer la contraseña. Por favor, inténtalo de nuevo.');
+      
+      throw error;
     }
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login', { replace: true });
   };
 
   return {
@@ -207,9 +222,11 @@ export function useAuth() {
     error,
     login: handleLogin,
     register: handleRegister,
+    updateProfile: handleUpdateProfile,
+    updatePassword: handleUpdatePassword,
     googleAuth: handleGoogleAuth,
-    logout: handleLogout,
     forgotPassword: handleForgotPassword,
-    resetPassword: handleResetPassword
+    resetPassword: handleResetPassword,
+    logout: handleLogout
   };
 }

@@ -44,6 +44,22 @@ interface ResetPasswordCredentials {
   confirmPassword: string;
 }
 
+interface ChangePasswordCredentials {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+interface UpdateProfileData {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  jobTitle?: string;
+  company?: string;
+  location?: string;
+  website?: string;
+}
 
 const initialState: AuthState = {
   user: null,
@@ -176,6 +192,87 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (profileData: UpdateProfileData, { getState, rejectWithValue }) => {
+    try {
+      const { auth } = getState() as { auth: AuthState };
+      
+      if (!auth.token || !auth.user) {
+        return rejectWithValue('No authenticated user found');
+      }
+
+      // For demo purposes, simulate API call
+      if (auth.user.email === 'demo@shareflow.me') {
+        console.log('Demo mode: Updating profile with data:', profileData);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        return {
+          ...auth.user,
+          ...profileData,
+          // Ensure we keep required fields
+          id: auth.user.id,
+          email: profileData.email || auth.user.email,
+          username: profileData.username || auth.user.username,
+          isActive: auth.user.isActive,
+          roles: auth.user.roles
+        };
+      }
+
+      // Real API call
+      console.log('Making API request to update profile:', profileData);
+      const { data } = await request.put('/Auth/profile', profileData);
+      
+      return data.user;
+    } catch (apiError: any) {
+      console.error('Update profile API error:', apiError);
+      
+      if (apiError.response && apiError.response.data) {
+        return rejectWithValue(apiError.response.data.message || 'Error al actualizar perfil');
+      }
+      
+      return rejectWithValue('Error de conexión');
+    }
+  }
+);
+
+export const updatePassword = createAsyncThunk(
+  'auth/updatePassword',
+  async (passwordData: ChangePasswordCredentials, { getState, rejectWithValue }) => {
+    try {
+      const { auth } = getState() as { auth: AuthState };
+      
+      if (!auth.token || !auth.user) {
+        return rejectWithValue('No authenticated user found');
+      }
+
+      // For demo purposes, simulate API call
+      if (auth.user.email === 'demo@shareflow.me') {
+        console.log('Demo mode: Updating password');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return { success: true };
+      }
+
+      // Real API call
+      console.log('Making API request to update password');
+      await request.put('/Auth/password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+      
+      return { success: true };
+    } catch (apiError: any) {
+      console.error('Update password API error:', apiError);
+      
+      if (apiError.response && apiError.response.data) {
+        return rejectWithValue(apiError.response.data.message || 'Error al cambiar contraseña');
+      }
+      
+      return rejectWithValue('Error de conexión');
+    }
+  }
+);
+
 // Acción para verificar la autenticación al cargar la aplicación
 export const checkAuth = createAsyncThunk(
   'auth/check',
@@ -246,6 +343,11 @@ const authSlice = createSlice({
         state.token = null;
         state.user = null;
         state.isAuthenticated = false;
+      }
+    },
+    updateUserInfo: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
       }
     }
   },
@@ -351,8 +453,37 @@ const authSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload as string;
     });
+
+    // Update Profile
+    builder.addCase(updateProfile.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(updateProfile.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.user = action.payload;
+      state.error = null;
+    });
+    builder.addCase(updateProfile.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload as string;
+    });
+
+    // Update Password
+    builder.addCase(updatePassword.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(updatePassword.fulfilled, (state) => {
+      state.isLoading = false;
+      state.error = null;
+    });
+    builder.addCase(updatePassword.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload as string;
+    });
   }
 });
 
-export const { logout, clearError, refreshToken } = authSlice.actions;
+export const { logout, clearError, refreshToken, updateUserInfo } = authSlice.actions;
 export default authSlice.reducer;

@@ -20,6 +20,14 @@ import { CartIcon } from '../components/cart/CartIcon';
 import { ShoppingCart, Plus, Check } from 'lucide-react';
 import estadioImage from '../assets/estadio.png';
 
+// Format price in short notation: <1M -> K, >=1M -> M with 1 decimal
+const formatShortCOP = (value: number): string => {
+  if (value < 1_000_000) {
+    return `${Math.round(value / 1_000)}K`;
+  }
+  return `${(value / 1_000_000).toFixed(1)}M`;
+};
+
 // Memoized Event Card Component for Better Performance
 const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFromCart, isInCart }: {
   event: any;
@@ -40,7 +48,7 @@ const EventCard = React.memo(({ event, index, onClick, onAddToCart, onRemoveFrom
     return {
       basePrice,
       isPopular: totalAudience > 100000,
-      priceDisplay: `${(basePrice / 1000000).toFixed(1)}M`
+      priceDisplay: formatShortCOP(basePrice)
     };
   }, [event]);
 
@@ -299,7 +307,7 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
     return {
       basePrice,
       isPopular: totalAudience > 100000,
-      priceDisplay: `${(basePrice / 1000000).toFixed(1)}M`,
+      priceDisplay: formatShortCOP(basePrice),
       audienceDisplay: totalAudience > 0 ? `${(totalAudience / 1000).toFixed(0)}K` : 'N/A'
     };
   }, [event]);
@@ -428,7 +436,7 @@ const EventListItem = React.memo(({ event, onClick, onAddToCart, onRemoveFromCar
           {/* Precio */}
           <div className="text-right mb-2">
             <p className="font-bold text-base sm:text-lg text-gray-900 leading-none">
-              ${(eventData.basePrice / 1000000).toFixed(1)}M
+              ${formatShortCOP(eventData.basePrice)}
             </p>
             <p className="text-xs text-gray-500 leading-none">desde / momento</p>
           </div>
@@ -667,45 +675,13 @@ export function SportsEvents() {
         event.awayTeamName === selectedTeam;
       const matchesStadium = !selectedStadium || event.stadiumName === selectedStadium;
       // Handle different status formats (string vs number)
-      const matchesStatus = event.status === 'Active' || event.status === 1;
+      const matchesStatus = event.status === 'Active' || Number(event.status) === 1;
       
-      // Debug individual event filtering
-      if (normalizedQuery && process.env.NODE_ENV === 'development') {
-        console.log(`Event ${event.id}:`, {
-          homeTeam: event.homeTeamName,
-          awayTeam: event.awayTeamName,
-          stadium: event.stadiumName,
-          status: event.status,
-          searchQuery: normalizedQuery,
-          matchesSearch,
-          matchesTeam,
-          matchesStadium,
-          matchesStatus,
-          finalMatch: matchesSearch && matchesTeam && matchesStadium && matchesStatus
-        });
-      }
+
       
       return matchesSearch && matchesTeam && matchesStadium && matchesStatus;
     });
-    
-    // Debug log
-    if (process.env.NODE_ENV === 'development') {
-      console.log('=== SEARCH DEBUG ===');
-      console.log('Search query:', searchQuery);
-      console.log('Debounced query:', debouncedSearchQuery);
-      console.log('Normalized query:', debouncedSearchQuery?.trim().toLowerCase());
-      console.log('Total events:', sportEvents.length);
-      console.log('Active events:', sportEvents.filter(e => e.status === 'Active').length);
-      console.log('Filtered events:', filtered.length);
-      console.log('Selected team:', selectedTeam);
-      console.log('Selected stadium:', selectedStadium);
-      
-      if (debouncedSearchQuery && filtered.length === 0 && sportEvents.length > 0) {
-        console.log('No results found. Sample event data:');
-        console.log(sportEvents[0]);
-        console.log('Available team names:', sportEvents.map(e => `${e.homeTeamName} vs ${e.awayTeamName}`));
-      }
-    }
+
     
     return filtered;
   }, [sportEvents, debouncedSearchQuery, selectedTeam, selectedStadium]);
@@ -828,35 +804,7 @@ export function SportsEvents() {
                     </span>
                   )}
                 </p>
-                {/* Debug info - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500 mt-1 space-y-1">
-                    <div>
-                      Debug: {sportEvents.length} total, {sportEvents.filter(e => e.status === 'Active' || e.status === 1).length} activos
-                      {sportEvents.length > 0 && (
-                        <span className="ml-2">
-                          (Estados: {[...new Set(sportEvents.map(e => e.status))].join(', ')})
-                        </span>
-                      )}
-                    </div>
-                    {sportEvents.length > 0 && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => console.log('Sample event:', sportEvents[0])}
-                          className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"
-                        >
-                          Log Sample Event
-                        </button>
-                        <button
-                          onClick={() => setSearchQuery(sportEvents[0]?.homeTeamName || '')}
-                          className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
-                        >
-                          Test Search
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+
               </div>
             
               {/* View Mode Selector */}

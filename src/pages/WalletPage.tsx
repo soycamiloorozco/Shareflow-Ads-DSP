@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, memo, useMemo } from 'react';
+import React, { useState, useEffect, createContext, useContext, memo, useMemo, useCallback } from 'react';
 import { 
   Wallet, BarChart2, ArrowUpRight, DollarSign, Package2, 
   Zap, TrendingUp, Gift, Bell, Crown, 
@@ -9,7 +9,8 @@ import {
   Shield, 
   RefreshCw, HelpCircle, Key,
   Loader2,
-  ArrowRight
+  ArrowRight, Search, Filter,
+  Lock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -18,7 +19,7 @@ import type { RootState } from '../store/store';
 import { loadStripe } from '@stripe/stripe-js';
 import { paymentApi } from '../api/payment';
 import { Button } from '../components/Button';
-import { useWallet } from '../hooks/useWallet';
+import { useWallet } from '../hooks/useWallet/index';
 import { Transaction } from '../hooks/useWallet/types';
 import { Bonus, useBonus } from '../hooks/useBonus';
 import RechargeModal from '../components/wallet/RechargeModal';
@@ -75,35 +76,50 @@ const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: (id: any) => v
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="p-3 bg-white rounded-lg border border-[#B8B8C0]">
+      <div className="p-3 bg-white border border-gray-200 rounded-lg focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
         <CardElement
           options={{
             style: {
               base: {
-                fontSize: '16px',
-                color: '#424770',
+                fontSize: '13px',
+                color: '#374151',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                fontWeight: '400',
+                lineHeight: '1.5',
                 '::placeholder': {
-                  color: '#aab7c4',
+                  color: '#9CA3AF',
+                  fontSize: '13px'
                 },
               },
               invalid: {
-                color: '#9e2146',
+                color: '#DC2626',
               },
+              complete: {
+                color: '#059669',
+              }
             },
+            hidePostalCode: true
           }}
         />
       </div>
 
-      <Button
+      <button
         type="submit"
-        variant="primary"
-        size="lg"
-        fullWidth
-        icon={ArrowRight}
         disabled={!stripe || isProcessing}
+        className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
       >
-        {isProcessing ? 'Procesando...' : `Pagar ${amount.toLocaleString('es-CO')} COP`}
-      </Button>
+        {isProcessing ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Procesando...
+          </>
+        ) : (
+          <>
+            Pagar {amount.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
+            <ArrowRight className="w-4 h-4" />
+          </>
+        )}
+      </button>
     </form>
   );
 };
@@ -144,22 +160,22 @@ const CreditTooltip: React.FC<CreditTooltipProps> = memo(({ children, content, s
       {isVisible && (
         <div className={`absolute z-50 ${
           isMobile 
-            ? 'bottom-full left-1/2 transform -translate-x-1/2 mb-2' 
-            : 'bottom-full left-1/2 transform -translate-x-1/2 mb-2'
+            ? 'bottom-full left-1/2 transform -translate-x-1/2 mb-3' 
+            : 'bottom-full left-1/2 transform -translate-x-1/2 mb-3'
         }`}>
-          <div className="bg-gray-900 text-white text-sm rounded-xl px-4 py-3 shadow-2xl border border-gray-700 max-w-xs">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-xs font-bold">💰</span>
+          <div className="bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm rounded-2xl px-5 py-4 shadow-2xl border border-neutral-700 dark:border-neutral-300 max-w-xs backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-7 h-7 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-sm font-bold">💰</span>
               </div>
-              <span className="font-semibold">{content}</span>
+              <span className="font-semibold text-base">{content}</span>
             </div>
             {subContent && (
-              <p className="text-gray-300 text-xs leading-relaxed">{subContent}</p>
+              <p className="text-neutral-300 dark:text-neutral-600 text-xs leading-relaxed pl-10">{subContent}</p>
             )}
             {/* Arrow */}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2">
-              <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-gray-900"></div>
+              <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-neutral-900 dark:border-t-neutral-100"></div>
             </div>
           </div>
         </div>
@@ -692,26 +708,25 @@ const formatBalance = (amount: number) => {
 
 // Helper functions for the new RechargeModal component
 const calculateBonus = (amount: number, currentCampaign: any, currentLevel: any, userBonusPercentage: number) => {
-    if (!currentCampaign || amount < currentCampaign.minRecharge) return 0;
-    const levelBonus = Math.floor((amount * currentLevel.bonusPercentage) / 100);
-    const campaignBonus = Math.floor((amount * userBonusPercentage) / 100);
-    return levelBonus + campaignBonus;
+  // Only calculate campaign bonus, level bonus is disabled for now
+  if (!currentCampaign || amount < (currentCampaign.minRecharge || 100000)) return 0;
+  const campaignBonus = Math.floor((amount * currentCampaign.value) / 100);
+  return campaignBonus;
   };
 
 const calculateLevelBonus = (amount: number, currentLevel: any) => {
-    return Math.floor((amount * currentLevel.bonusPercentage) / 100);
+  // Level bonus is disabled for now
+  return 0;
   };
 
 const calculateCampaignBonus = (amount: number, currentCampaign: any) => {
-    if (!currentCampaign || amount < currentCampaign.minRecharge) return 0;
+  if (!currentCampaign || amount < (currentCampaign.minRecharge || 100000)) return 0;
     return Math.floor((amount * currentCampaign.value) / 100);
   };
 
 const calculateFinancialCommission = (amount: number, paymentMethod: string) => {
-    if (paymentMethod === 'card') {
-    return Math.floor((amount * 5) / 100);
-    }
-  return 0;
+  const rate = paymentMethod === 'pse' ? 0.02 : 0.05; // 2% PSE, 5% card
+  return Math.floor(amount * rate);
   };
 
 // TODO: Old modal code completely removed - using new RechargeModal component
@@ -808,239 +823,110 @@ const LevelsModalComponent: React.FC<LevelsModalProps> = memo(({ isOpen, onClose
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-4xl sm:w-full h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl rounded-t-3xl overflow-y-auto">
-        {/* Header - Mobile optimized */}
-        <div className={`sticky top-0 p-4 sm:p-6 ${currentLevel.bgColor} ${currentLevel.borderColor} border-b sm:rounded-t-3xl`}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white w-full sm:w-auto sm:max-w-2xl max-h-screen sm:max-h-[85vh] sm:rounded-xl shadow-2xl border-0 sm:border border-gray-200 overflow-hidden flex flex-col">
+        {/* Header - Compact */}
+        <div className="flex-shrink-0 bg-gray-50 border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="text-3xl sm:text-4xl">{currentLevel.icon}</div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <Crown className="w-4 h-4 text-white" />
+              </div>
               <div>
-                <h2 className={`text-xl sm:text-2xl font-bold ${currentLevel.color}`}>
-                  Nivel {currentLevel.name}
-                </h2>
-                <p className="text-gray-600 text-sm sm:text-base">{currentLevel.description}</p>
+                <h2 className="text-lg font-bold text-gray-900">Niveles de usuario</h2>
+                <p className="text-xs text-gray-600">Beneficios por fidelidad</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors min-h-[44px] min-w-[44px]"
+              className="w-8 h-8 bg-white/80 hover:bg-white rounded-lg flex items-center justify-center transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-4 h-4 text-gray-600" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6 space-y-6">
-          {/* Current Progress - Simplified for mobile */}
-          <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
-              Mi progreso
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Gasto total:</span>
-                <span className="font-bold text-lg">{formatCreditsText(totalSpent)}</span>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {/* Coming Soon Block */}
+          <div className="relative bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 mb-6 overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-purple-100/50 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+            
+            <div className="relative text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Lock className="w-8 h-8 text-white" />
               </div>
-              {nextLevel && (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600 text-sm">Siguiente nivel:</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{nextLevel.icon}</span>
-                      <span className="font-semibold text-gray-900">{nextLevel.name}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="relative">
-                    <div className="w-full rounded-full h-3 overflow-hidden shadow-inner bg-gray-200">
-                      <motion.div 
-                        className="h-3 rounded-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ 
-                          duration: 1.5,
-                          ease: "easeInOut",
-                          delay: 0.3
-                        }}
-                      />
-                    </div>
-                    <div className="mt-2 flex justify-between items-center text-xs">
-                      <span className="text-gray-500">{Math.round(progress)}% completado</span>
-                      <span className="text-blue-600 font-medium">
-                        Faltan {formatCreditsText(nextLevel.minSpent - totalSpent)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Next level preview */}
-                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-800">
-                          Al llegar a {nextLevel.name}:
-                        </span>
-                    </div>
-                      <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-                        +{nextLevel.bonusPercentage}% bonus
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              
+              <h3 className="text-xl font-bold text-purple-900 mb-2">Próximamente disponible</h3>
+              <p className="text-purple-700 text-sm leading-relaxed mb-4">
+                Estamos preparando un sistema de niveles revolucionario basado en tu fidelidad y actividad.
+              </p>
+              
+              <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium">
+                <Sparkles className="w-4 h-4" />
+                Tu fidelidad será recompensada
+              </div>
             </div>
           </div>
 
-          {/* All Levels - Mobile optimized grid */}
-          <div>
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-600" />
-              Todos los niveles
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {userLevels.map((level) => {
-                const isCurrentLevel = level.id === currentLevel.id;
-                const isUnlocked = totalSpent >= level.minSpent;
-                const isGranEstrategaLevel = level.id === 4; // Gran Estratega level
-                
-                return (
-                  <div
-                    key={level.id}
-                    className={`p-4 rounded-xl border-2 transition-all ${
-                      isCurrentLevel 
-                        ? `${level.bgColor} ${level.borderColor} shadow-lg`
-                        : isUnlocked
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-gray-50 border-gray-200'
-                    } ${isGranEstrategaLevel && isCurrentLevel ? 'relative overflow-hidden' : ''}`}
-                  >
-                    {/* Special gold accent for Gran Estratega when current */}
-                    {isGranEstrategaLevel && isCurrentLevel && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 via-transparent to-yellow-600/20 pointer-events-none" />
-                    )}
-                    
-                    <div className="relative z-10 flex items-center gap-3 mb-3">
-                      <div className="text-2xl">{level.icon}</div>
-                      <div>
-                        <h4 className={`font-bold ${
-                          isGranEstrategaLevel && isCurrentLevel 
-                            ? 'text-yellow-400' 
-                            : isCurrentLevel 
-                            ? level.color 
-                            : isUnlocked 
-                            ? 'text-green-700' 
-                            : 'text-gray-500'
-                        }`}>
-                          {level.name}
-                          {isCurrentLevel && <span className="ml-2 text-sm">(Actual)</span>}
-                        </h4>
-                        <p className={`text-xs ${
-                          isGranEstrategaLevel && isCurrentLevel 
-                            ? 'text-yellow-100' 
-                            : 'text-gray-600'
-                        }`}>
-                          Desde {formatCreditsText(level.minSpent)}
-                          {level.maxSpent && ` hasta ${formatCreditsText(level.maxSpent)}`}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Simplified key benefits */}
-                    <div className="relative z-10 space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Percent className={`w-3 h-3 ${
-                          isGranEstrategaLevel && isCurrentLevel ? 'text-yellow-400' : 'text-green-600'
-                        }`} />
-                        <span className={isGranEstrategaLevel && isCurrentLevel ? 'text-yellow-100' : ''}>
-                          {level.bonusPercentage}% bonus en recargas
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Bell className={`w-3 h-3 ${
-                          isGranEstrategaLevel && isCurrentLevel ? 'text-yellow-400' : 'text-blue-600'
-                        }`} />
-                        <span className={isGranEstrategaLevel && isCurrentLevel ? 'text-yellow-100' : ''}>
-                          {level.supportLevel}
-                        </span>
-                      </div>
-                      
-                      {/* Visual benefit indicators instead of long text */}
-                      <div className="flex flex-wrap gap-1 mt-3">
-                        {level.statusBenefits.length > 0 && (
-                          <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
-                            isGranEstrategaLevel && isCurrentLevel 
-                              ? 'bg-yellow-400/20 text-yellow-300 border border-yellow-400/30'
-                              : 'bg-purple-100 text-purple-700'
-                          }`}>
-                            <Crown className="w-3 h-3" />
-                            Status
-                      </div>
-                        )}
-                        
-                        {level.advancedFinancialBenefits.length > 0 && (
-                          <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
-                            isGranEstrategaLevel && isCurrentLevel 
-                              ? 'bg-yellow-400/20 text-yellow-300 border border-yellow-400/30'
-                              : 'bg-emerald-100 text-emerald-700'
-                          }`}>
-                            <DollarSign className="w-3 h-3" />
-                            Financieros
-                          </div>
-                        )}
-                        
-                        {level.merchandising.length > 0 && (
-                          <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
-                            isGranEstrategaLevel && isCurrentLevel 
-                              ? 'bg-yellow-400/20 text-yellow-300 border border-yellow-400/30'
-                              : 'bg-orange-100 text-orange-700'
-                          }`}>
-                            <Gift className="w-3 h-3" />
-                            Gifts
-                          </div>
-                        )}
-                        
-                        {level.exclusiveAccess.length > 0 && (
-                          <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
-                            isGranEstrategaLevel && isCurrentLevel 
-                              ? 'bg-yellow-400/20 text-yellow-300 border border-yellow-400/30'
-                              : 'bg-indigo-100 text-indigo-700'
-                          }`}>
-                            <Key className="w-3 h-3" />
-                            Exclusivo
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Single highlight benefit instead of full list */}
-                      {level.statusBenefits.length > 0 && (
-                        <div className={`mt-2 p-2 rounded-lg text-xs ${
-                          isGranEstrategaLevel && isCurrentLevel 
-                            ? 'bg-black/20 border border-yellow-400/30 text-yellow-100'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          ✨ {level.statusBenefits[0]}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+          {/* Current Level Preview - Disabled */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 opacity-60">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                <span className="text-lg opacity-50">{currentLevel.icon}</span>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-700">Nivel actual: {currentLevel.name}</h4>
+                <p className="text-xs text-gray-500">Sistema en desarrollo</p>
+              </div>
             </div>
             
-            {/* Simple info footer */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Info className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-blue-900 text-sm">¿Cómo subir de nivel?</span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Bonus potencial</span>
+                <span className="text-sm text-gray-400">{currentLevel.bonusPercentage}%</span>
               </div>
-              <p className="text-blue-700 text-xs">
-                Tu nivel se calcula automáticamente según tu gasto total acumulado. Mientras más inviertas en tus campañas, más beneficios exclusivos desbloqueas.
-              </p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-gray-300 h-2 rounded-full w-0"></div>
+              </div>
+              <div className="text-xs text-gray-400 text-center">
+                Funcionalidad próximamente
+              </div>
             </div>
+          </div>
+
+          {/* Features Preview */}
+          <div className="mt-6 space-y-3">
+            <h4 className="font-semibold text-gray-900 text-sm mb-3">Características que incluirá:</h4>
+            
+            {[
+              { icon: "🎯", title: "Bonus escalonados", desc: "Recompensas por fidelidad" },
+              { icon: "👑", title: "Beneficios exclusivos", desc: "Acceso a funciones premium" },
+              { icon: "🚀", title: "Soporte prioritario", desc: "Atención personalizada" },
+              { icon: "💎", title: "Descuentos especiales", desc: "Precios preferenciales" }
+            ].map((feature, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg opacity-60">
+                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm opacity-50">{feature.icon}</span>
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-700 text-sm">{feature.title}</div>
+                  <div className="text-xs text-gray-500">{feature.desc}</div>
+                </div>
+                <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                  <Lock className="w-3 h-3 text-gray-400" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+            <Info className="w-3 h-3" />
+            <span>Te notificaremos cuando esté disponible</span>
           </div>
         </div>
       </div>
@@ -1130,126 +1016,143 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = memo(({ isOpen, 
 
   const details = parseTransactionDetails(transaction.description, transaction.type);
 
+  // Determine transaction type for display (TikTok style)
+  const getTransactionType = () => {
+    if (transaction.type === 'Deposit') return { 
+      label: 'Add Credits', 
+      color: 'emerald', 
+      icon: ArrowUpRight,
+      subtext: 'Cash'
+    };
+    if (transaction.type === 'bonus') return { 
+      label: 'Bonus', 
+      color: 'blue', 
+      icon: Gift,
+      subtext: 'Bonus'
+    };
+    return { 
+      label: 'Ad Spend', 
+      color: 'red', 
+      icon: Package2,
+      subtext: 'Campaign'
+    };
+  };
+
+  const transactionType = getTransactionType();
+  const IconComponent = transactionType.icon;
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-md sm:w-full sm:rounded-2xl rounded-t-2xl shadow-2xl p-4 sm:p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Detalle de transacción</h3>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-neutral-800 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+        {/* Clean Header */}
+        <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Transaction Details</h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors min-h-[44px] min-w-[44px]"
+            className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Transaction Details */}
-        <div className="space-y-4">
-          {/* Amount */}
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <div className={`text-2xl sm:text-3xl font-bold mb-2 ${
-              transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+        <div className="p-6">
+          {/* Amount Display - TikTok Style */}
+          <div className="text-center mb-6">
+            <div className={`text-4xl font-bold mb-3 ${
+              transaction.amount > 0 
+                ? 'text-emerald-600 dark:text-emerald-400' 
+                : 'text-red-600 dark:text-red-400'
             }`}>
-              {transaction.amount > 0 ? '+' : ''}{formatCreditsText(Math.abs(transaction.amount))}
+              {transaction.amount > 0 ? '+' : '-'}{formatCreditsText(Math.abs(transaction.amount))}
             </div>
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-              transaction.type === 'Deposit' ? 'bg-green-100 text-green-800' :
-              transaction.type === 'bonus' ? 'bg-blue-100 text-blue-800' : 
-              details.isSportsEvent ? 'bg-purple-100 text-purple-800' : 'bg-red-100 text-red-800'
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+              transactionType.color === 'emerald' 
+                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' :
+              transactionType.color === 'blue' 
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' 
+                : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
             }`}>
-              {transaction.type === 'Deposit' ? (
-                <>
-                  <ArrowUpRight className="w-4 h-4" />
-                  Recarga
-                </>
-              ) : transaction.type === 'bonus' ? (
-                <>
-                  <Gift className="w-4 h-4" />
-                  Bonus
-                </>
-              ) : (
-                <>
-                  <Package2 className="w-4 h-4" />
-                  Campaña
-                </>
-              )}
+              <IconComponent className="w-4 h-4" />
+              {transactionType.label}
             </div>
           </div>
 
-          {/* Structured Details for Spending */}
-          {details.isStructured && transaction.type === 'Deposit' && (
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <h4 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
-                <Target className="w-4 h-4" />
-                Detalles de la campaña
-              </h4>
-              <div className="space-y-3 text-sm">
-                {details.screenType && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tipo de pantalla:</span>
-                    <span className="font-medium text-gray-900">{details.screenType}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Ubicación:</span>
-                  <span className="font-medium text-gray-900 text-right max-w-48">{details.location}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Duración:</span>
-                  <span className="font-medium text-gray-900">{details.duration}</span>
-                </div>
-                {details.package && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Paquete:</span>
-                    <span className="font-medium text-gray-900">{details.package}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Standard Details */}
+          {/* Clean Details */}
+          <div className="space-y-4">
           <div className="space-y-3">
-            {!details.isStructured && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Descripción:</span>
-                <span className="font-medium text-gray-900 text-right max-w-48">{details.description}</span>
+              <div className="flex justify-between items-start">
+                <span className="text-neutral-600 dark:text-neutral-400 text-sm">Description:</span>
+                <span className="text-neutral-900 dark:text-neutral-100 text-sm text-right max-w-56 font-medium">
+                  {transaction.description}
+                </span>
               </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-gray-600">Fecha:</span>
-              <span className="font-medium text-gray-900">
-                {new Date(transaction.createdAt).toLocaleDateString('es-CO', {
-                  year: 'numeric',
-                  month: 'long',
+              
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-600 dark:text-neutral-400 text-sm">Date:</span>
+                <span className="text-neutral-900 dark:text-neutral-100 text-sm font-medium">
+                  {new Date(transaction.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
                   day: 'numeric',
+                    year: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit'
                 })}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Estado:</span>
-              <span className={`font-medium ${
-                transaction.status === 'Completed' ? 'text-green-600' : 'text-yellow-600'
-              }`}>
-                {transaction.status === 'Completed' ? 'Completado' : 'Pendiente'}
+
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-600 dark:text-neutral-400 text-sm">Status:</span>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                  transaction.status === 'Completed' 
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' 
+                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                }`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${
+                    transaction.status === 'Completed' ? 'bg-emerald-500' : 'bg-yellow-500'
+                  }`} />
+                  {transaction.status === 'Completed' ? 'Success' : 'Pending'}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">ID:</span>
-              <span className="font-mono text-sm text-gray-500">{transaction.id}</span>
+
+              <div className="flex justify-between items-start">
+                <span className="text-neutral-600 dark:text-neutral-400 text-sm">ID:</span>
+                <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400 text-right max-w-48 break-all">
+                  {transaction.id}
+                </span>
             </div>
           </div>
 
-          {/* Close Button - Touch Friendly */}
+            {/* Transaction Breakdown - TikTok Style (only for purchases) */}
+            {transaction.type === 'Deposit' && (
+              <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4">
+                <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Transaction breakdown</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600 dark:text-neutral-400">Purchase amount</span>
+                    <span className="text-neutral-900 dark:text-neutral-100 font-medium">{formatCreditsText(Math.abs(transaction.amount))}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600 dark:text-neutral-400">Processing fee</span>
+                    <span className="text-neutral-900 dark:text-neutral-100 font-medium">$0.00</span>
+                  </div>
+                  <div className="border-t border-neutral-200 dark:border-neutral-700 pt-2 mt-2">
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span className="text-neutral-900 dark:text-neutral-100">Total amount</span>
+                      <span className="text-neutral-900 dark:text-neutral-100">{formatCreditsText(Math.abs(transaction.amount))}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Simple Close Button */}
           <button
             onClick={onClose}
-            className="w-full mt-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium min-h-[48px]"
+              className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-xl font-medium text-sm transition-colors"
           >
-            Cerrar
+              Close
           </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1258,10 +1161,10 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = memo(({ isOpen, 
 
 // Mobile-optimized Main Dashboard Component
 const WalletDashboard: React.FC = memo(() => {
+  console.log('🔄 WalletDashboard: Component rendering');
   const { wallet, currentCampaign, loading, recharge, refreshData } = useWallets();
     const { getActiveBonus } = useBonus();
-
-  const { transactions: getTransactions, getBalance } = useWallet();
+  const walletHook = useWallet();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [isLevelsModalOpen, setIsLevelsModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -1269,6 +1172,17 @@ const WalletDashboard: React.FC = memo(() => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState<number>(0);
   const [activeBonus, setActiveBonus] = useState<Bonus | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions'>('dashboard');
+  
+  // Filter states for transactions
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Credits banner state
+  const [showCreditsBanner, setShowCreditsBanner] = useState(true);
   
 
   // NUEVO: Estado para la página de celebración independiente
@@ -1290,14 +1204,23 @@ const WalletDashboard: React.FC = memo(() => {
     })
   }, []);
   useEffect(() => {
-    getTransactions().then((data) => {
-      setTransactions(data.transactions)
-    });
-    getBalance().then((data) => {
-      console.log({data})
-      setBalance(data.balance)
-    });
-  }, []);
+    console.log('🔄 WalletDashboard: Loading wallet data (should only run once)');
+    const loadWalletData = async () => {
+      try {
+        const [transactionsData, balanceData] = await Promise.all([
+          walletHook.transactions(),
+          walletHook.getBalance()
+        ]);
+        setTransactions(transactionsData.transactions);
+        setBalance(balanceData.balance);
+        console.log('✅ WalletDashboard: Wallet data loaded successfully');
+      } catch (error) {
+        console.error('❌ WalletDashboard: Error loading wallet data:', error);
+      }
+    };
+    
+    loadWalletData();
+  }, []); // Empty dependencies array to prevent infinite loop
 
 
   
@@ -1330,6 +1253,48 @@ const WalletDashboard: React.FC = memo(() => {
 const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
 
   
+  // Filter transactions based on search and filters
+  const filteredTransactions = useMemo(() => {
+    let filtered = [...transactions];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(t => 
+        t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Type filter
+    if (selectedType) {
+      if (selectedType === 'Add Credits') {
+        filtered = filtered.filter(t => t.type === 'Deposit');
+      } else if (selectedType === 'Bonus') {
+        filtered = filtered.filter(t => t.type === 'bonus');
+      } else if (selectedType === 'Ad Spend') {
+        filtered = filtered.filter(t => t.type !== 'Deposit' && t.type !== 'bonus');
+      }
+    }
+
+    // Status filter
+    if (selectedStatus) {
+      filtered = filtered.filter(t => t.status === selectedStatus);
+    }
+
+    // Date range filter
+    if (dateRange.start) {
+      const startDate = new Date(dateRange.start);
+      filtered = filtered.filter(t => new Date(t.createdAt) >= startDate);
+    }
+    if (dateRange.end) {
+      const endDate = new Date(dateRange.end);
+      endDate.setHours(23, 59, 59, 999); // Include the entire end date
+      filtered = filtered.filter(t => new Date(t.createdAt) <= endDate);
+    }
+
+    return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [transactions, searchTerm, selectedType, selectedStatus, dateRange]);
+  
   // Calculate totals for compact view
   const totalCredits = transactions
     .filter(t => t.amount > 0)
@@ -1339,6 +1304,33 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
     .filter(t => t.amount < 0)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
+  // Quick date filter functions
+  const setQuickDateFilter = useCallback((days: number | 'month' | 'quarter') => {
+    const end = new Date();
+    let start = new Date();
+    
+    if (days === 'month') {
+      start = new Date(end.getFullYear(), end.getMonth(), 1);
+    } else if (days === 'quarter') {
+      const quarter = Math.floor(end.getMonth() / 3);
+      start = new Date(end.getFullYear(), quarter * 3, 1);
+    } else {
+      start.setDate(end.getDate() - days);
+    }
+    
+    setDateRange({
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0]
+    });
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setSearchTerm('');
+    setSelectedType('');
+    setSelectedStatus('');
+    setDateRange({ start: '', end: '' });
+  }, []);
+
   // Función deposit para el nuevo modal
   const deposit = async (depositData: { amount: number; paymentReference: string; description: string }) => {
     console.log('💳 Deposit function called:', depositData);
@@ -1346,7 +1338,7 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
     return { success: true, transactionId: depositData.paymentReference };
   };
 
-  const handleRecharge = async (amount: number) => {
+  const handleRecharge = useCallback(async (amount: number) => {
     console.log('🎯 handleRecharge called with amount:', amount);
     
     // Calcular datos para la celebración ANTES de procesar usando los nuevos cálculos
@@ -1387,14 +1379,14 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
         console.error('❌ Error updating wallet:', error);
       }
     }, 100);
-  };
+  }, [currentLevel, currentCampaign, userBonusPercentage, recharge]);
 
-  const handleTransactionClick = (transaction: Transaction) => {
+  const handleTransactionClick = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsDetailModalOpen(true);
-  };
+  }, []);
 
-  const handleCloseCelebration = () => {
+  const handleCloseCelebration = useCallback(() => {
     console.log('🔄 Closing celebration page');
     setIsCelebrationOpen(false);
     setCelebrationData({
@@ -1407,369 +1399,577 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
       levelName: '',
       campaignName: ''
     });
-  };
+  }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando wallet...</p>
+          <div className="w-12 h-12 border-4 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-neutral-400">Cargando wallet...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 wallet-dashboard">
-      {/* Mobile-first container with proper padding */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header - Mobile optimized */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+    <div className="min-h-screen bg-white dark:bg-neutral-900 wallet-dashboard">
+      {/* Professional container with clean spacing */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        {/* Header Section - Clean and minimal */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Wallet</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">
-              Potencia tu creatividad e ilumina la ciudad
+              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-1">Mi Wallet</h1>
+              <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+                Gestiona tus créditos y campañas publicitarias
             </p>
           </div>
           <button
             onClick={() => setIsRechargeModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 rounded-xl font-semibold shadow-lg transition-colors flex items-center justify-center gap-2 min-h-[48px] w-full sm:w-auto"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center gap-2"
           >
-            <Zap className="w-5 h-5" />
-            Recargar
+              <Zap className="w-4 h-4" />
+              Recargar Saldo
           </button>
+          </div>
         </div>
 
-        {/* Campaign Banner - Moved to top */}
+        {/* Professional Tab Navigation */}
+        <div className="mb-8">
+          <div className="border-b border-neutral-200 dark:border-neutral-700">
+            <nav className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  activeTab === 'dashboard'
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                    : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <BarChart2 className="w-4 h-4" />
+                  Dashboard
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('transactions')}
+                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  activeTab === 'transactions'
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                    : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  Transacciones
+                </div>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Campaign Banner - Professional and elegant */}
         {activeBonus && (
-          <div className="relative mb-6 sm:mb-8 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl sm:rounded-3xl p-4 sm:p-8 relative overflow-hidden">
-              {/* Main content - Mobile first */}
-              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3 sm:gap-6">
-                  {/* Icon */}
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl border border-white/30">
+          <div className="mb-8">
+            <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 rounded-2xl p-6 overflow-hidden">
+              {/* Subtle background decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-16 -translate-y-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full transform -translate-x-12 translate-y-12"></div>
+              
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-xl backdrop-blur-sm">
                     {activeBonus.icon}
                   </div>
-
-                  {/* Campaign info */}
                   <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                      <h3 className="text-lg sm:text-2xl font-bold text-white">
+                    <h3 className="text-white font-semibold text-lg mb-1">
                         {activeBonus.name}
                       </h3>
-                    </div>
-                    <p className="text-blue-100 text-xs sm:text-sm mb-3 max-w-lg">
+                    <p className="text-blue-100 text-sm mb-3 max-w-md">
                       {activeBonus.description}
                     </p>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                      <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/30 w-fit">
-                        <Timer className="w-4 h-4 text-yellow-300" />
-                        <span className="text-white font-semibold text-sm">
-                          ¡Solo {timeLeft} días!
+                    <div className="flex items-center gap-3">
+                      <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
+                        <Timer className="w-3 h-3" />
+                        {timeLeft} días restantes
                         </span>
-                      </div>
-                      <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-3 sm:px-4 py-2 rounded-lg font-bold text-sm w-fit">
+                      <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg text-xs font-semibold">
                         Hasta +{activeBonus.value}% bonus
+                      </span>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* CTA Button - Mobile optimized */}
                 <button
                   onClick={() => setIsRechargeModalOpen(true)}
-                  className="bg-white text-blue-700 hover:text-blue-800 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 min-h-[48px] w-full sm:w-auto"
+                  className="bg-white text-blue-600 hover:bg-blue-50 px-5 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center gap-2"
                 >
-                  <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-                  ¡Aprovechar oferta!
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Zap className="w-4 h-4" />
+                  Aprovechar
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Main Grid Layout - Mobile first */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
-          {/* Balance Card - Full width on mobile */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Saldo disponible</h2>
-                  <div className="text-3xl sm:text-4xl font-bold text-blue-600">
+        {/* Main Content Grid - Professional layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Left Column - Balance and Info */}
+          <div className="lg:col-span-3 space-y-6">
+            
+            {/* Balance Card - Clean design */}
+            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm font-medium mb-2">Saldo Disponible</p>
+                  <p className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                     {formatBalance(balance)}
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">
+                  </p>
+                  <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">
                     💰 {formatCreditsText(balance)}
+                  </p>
                   </div>
-                </div>
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Wallet className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
+                  <Wallet className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
               
-              {/* Stats Grid - Mobile optimized */}
+              {/* Monthly Stats - Professional cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ArrowUpRight className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-gray-600">Este mes recargado</span>
+                <div className="bg-neutral-50 dark:bg-neutral-700/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-600">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+                      <ArrowUpRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <div className="text-lg sm:text-xl font-bold text-gray-900">
+                    <span className="text-neutral-700 dark:text-neutral-300 text-sm font-medium">Recargado este mes</span>
+                  </div>
+                  <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     {formatBalance(monthlyRecharged)}
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="w-4 h-4 text-red-600" />
-                    <span className="text-sm text-gray-600">Este mes gastado</span>
-                  </div>
-                  <div className="text-lg sm:text-xl font-bold text-gray-900">
-                    {formatBalance(totalDebits)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* How Credits Work - Mobile optimized */}
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-6">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                    ¿Cómo funcionan los Shareflow Credits?
-                    <CreditTooltip 
-                      content="Sistema de moneda virtual"
-                      subContent="Inspirado en las mejores plataformas globales, nuestro sistema te da control total."
-                    >
-                      <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-                    </CreditTooltip>
-                  </h3>
-                  <div className="space-y-2 text-blue-800">
-                    <p className="text-sm flex items-start gap-2">
-                      <span className="text-yellow-500">💰</span>
-                      <span>
-                        <strong>Conversión simple:</strong> $1 peso = 1 Shareflow Credit
-                      </span>
-                    </p>
-                    <p className="text-sm flex items-start gap-2">
-                      <span className="text-blue-500">🎯</span>
-                      <span><strong>Alcance ilimitado:</strong> Más de 150 pantallas estratégicas</span>
-                    </p>
-                    <p className="text-sm flex items-start gap-2">
-                      <span className="text-green-500">♾️</span>
-                      <span><strong>Sin vencimiento:</strong> Tu saldo nunca expira</span>
-                    </p>
-                    <p className="text-sm flex items-start gap-2">
-                      <span className="text-red-500">🚀</span>
-                      <span><strong>Tú decides:</strong> Fotos, videos, proyectos o campañas épicas</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* User Level Card - Mobile optimized */}
-          <div className="lg:col-span-1">
-            <div 
-              className={`${currentLevel.bgColor} border-2 ${currentLevel.borderColor} rounded-2xl p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all h-fit relative overflow-hidden`}
-              onClick={() => setIsLevelsModalOpen(true)}
-            >
-              {/* Special gold accent for Gran Estratega */}
-              {currentLevel.id === 4 && (
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-transparent to-yellow-600/10 pointer-events-none" />
-              )}
-              
-              <div className="relative z-10 flex items-center justify-between mb-4">
-                <div className="text-2xl sm:text-3xl">{currentLevel.icon}</div>
-                <div className="text-right">
-                  <p className={`text-xs ${currentLevel.id === 4 ? 'text-yellow-200' : 'text-gray-500'}`}>
-                    Nivel actual
                   </p>
-                </div>
-              </div>
-              
-              <h3 className={`text-base sm:text-lg font-semibold mb-1 ${
-                currentLevel.id === 4 ? 'text-yellow-400' : currentLevel.color
-              }`}>
-                Nivel {currentLevel.name}
-              </h3>
-              <p className={`text-sm mb-4 ${
-                currentLevel.id === 4 ? 'text-yellow-100' : 'text-gray-600'
-              }`}>
-                {currentLevel.description}
-              </p>
-              
-              <div className={`${
-                currentLevel.id === 4 
-                  ? 'bg-black/20 border border-yellow-400/30' 
-                  : 'bg-white/50'
-              } rounded-lg p-3 mb-4`}>
-                <p className={`text-lg sm:text-xl font-bold mb-1 ${
-                  currentLevel.id === 4 ? 'text-yellow-400' : currentLevel.color
-                }`}>
-                  {currentLevel.bonusPercentage}% bonus
-                </p>
-                <p className={`text-xs ${
-                  currentLevel.id === 4 ? 'text-yellow-200' : 'text-gray-500'
-                }`}>
-                  en recargas
-                </p>
-                    </div>
-              
-              <div className="mt-4 pt-3 border-t border-gray-300">
-                <p className="text-xs text-gray-500 text-center">
-                  👆 Toca para ver todos los niveles
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-
-        {/* Compact Recent Activity */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-blue-600" />
-              Actividad reciente
-            </h3>
-            <button
-              onClick={refreshData}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px] min-w-[44px]"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
-          
-          {/* Summary Cards - Mobile first grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            {/* Total Credits */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-600 text-sm font-medium mb-1">Total</p>
-                  <p className="text-xl sm:text-2xl font-bold text-green-700">
-                    +{formatCreditsText(totalCredits)}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Total Debits */}
-            <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-red-600 text-sm font-medium mb-1">Total Gastos</p>
-                  <p className="text-xl sm:text-2xl font-bold text-red-700">
-                    -{formatCreditsText(totalDebits)}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <Package2 className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Net Balance */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-600 text-sm font-medium mb-1">Balance Neto</p>
-                  <p className={`text-xl sm:text-2xl font-bold ${
-                    totalCredits - totalDebits >= 0 ? 'text-blue-700' : 'text-red-700'
-                  }`}>
-                    {totalCredits - totalDebits >= 0 ? '+' : ''}{formatCreditsText(totalCredits - totalDebits)}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Transactions List - Mobile optimized */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-gray-900">Últimas transacciones</h4>
-              <span className="text-sm text-gray-500">{transactions.length} transacciones</span>
-            </div>
-            
-            {transactions.slice(0, 4).map((transaction) => (
-              <div
-                key={transaction.id}
-                onClick={() => handleTransactionClick(transaction)}
-                className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-all group min-h-[60px]"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`p-2 rounded-lg flex-shrink-0 ${
-                    transaction.type === 'Deposit' ? 'bg-green-100' :
-                    transaction.type === 'bonus' ? 'bg-blue-100' : 'bg-red-100'
-                  }`}>
-                    {transaction.type === 'Deposit' ? (
-                      <ArrowUpRight className="w-4 h-4 text-green-600" />
-                    ) : transaction.type === 'bonus' ? (
-                      <Gift className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <Package2 className="w-4 h-4 text-red-600" />
-                    )}
                   </div>
-                  
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
-                      {transaction.description}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-xs text-gray-500">
-                        {new Date(transaction.createdAt).toLocaleDateString('es-CO', {
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </p>
-                      <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-sm font-medium ${
-                        transaction.status === 'Completed' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {transaction.status === 'Completed' ? '✓' : '⏳'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
                 
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="text-right">
-                    <p className={`font-bold text-sm ${
-                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.amount > 0 ? '+' : ''}{formatCreditsText(Math.abs(transaction.amount))}
-                    </p>
+                <div className="bg-neutral-50 dark:bg-neutral-700/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-600">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-red-100 dark:bg-red-900/50 rounded-lg flex items-center justify-center">
+                      <DollarSign className="w-4 h-4 text-red-600 dark:text-red-400" />
+                </div>
+                    <span className="text-neutral-700 dark:text-neutral-300 text-sm font-medium">Gastado este mes</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                  <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                    {formatBalance(totalDebits)}
+                  </p>
                 </div>
               </div>
-            ))}
-            
-            {transactions.length > 4 && (
-              <div className="text-center pt-3">
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors min-h-[44px] px-4">
-                  Ver todas las transacciones ({transactions.length - 4} más)
-                </button>
+            </div>
+
+            {/* Credits Info Banner - Dismissible */}
+            {showCreditsBanner && (
+              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Zap className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-1">
+                      Shareflow Credits
+                    </h3>
+                    <p className="text-blue-700 dark:text-blue-300 text-xs leading-relaxed">
+                      Tu moneda digital para publicidad. <strong>Conversión 1:1</strong> ($1 COP = 1 Credit), 
+                      sin vencimiento y disponible en 150+ pantallas a nivel nacional.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreditsBanner(false)}
+                    className="w-6 h-6 bg-blue-100 dark:bg-blue-800 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
+                  >
+                    <X className="w-3 h-3 text-blue-600 dark:text-blue-300" />
+                  </button>
+                </div>
               </div>
             )}
           </div>
+
+          {/* Right Column - Professional sidebar */}
+          <div className="space-y-6">
+            {/* User Level Card - Clean and professional */}
+            <div 
+              onClick={() => setIsLevelsModalOpen(true)}
+              className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Nivel actual</span>
+                <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all duration-200" />
+              </div>
+              
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center text-xl">
+                  {currentLevel.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">{currentLevel.name}</h3>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Nivel creativo activo</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-neutral-600 dark:text-neutral-400">Progreso al siguiente nivel</span>
+                  <span className="font-medium text-neutral-900 dark:text-neutral-100">{Math.round(levelProgress)}%</span>
+                </div>
+                <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${levelProgress}%` }}
+                  ></div>
+                    </div>
+              
+                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
+                  <div className="text-sm text-purple-700 dark:text-purple-300 font-medium mb-1 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Bonus por fidelidad
+                  </div>
+                  <div className="text-purple-900 dark:text-purple-100 font-bold text-sm">
+                    Próximamente disponible
+                  </div>
+                  <div className="text-xs text-purple-600 dark:text-purple-400 mt-2 leading-relaxed">
+                    Tu fidelidad te hará brillar más. Estamos preparando recompensas especiales basadas en tu actividad.
+                  </div>
+                </div>
+          </div>
         </div>
+
+
+          </div>
+        </div>
+          </>
+        )}
+
+        {/* Transactions Tab Content - TikTok Style Professional Table */}
+        {activeTab === 'transactions' && (
+          <div className="space-y-6">
+            {/* Filters and Search Bar - TikTok Style */}
+            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                  {/* Search Input */}
+                  <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <input
+                      type="text"
+                      placeholder="Search transactions..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  
+                  {/* Filter by Type */}
+                  <select 
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">All types</option>
+                    <option value="Add Credits">Add Credits</option>
+                    <option value="Bonus">Bonus</option>
+                    <option value="Ad Spend">Ad Spend</option>
+                  </select>
+                  
+                  {/* Filter by Status */}
+                  <select 
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">All statuses</option>
+                    <option value="Completed">Success</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Failed">Failed</option>
+                  </select>
+                </div>
+                
+                <div className="flex gap-2">
+            <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`px-4 py-2 border border-neutral-200 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                      showFilters ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300' : ''
+                    }`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    Filters
+            </button>
+
+                </div>
+          </div>
+          
+              {/* Advanced Filters Panel - TikTok Style */}
+              {showFilters && (
+                <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Date Range */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Date Range</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={dateRange.start}
+                          onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                          className="flex-1 px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <input
+                          type="date"
+                          value={dateRange.end}
+                          onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                          className="flex-1 px-3 py-2 border border-neutral-200 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                </div>
+                </div>
+
+                    {/* Quick Date Filters */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Quick Filters</label>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setQuickDateFilter(7)}
+                          className="px-3 py-1.5 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          Last 7 days
+                        </button>
+                        <button
+                          onClick={() => setQuickDateFilter(30)}
+                          className="px-3 py-1.5 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          Last 30 days
+                        </button>
+                        <button
+                          onClick={() => setQuickDateFilter('month')}
+                          className="px-3 py-1.5 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          This month
+                        </button>
+              </div>
+            </div>
+
+                    {/* Filter Actions */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Actions</label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={clearFilters}
+                          className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Clear all
+                        </button>
+                        <button
+                          onClick={() => setShowFilters(false)}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Apply
+                        </button>
+                </div>
+                </div>
+              </div>
+                </div>
+              )}
+            </div>
+
+            {/* Professional Table - TikTok Style */}
+            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                      Transactions
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400">
+                      <span>
+                        Showing <strong className="text-neutral-900 dark:text-neutral-100">{filteredTransactions.length}</strong> of <strong className="text-neutral-900 dark:text-neutral-100">{transactions.length}</strong> transactions
+                      </span>
+                      <button
+                        onClick={refreshData}
+                        className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md transition-all duration-200"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                </div>
+                </div>
+              </div>
+
+              {filteredTransactions.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Activity className="w-8 h-8 text-neutral-400" />
+            </div>
+                  <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                    {transactions.length === 0 ? 'No transactions found' : 'No results match your filters'}
+                  </h3>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+                    {transactions.length === 0 
+                      ? 'When you make your first purchase or expense, it will appear here.'
+                      : 'Try adjusting your search terms or filters to find what you\'re looking for.'
+                    }
+                  </p>
+                  {transactions.length > 0 && filteredTransactions.length === 0 && (
+                    <button
+                      onClick={clearFilters}
+                      className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+          </div>
+              ) : (
+                <>
+                  {/* Table Header */}
+                  <div className="bg-neutral-50 dark:bg-neutral-700/50 px-6 py-3 border-b border-neutral-200 dark:border-neutral-600">
+                    <div className="grid grid-cols-12 gap-4 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <div className="col-span-2">Date</div>
+                      <div className="col-span-2">Type</div>
+                      <div className="col-span-3">Transaction ID</div>
+                      <div className="col-span-3">Description</div>
+                      <div className="col-span-1">Status</div>
+                      <div className="col-span-1 text-right">Amount</div>
+                    </div>
+            </div>
+            
+                  {/* Table Body */}
+                  <div className="divide-y divide-neutral-200 dark:divide-neutral-600">
+                    {filteredTransactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                onClick={() => handleTransactionClick(transaction)}
+                        className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 cursor-pointer transition-colors group"
+                      >
+                        {/* Date */}
+                        <div className="col-span-2 flex items-center">
+                          <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                            <p className="font-medium">
+                              {new Date(transaction.createdAt).toLocaleDateString('es-CO', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                              {new Date(transaction.createdAt).toLocaleTimeString('es-CO', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Transaction Type - TikTok Style */}
+                        <div className="col-span-2 flex items-center">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+                              transaction.type === 'Deposit' 
+                                ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400' :
+                              transaction.type === 'bonus' 
+                                ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                                : 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400'
+                  }`}>
+                    {transaction.type === 'Deposit' ? (
+                                <ArrowUpRight className="w-3 h-3" />
+                    ) : transaction.type === 'bonus' ? (
+                                <Gift className="w-3 h-3" />
+                              ) : (
+                                <Package2 className="w-3 h-3" />
+                              )}
+                            </div>
+                            <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                              {transaction.type === 'Deposit' ? 'Add Credits' : 
+                               transaction.type === 'bonus' ? 'Bonus' : 'Ad Spend'}
+                            </span>
+                          </div>
+                  </div>
+                  
+                        {/* Transaction ID */}
+                        <div className="col-span-3 flex items-center">
+                          <div className="min-w-0">
+                            <p className="text-sm font-mono text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              {transaction.id.slice(0, 16)}...
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                              Shareflow LLC0916
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="col-span-3 flex items-center">
+                          <p className="text-sm text-neutral-900 dark:text-neutral-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {transaction.description}
+                          </p>
+                        </div>
+
+                        {/* Status */}
+                        <div className="col-span-1 flex items-center">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        transaction.status === 'Completed' 
+                              ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' 
+                              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                          }`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              transaction.status === 'Completed' 
+                                ? 'bg-emerald-500' 
+                                : 'bg-yellow-500'
+                            }`} />
+                            {transaction.status === 'Completed' ? 'Success' : 'Pending'}
+                      </span>
+                </div>
+                
+                        {/* Amount */}
+                        <div className="col-span-1 flex items-center justify-end">
+                  <div className="text-right">
+                            <p className={`text-sm font-semibold ${
+                              transaction.amount > 0 
+                                ? 'text-emerald-600 dark:text-emerald-400' 
+                                : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {transaction.amount > 0 ? '+' : '-'}{formatCreditsText(Math.abs(transaction.amount))}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                              {transaction.type === 'Deposit' ? 'Cash' : 
+                               transaction.type === 'bonus' ? 'Bonus' : 'Credits'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+                  </div>
+
+                  {/* Pagination - TikTok Style */}
+                  <div className="bg-neutral-50 dark:bg-neutral-700/50 px-6 py-3 border-t border-neutral-200 dark:border-neutral-600">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-neutral-600 dark:text-neutral-400">
+                        Showing <strong>{filteredTransactions.length}</strong> of <strong>{transactions.length}</strong> transactions
+                        {(searchTerm || selectedType || selectedStatus || dateRange.start || dateRange.end) && (
+                          <span className="ml-2 text-blue-600 dark:text-blue-400">(filtered)</span>
+                        )}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button className="px-3 py-1 border border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-600 rounded text-sm transition-colors">
+                          Previous
+                        </button>
+                        <span className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium">1</span>
+                        <button className="px-3 py-1 border border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-600 rounded text-sm transition-colors">
+                          Next
+                </button>
+              </div>
+                    </div>
+                  </div>
+                </>
+            )}
+          </div>
+        </div>
+        )}
+
+
+
 
         {/* Modals */}
         <RechargeModal

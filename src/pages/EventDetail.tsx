@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -151,6 +151,11 @@ const PaymentForm = ({ onSuccess, onError, amount, selectedMoments }: { onSucces
   );
 };
 
+// Helper: format COP in short form (<1M -> K, >=1M -> M)
+const formatShortCOP = (value: number): string => {
+  if (value < 1_000_000) return `${Math.round(value / 1_000)}K`;
+  return `${(value / 1_000_000).toFixed(1)}M`;
+};
 
 export function EventDetail() {
   const navigate = useNavigate();
@@ -1146,7 +1151,7 @@ export function EventDetail() {
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Precio por momento</p>
                         <p className="font-semibold text-gray-800">
-                          ${(period.price / 1000000).toFixed(1)}M COP
+                          ${formatShortCOP(period.price)} COP
                         </p>
                       </div>
                       <div>
@@ -1178,7 +1183,7 @@ export function EventDetail() {
                   <div className="text-right">
                     <p className="text-primary-100 text-sm">Precio por momento</p>
                     <p className="text-white font-bold text-lg">
-                      ${(currentPeriod.price / 1000000).toFixed(1)}M COP
+                      ${formatShortCOP(currentPeriod.price)} COP
                     </p>
                   </div>
                 </div>
