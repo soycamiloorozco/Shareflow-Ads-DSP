@@ -42,7 +42,7 @@ interface GamePeriodInfo {
 }
 
 
-const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
+const stripePromise = loadStripe('pk_live_51OHbGYHQkntOzh4KQFTksD7uHP2GOH8JjjVmkxE9uJm6dfx6OdwmWAl3wrozgTpb1330qbdthjXopdSNx7cM8sub00Z0maRpBS');
 
 // Componente de formulario de pago
 const PaymentForm = ({ onSuccess, onError, amount, selectedMoments }: { onSuccess: (id: any) => void, onError: (error: any) => void, amount: number, selectedMoments: any }) => {

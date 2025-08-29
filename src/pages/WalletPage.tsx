@@ -24,7 +24,7 @@ import { Transaction } from '../hooks/useWallet/types';
 import { Bonus, useBonus } from '../hooks/useBonus';
 import RechargeModal from '../components/wallet/RechargeModal';
 
-const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
+const stripePromise = loadStripe('pk_live_51OHbGYHQkntOzh4KQFTksD7uHP2GOH8JjjVmkxE9uJm6dfx6OdwmWAl3wrozgTpb1330qbdthjXopdSNx7cM8sub00Z0maRpBS');
 
 const PaymentForm = ({ onSuccess, onError, amount }: { onSuccess: (id: any) => void, onError: (error: any) => void, amount: number }) => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -1336,10 +1336,31 @@ const timeLeft = activeBonus ? Math.ceil((new Date(activeBonus.endDate).getTime(
   }, []);
 
   // Función deposit para el nuevo modal
-  const deposit = async (depositData: { amount: number; paymentReference: string; description: string }) => {
-    console.log('💳 Deposit function called:', depositData);
-    // Simula el procesamiento del pago
-    return { success: true, transactionId: depositData.paymentReference };
+  const deposit = async (amount: number, externalPaymentReference?: string) => {
+    try {
+      console.log('💳 Ejecutando depósito con monto:', amount);
+      const paymentReference = externalPaymentReference || `TX-${Date.now()}`;
+      const description = 'Recarga de créditos';
+
+      const response = await walletHook.deposit({
+        amount,
+        paymentReference,
+        description,
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error al procesar el depósito');
+      }
+
+      // Actualizar el balance mostrado en el dashboard
+      const balanceData = await walletHook.getBalance();
+      setBalance(balanceData.balance);
+
+      return { success: true, transactionId: response.data?.id || paymentReference };
+    } catch (error) {
+      console.error('❌ Error en depósito:', error);
+      throw error;
+    }
   };
 
   const handleRecharge = useCallback(async (amount: number) => {
@@ -2150,41 +2171,15 @@ const CelebrationPage: React.FC<CelebrationPageProps> = memo(({ isOpen, onClose,
             <span className="font-bold text-lg">{formatCurrency(amount)}</span>
           </div>
           
-          {/* Level Bonus */}
-          {levelBonus > 0 && (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Crown className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                <span className="text-blue-600 text-xs truncate">
-                  Bonus Nivel {levelName}:
-                </span>
-              </div>
-              <span className="font-bold text-blue-600 text-sm ml-2">
-                +{formatCreditsText(levelBonus)}
-              </span>
-            </div>
-          )}
+          {/* Bonus oculto por solicitud */}
           
-          {/* Campaign Bonus */}
-          {campaignBonus > 0 && (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Gift className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <span className="text-green-600 text-xs truncate">
-                  Bonus {campaignName}:
-                </span>
-              </div>
-              <span className="font-bold text-green-600 text-sm ml-2">
-                +{formatCreditsText(campaignBonus)}
-              </span>
-            </div>
-          )}
+          {/* Bonus oculto por solicitud */}
           
           <div className="border-t border-gray-300 pt-3 flex justify-between items-center">
             <span className="font-bold text-gray-900">Total:</span>
             <div className="text-right">
               <div className="font-bold text-2xl text-blue-600">
-                💰 {formatCreditsText(totalCredits)}
+                💰 {formatCreditsText(amount)}
               </div>
             </div>
           </div>
@@ -2208,13 +2203,13 @@ const CelebrationPage: React.FC<CelebrationPageProps> = memo(({ isOpen, onClose,
               onClose(); // Cerrar página de celebración
               // Navegar al marketplace después de cerrar
               setTimeout(() => {
-                window.location.href = '/marketplace';
+                window.location.href = '/sports-events';
               }, 300);
             }}
             className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-bold shadow-lg flex items-center justify-center gap-2"
           >
             <Package2 className="w-5 h-5" />
-            Ir al Marketplace
+           Ir a eventos deportivos
           </button>
           
           <button

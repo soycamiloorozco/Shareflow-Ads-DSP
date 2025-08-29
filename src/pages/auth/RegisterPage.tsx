@@ -52,7 +52,12 @@ export function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    await registerUser(data.name, data.email, data.password, data.whatsapp);
+    await registerUser({
+      username: data.name,
+      email: data.email,
+      password: data.password,
+      phone: data.whatsapp
+    });
   };
 
 

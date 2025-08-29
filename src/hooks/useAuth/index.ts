@@ -64,6 +64,9 @@ export function useAuth() {
 
       const result = await dispatch(register(userData)).unwrap();
       
+      // Mostrar confirmación de registro exitoso
+      alert('Registro exitoso. Por favor, revisa tu correo electrónico para validar tu cuenta antes de iniciar sesión.');
+      
       // Redirigir al dashboard después del registro exitoso
       navigate('/dashboard', { replace: true });
       return result;

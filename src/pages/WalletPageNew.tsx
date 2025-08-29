@@ -574,14 +574,14 @@ const generateMockData = (): WalletData => {
       description: 'Pantalla Gigante Estadio El Campín - Tribuna Oriental | Partido Millonarios vs Nacional | 90 minutos',
       status: 'completed' as const
     },
-    {
-      id: '4',
-      amount: 50000,
-      type: 'bonus' as const,
-      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      description: 'Bonus Nivel Visionario (5%) - Recarga de $500K',
-      status: 'completed' as const
-    },
+    // {
+    //   id: '4',
+    //   amount: 50000,
+    //   type: 'bonus' as const,
+    //   date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    //   description: 'Bonus Nivel Visionario (5%) - Recarga de $500K',
+    //   status: 'completed' as const
+    // },
     {
       id: '5',
       amount: -120000,

@@ -7,7 +7,7 @@ import {
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe('pk_test_51OHbGYHQkntOzh4KeXpPzlQ96Qj9vofFxGAvTfBVR8yKOBsupmAmQisj1wizDfkF543hpjoIOn7UuCPVcndFw4db00BcWQwc7h');
+const stripePromise = loadStripe('pk_live_51OHbGYHQkntOzh4KQFTksD7uHP2GOH8JjjVmkxE9uJm6dfx6OdwmWAl3wrozgTpb1330qbdthjXopdSNx7cM8sub00Z0maRpBS');
 
 // Stripe appearance configuration for professional look
 const stripeAppearance = {
@@ -201,12 +201,15 @@ const RechargeModal: React.FC<RechargeModalProps> = ({
     }
   };
 
-  const handlePayment = async () => {
+  const handlePayment = async (paymentReference?: string) => {
     try {
       setIsProcessing(true);
-      await deposit(selectedAmount);
+      // Abrir celebración inmediatamente
       await onRecharge(selectedAmount);
+      // Cerrar el modal de inmediato
       handleCloseModal();
+      // Ejecutar depósito en el backend
+      await deposit(totalWithCommission, paymentReference);
     } catch (error) {
       console.error('Payment failed:', error);
     } finally {

@@ -10,6 +10,7 @@ import {
   Percent, Building, ChevronsLeft, ChevronsRight, Zap
 } from 'lucide-react';
 import { usePermissions } from '../contexts/PermissionsContext';
+import type { Role } from '../contexts/PermissionsContext';
 import { RequirePermission } from './RequirePermission';
 import { Tooltip } from './Tooltip';
 import { useAuth } from '../hooks/useAuth';
@@ -29,7 +30,8 @@ interface NavItem {
   label: string;
   description?: string;
   requiresPermission?: string;
-  requiresRole?: string[];
+  requiresRole?: Role[];
+  requiresEmail?: string[];
 }
 
 interface NavGroup {
@@ -119,9 +121,9 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
     title: 'Plataforma',
     items: [
       // { path: '/sports-events', icon: Home, label: 'Inicio' },
-      { path: '/marketplace', icon: ShoppingBag, label: 'Marketplace', description: 'Pantallas digitales disponibles' },
+      { path: '/marketplace', icon: ShoppingBag, label: 'Marketplace', description: 'Pantallas digitales disponibles', requiresEmail: ['ceo@shareflow.me', 'cardenascarlos18@gmail.com'] },
       { path: '/sports-events', icon: Zap, label: 'Eventos Deportivos' },
-      { path: '/my-campaigns', icon: Rocket, label: 'Mis Campañas' },
+      { path: '/my-campaigns', icon: Rocket, label: 'Mis Campañas', requiresEmail: ['ceo@shareflow.me', 'cardenascarlos18@gmail.com'] },
       // { 
       //   path: '/create', 
       //   icon: PlusSquare, 
@@ -183,9 +185,17 @@ export function Navigation({ isCollapsed, onCollapsedChange }: NavigationProps) 
   const NavLink = ({ item }: { item: NavItem }) => {
     // Check if user has required role or permission
     const hasRequiredAccess = () => {
+      // Restricción por email si está definida
+      if (item.requiresEmail) {
+        if (!user?.email) return false;
+        const allowed = item.requiresEmail.map(e => e.toLowerCase());
+        return allowed.includes(user.email.toLowerCase());
+      }
+      // Restricción por rol
       if (item.requiresRole && item.requiresRole.length > 0) {
         return hasRole(item.requiresRole);
       }
+      // Restricción por permiso (placeholder actual)
       if (item.requiresPermission) {
         return true;
       }
